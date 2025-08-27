@@ -6,6 +6,8 @@ import {
   isPrivate,
   isFactoryFunc,
   isFactoryDef,
+  isAsyncFactoryDef,
+  isAsyncFactoryFunc,
 } from "./unit.ts";
 import { unitSymbol } from "./common.ts";
 
@@ -105,6 +107,30 @@ Deno.test("unit: isBoundFunc", () => {
   assertEquals(isBoundFunc(boundDef), false);
 });
 
+Deno.test("unit: isBoundDef", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isBound: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isBoundDef(ex1), false);
+  assertEquals(isBoundDef(ex2), false);
+  assertEquals(isBoundDef(exDef1), false);
+  assertEquals(isBoundDef(exDef2), false);
+
+  function boundFunc() {}
+  boundFunc.isBound = true as const;
+  assertEquals(isBoundDef(boundFunc), false);
+
+  const boundDef = defineUnit(
+    function (this: W, a: number) {
+      return a;
+    },
+    { isBound: true },
+  );
+  assertEquals(isBoundDef(boundDef), true);
+});
+
 Deno.test("unit: isFactoryFunc", () => {
   const ex1 = 5;
   const ex2 = { a: 1, isFactory: true };
@@ -155,26 +181,54 @@ Deno.test("unit: isFactoryDef", () => {
   assertEquals(isFactoryDef(factoDef), true);
 });
 
-Deno.test("unit: isBoundDef", () => {
+Deno.test("unit: isAsyncFactoryFunc", () => {
   const ex1 = 5;
-  const ex2 = { a: 1, isBound: true };
+  const ex2 = { a: 1, isFactory: true, isAync: true };
   const exDef1 = defineUnit(5);
   const exDef2 = defineUnit(function () {});
 
-  assertEquals(isBoundDef(ex1), false);
-  assertEquals(isBoundDef(ex2), false);
-  assertEquals(isBoundDef(exDef1), false);
-  assertEquals(isBoundDef(exDef2), false);
+  assertEquals(isAsyncFactoryFunc(ex1), false);
+  assertEquals(isAsyncFactoryFunc(ex2), false);
+  assertEquals(isAsyncFactoryFunc(exDef1), false);
+  assertEquals(isAsyncFactoryFunc(exDef2), false);
 
-  function boundFunc() {}
-  boundFunc.isBound = true as const;
-  assertEquals(isBoundDef(boundFunc), false);
+  function factoFunc() {}
+  factoFunc.isFactory = true as const;
+  factoFunc.isAsync = true as const;
 
-  const boundDef = defineUnit(
+  const factoDef = defineUnit(
     function (this: W, a: number) {
       return a;
     },
-    { isBound: true },
+    { isFactory: true },
   );
-  assertEquals(isBoundDef(boundDef), true);
+
+  assertEquals(isAsyncFactoryFunc(factoFunc), true);
+  assertEquals(isAsyncFactoryFunc(factoDef), false);
+});
+
+Deno.test("unit: isAsyncFactoryDef", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isFactory: true, isAsync: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isAsyncFactoryDef(ex1), false);
+  assertEquals(isAsyncFactoryDef(ex2), false);
+  assertEquals(isAsyncFactoryDef(exDef1), false);
+  assertEquals(isAsyncFactoryDef(exDef2), false);
+
+  function factoFunc() {}
+  factoFunc.isFactory = true as const;
+  factoFunc.isAsync = true as const;
+
+  const factoDef = defineUnit(
+    function (this: W, a: number) {
+      return () => a;
+    },
+    { isFactory: true, isAsync: true },
+  );
+
+  assertEquals(isAsyncFactoryDef(factoFunc), false);
+  assertEquals(isAsyncFactoryDef(factoDef), true);
 });

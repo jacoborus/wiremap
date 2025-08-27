@@ -165,15 +165,17 @@ export function isAsyncFactoryDef<T>(
   def: unknown,
 ): def is AsyncFactoryDef<T, boolean> {
   if (!isUnitDef(def)) return false;
+
   const unit = def[unitSymbol];
   if (!isFunction(unit)) {
     return false;
   }
+
   return (
-    "isFactory" in def &&
-    def.isFactory === true &&
-    "isAsync" in def &&
-    def.isAsync === true
+    "isFactory" in def.opts &&
+    def.opts.isFactory === true &&
+    "isAsync" in def.opts &&
+    def.opts.isAsync === true
   );
 }
 
