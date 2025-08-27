@@ -1,20 +1,24 @@
 import { assertEquals } from "@std/assert";
 
-import { $, addUser, getUsers } from "./userService.ts";
+import * as userService from "./userService.ts";
 import type { Database } from "../db.ts";
+import { mockUnit } from "../../src/mock.ts";
 
 Deno.test(function addUsertTest() {
   const db: Database = { users: [], posts: [] };
-  $.feed({
+  const fakeBlocks = {
     "": {
       db,
     },
-    "user.service": {
+    ".": {
       getUserByEmail: (email: string) => {
         return db.users.find((user) => user.email === email);
       },
     },
-  });
+  };
+
+  const getUsers = mockUnit(userService.getUsers, fakeBlocks);
+  const addUser = mockUnit(userService.addUser, fakeBlocks);
 
   let users = getUsers();
   assertEquals(users.length, 0);
