@@ -1,5 +1,11 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { defineUnit, isBoundFunc, isPrivate, isFactoryFunc } from "./unit.ts";
+import {
+  defineUnit,
+  isBoundFunc,
+  isBoundDef,
+  isPrivate,
+  isFactoryFunc,
+} from "./unit.ts";
 import { unitSymbol } from "./common.ts";
 
 Deno.test("unit: defineUnit", async () => {
@@ -121,4 +127,28 @@ Deno.test("unit: isFactoryFunc", () => {
 
   assertEquals(isFactoryFunc(factoFunc), true);
   assertEquals(isFactoryFunc(factoDef), false);
+});
+
+Deno.test("unit: isBoundDef", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isBound: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isBoundDef(ex1), false);
+  assertEquals(isBoundDef(ex2), false);
+  assertEquals(isBoundDef(exDef1), false);
+  assertEquals(isBoundDef(exDef2), false);
+
+  function boundFunc() {}
+  boundFunc.isBound = true as const;
+  assertEquals(isBoundDef(boundFunc), false);
+
+  const boundDef = defineUnit(
+    function (this: W, a: number) {
+      return a;
+    },
+    { isBound: true },
+  );
+  assertEquals(isBoundDef(boundDef), true);
 });
