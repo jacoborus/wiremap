@@ -23,6 +23,7 @@ app().printValor();
 const addUser = app("user.service").addUser;
 
 const userId = addUser("jacobo", "jacobo@example.com", true);
+console.log("userId:", userId);
 console.log("users:", app("user.service").getUsers());
 
 const addPost = app("post.service").addPost;

@@ -1,15 +1,13 @@
-import { tagBlock } from "../../src/wiremap.ts";
+import { defineUnit, tagBlock } from "../../src/wiremap.ts";
 import type { Defs } from "../app/app.ts";
 
-export const $ = tagBlock("post.service");
+export const $ = tagBlock();
 
-const wire = $<Defs>();
-
-export function getPosts() {
-  const collection = wire(".").collection;
+export function getPosts(this: W) {
+  const collection = this(".").collection;
   return collection.slice();
 }
-// getPosts.isPrivate = true as const;
+getPosts.isBound = true as const;
 
 /**
  * Retrieve a post from the database
@@ -21,30 +19,34 @@ export function getPosts() {
  * const post = getPost('1234abcd')
  * ```
  */
-export function getPost(id: string) {
-  const db = wire().db;
+export function getPost(this: W, id: string) {
+  const db = this().db;
   return db.posts.find((post) => post.id === id);
 }
+getPost.isBound = true as const;
 
-export function addPost(title: string, content: string, userId: string) {
-  const getUser = wire("user.service").getUser;
+export function addPost(
+  this: W,
+  title: string,
+  content: string,
+  userId: string,
+) {
+  const getUser = this("user.service").getUser;
   const user = getUser(userId);
   if (!user) throw new Error(`User with id ${userId} does not exist.`);
 
-  const db = wire().db;
+  const db = this().db;
   const id = crypto.randomUUID();
   db.posts.push({ id, title, userId, content });
   return id;
 }
+addPost.isBound = true as const;
 
 /**
  * The posts collection of the database
  */
-export function collection() {
-  const db = wire().db;
-  return new Promise<typeof db.posts>((resolve) => {
-    resolve(db.posts);
-  });
+export function collection(w: W) {
+  const db = w().db;
+  return db.posts;
 }
 collection.isFactory = true as const;
-collection.isAsync = true as const;

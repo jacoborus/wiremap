@@ -1,14 +1,15 @@
 import { tagBlock } from "../../src/wiremap.ts";
 import type { Defs } from "../app/app.ts";
 
-export const $ = tagBlock("user.service");
+export const $ = tagBlock();
 
-const wire = $<Defs>();
+type W = Wire<Defs, "user.service">;
 
-export function getUsers() {
-  const db = wire().db;
+export function getUsers(this: W) {
+  const db = this().db;
   return db.users;
 }
+getUsers.isBound = true as const;
 
 /**
  * Get an user by id
@@ -20,18 +21,20 @@ export function getUsers() {
  * const user = getUser('1234')
  * ```
  */
-export function getUser(id: string) {
-  const db = wire().db;
+export function getUser(this: W, id: string) {
+  const db = this().db;
   return db.users.find((user) => user.id === id);
 }
+getUser.isBound = true as const;
 
-export function getUserByEmail(email: string) {
-  const db = wire().db;
+export function getUserByEmail(this: W, email: string) {
+  const db = this().db;
   return db.users.find((user) => user.email === email);
 }
+getUserByEmail.isBound = true as const;
 
-export function addUser(name: string, email: string, isAdmin = false) {
-  const getUserByEmail = wire(".").getUserByEmail;
+export function addUser(this: W, name: string, email: string, isAdmin = false) {
+  const getUserByEmail = this(".").getUserByEmail;
   const existingUser = getUserByEmail(email);
   if (existingUser) {
     throw new Error(`User with email ${email} already exists.`);
@@ -43,7 +46,8 @@ export function addUser(name: string, email: string, isAdmin = false) {
     email,
     isAdmin,
   };
-  const db = wire().db;
+  const db = this().db;
   db.users.push(user);
   return user.id;
 }
+addUser.isBound = true as const;

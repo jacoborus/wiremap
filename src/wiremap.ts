@@ -1,22 +1,13 @@
-/**
- * Represents an object with string keys and any values.
- */
-type Hashmap = Record<string, unknown>;
+import type { Hashmap, Wcache } from "./common.ts";
+import type { IsAsyncFactory } from "./unit.ts";
+import type { BlockDef, BlocksMap, IsBlock, BlockProxy } from "./block.ts";
 
-/**
- * A block is a Hashmap with a block tag ($) that identifies its namespace.
- */
-type Block<T extends Hashmap> = T & {
-  $: BlockTag<string>;
-};
+import { unitSymbol, blockSymbol, isFunction, isPromise } from "./common.ts";
+import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
+import { itemIsBlock, getWire } from "./block.ts";
 
-/**
- * Map of block names to their block definitions.
- */
-type BlocksMap = Record<string, Block<Hashmap>>;
-
-const blockSymbol = Symbol("BlockSymbol");
-const unitSymbol = Symbol("UnitSymbol");
+export { defineBlock, tagBlock } from "./block.ts";
+export { defineUnit } from "./unit.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -72,21 +63,9 @@ type FilterUnitValues<T> = T extends Hashmap
  * This is used to filter out nested blocks when creating unit proxies.
  */
 type ExtractBlockKeys<T> = {
-  [K in keyof T]: T[K] extends Block<Hashmap> ? K : never;
+  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? K : never;
 }[keyof T];
 
-type ExtractPublicPaths<T> = T extends Hashmap //
-  ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K }[keyof T] //
-  : never;
-
-/**
- * Cache structure for storing resolved units and proxies to avoid recomputation.
- */
-interface Wcache {
-  unit: Map<string, unknown>;
-  proxy: Map<string, unknown>;
-  localProxy: Map<string, unknown>;
-}
 /**
  * Wires up a set of unit definitions and blocks for dependency injection.
  *
@@ -115,26 +94,25 @@ interface Wcache {
 export function wireUp<Defs extends Hashmap>(
   defs: Defs,
 ): WiredUp<InferBlocks<Defs>> {
-  const finalDefinitions =
+  const finalDefinitions: BlockDef<Defs> =
     "$" in defs
-      ? (defs as Block<Hashmap>)
-      : Object.assign(defs, { $: tagBlock("") });
+      ? (defs as BlockDef<Defs>)
+      : (Object.assign(defs, { $: blockSymbol }) as BlockDef<Defs>);
+
   const blockDefinitions = mapBlocks(finalDefinitions);
   blockDefinitions[""] = finalDefinitions;
 
   const cache = createCacheObject();
 
-  feedBlockTags(blockDefinitions, cache);
-
   if (hasAsyncKeys(blockDefinitions)) {
     // This will cause wireUp to return a promise that resolves
     // when all async factories are resolved
     return resolveAsyncFactories(blockDefinitions, cache).then(() => {
-      return prepareWire("", blockDefinitions, cache);
+      return getWire("", blockDefinitions, cache);
     }) as WiredUp<InferBlocks<Defs>>;
   }
 
-  return prepareWire("", blockDefinitions, cache) as WiredUp<InferBlocks<Defs>>;
+  return getWire("", blockDefinitions, cache) as WiredUp<InferBlocks<Defs>>;
 }
 
 /**
@@ -163,7 +141,7 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
     ? PathValue<T[K], Rest>
     : never
   : P extends keyof T
-    ? T[P] extends Block<Hashmap>
+    ? T[P] extends BlockDef<Hashmap>
       ? T[P]
       : never
     : never;
@@ -193,7 +171,7 @@ type BlockPaths<T extends Hashmap, P extends string = ""> =
                   ? `${Extract<K, string>}`
                   : `${P}.${Extract<K, string>}`
                 : never)
-            | (T[K] extends Block<T[K]>
+            | (T[K] extends BlockDef<T[K]>
                 ? HasBlocks<T[K]> extends true
                   ? BlockPaths<
                       T[K],
@@ -213,17 +191,8 @@ function mapBlocks<L extends Hashmap>(blocks: L, prefix?: string): BlocksMap {
     const block = blocks[key];
 
     if (itemIsBlock(block)) {
-      const tagName = getBlockTagName(block.$);
-
       // this is the key of the block given the path
       const finalKey = prefix ? `${prefix}.${key}` : key;
-
-      // check if the tag name matches block path
-      if (tagName !== finalKey) {
-        throw new Error(
-          `Block tag "${tagName}" does not match key "${finalKey}".`,
-        );
-      }
 
       // only blocks with units are wireable
       if (hasUnits(block)) {
@@ -255,9 +224,9 @@ type HasUnits<T extends Hashmap> = true extends {
   ? true
   : false;
 
-function hasUnits(item: Block<Hashmap>): boolean {
+function hasUnits(item: BlockDef<Hashmap>): boolean {
   return Object.keys(item).some((key) => {
-    if (isBlockTag(item[key])) return false;
+    if (key === "$") return false;
     return !itemIsBlock(item[key]);
   });
 }
@@ -267,7 +236,7 @@ function hasUnits(item: Block<Hashmap>): boolean {
  * Used to identify if we need to recursively process nested blocks.
  */
 type HasBlocks<T extends Hashmap> = true extends {
-  [K in keyof T]: T[K] extends Block<Hashmap> ? true : false;
+  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? true : false;
 }[keyof T]
   ? true
   : false;
@@ -284,16 +253,8 @@ function hasAsyncKeys(blockDefs: BlocksMap): boolean {
 
     return Object.keys(block).some((key) => {
       const item = block[key];
-      return isAsyncFactory(item);
+      return isAsyncFactoryFunc(item) || isAsyncFactoryDef(item);
     });
-  });
-}
-
-function feedBlockTags(defs: BlocksMap, cache: Wcache): void {
-  const blockPaths = Object.keys(defs);
-  blockPaths.forEach((path) => {
-    const block = defs[path];
-    block.$.feed(defs, cache);
   });
 }
 
@@ -309,36 +270,24 @@ async function resolveAsyncFactories(
 
     for await (const key of keys) {
       const item = block[key];
-      if ((isFunction(item) || isPromise(item)) && isFactory(item)) {
+      if ((isFunction(item) || isPromise(item)) && isAsyncFactoryFunc(item)) {
         const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        const resolved = await item();
+        const wire = true;
+        const resolved = await item(wire);
         cache.unit.set(finalKey, resolved);
-      } else if (
-        (isFunctionDef(item) || isPromiseDef(item)) &&
-        isFactoryDef(item)
-      ) {
+      } else if (isAsyncFactoryDef(item)) {
         const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        // TODO: fix that type assertion
-        const resolved = await (item[unitSymbol] as () => unknown)();
+        const resolved = await item[unitSymbol];
         cache.unit.set(finalKey, resolved);
       }
     }
   }
 }
 
-/**
- * Block tag interface that enables a module to be wired as a block.
- * Contains the wire function and metadata about the block's namespace.
- */
-interface BlockTag<N extends string> {
-  <L extends Hashmap>(): Wire<L, N>;
-  readonly [blockSymbol]: N;
-  feed: (defs: Hashmap, cache?: Wcache) => void;
-}
-
 function createCacheObject(): Wcache {
   return {
     unit: new Map(),
+    wire: new Map(),
     proxy: new Map(),
     localProxy: new Map(),
   };
@@ -371,347 +320,3 @@ function createCacheObject(): Wcache {
  * app("user.service").addUser(...);
  * ```
  */
-export function tagBlock<N extends string>(namespace: N): BlockTag<N> {
-  const blockDefs: BlocksMap = {};
-  const cache = {
-    unit: new Map(),
-    proxy: new Map(),
-    localProxy: new Map(),
-  };
-
-  return Object.assign(
-    function f<Defs extends Hashmap>(): Wire<Defs, N> {
-      return prepareWire(namespace, blockDefs, cache) as Wire<Defs, N>;
-    },
-    {
-      get [blockSymbol]() {
-        return namespace;
-      },
-      feed(defs: Hashmap, newCache?: Wcache) {
-        Object.assign(blockDefs, defs);
-        const reCache = newCache ? newCache : createCacheObject();
-        Object.assign(cache, reCache);
-      },
-    },
-  ) as BlockTag<N>;
-}
-
-/**
- * Type that checks if a given type is a block by looking for the block tag ($).
- */
-type IsBlock<T> = T extends { $: { [blockSymbol]: string } } ? true : false;
-
-function itemIsBlock(item: unknown): item is Block<Hashmap> {
-  return (
-    item !== null &&
-    typeof item === "object" &&
-    "$" in item &&
-    isBlockTag(item.$)
-  );
-}
-
-function getBlockTagName<N extends string, T extends BlockTag<N>>(tag: T): N {
-  return tag[blockSymbol];
-}
-
-function isBlockTag(thing: unknown): thing is BlockTag<string> {
-  return (
-    (typeof thing === "function" || typeof thing === "object") &&
-    thing !== null &&
-    blockSymbol in thing &&
-    typeof thing[blockSymbol] === "string"
-  );
-}
-
-function prepareWire<Defs extends BlocksMap, P extends keyof Defs>(
-  localPath: P,
-  blockDefs: Defs,
-  cache: Wcache,
-) {
-  return function createWire(key = "") {
-    if (cache.proxy.has(key)) {
-      return cache.proxy.get(key);
-    }
-
-    if (key === ".") {
-      if (cache.localProxy.has(localPath as string)) {
-        return cache.localProxy.get(localPath as string);
-      }
-
-      const localProxy = createBlockProxy(
-        localPath as string,
-        true,
-        blockDefs,
-        cache,
-      );
-      cache.localProxy.set(localPath as string, localProxy);
-      return localProxy;
-    }
-
-    const blockPaths = Object.keys(blockDefs);
-    const k = String(key);
-
-    let proxy;
-
-    if (k === "") {
-      // root block resolution
-      proxy = createBlockProxy("", false, blockDefs, cache);
-    } else if (blockPaths.includes(k)) {
-      // external block resolution, uses absolute path of the block
-      proxy = createBlockProxy(k, false, blockDefs, cache);
-    } else {
-      throw new Error(`Unit ${k} not found from block "${String(localPath)}"`);
-    }
-
-    cache.proxy.set(k, proxy);
-    return proxy;
-  };
-}
-
-/**
- * Block proxy type that provides access to units within a block.
- * Local proxies include private units, while public proxies exclude them.
- */
-type BlockProxy<B extends Hashmap, Local extends boolean> = Local extends true
-  ? { [K in keyof B]: InferUnitValue<B[K]> }
-  : { [K in ExtractPublicPaths<B>]: InferPublicUnitValue<B[K]> };
-
-/**
- * Infers the actual value type of a unit, resolving factories to their return types.
- */
-type InferUnitValue<D> =
-  D extends Factory<infer T>
-    ? T extends Promise<infer V>
-      ? V
-      : T
-    : D extends UnitDef<infer U, infer O>
-      ? O["isFactory"] extends true
-        ? U extends Func
-          ? ReturnType<U>
-          : U
-        : U
-      : D;
-
-/**
- * Like InferUnitValue but excludes private units from the type.
- */
-type InferPublicUnitValue<Def> = Def extends PrivateUnit
-  ? never
-  : Def extends UnitDef<infer Unit, infer Opts>
-    ? Opts["isPrivate"] extends true
-      ? never
-      : Opts["isFactory"] extends true
-        ? Unit extends Func
-          ? ReturnType<Unit>
-          : Unit
-        : Unit
-    : InferUnitValue<Def>;
-
-function createBlockProxy<B extends BlocksMap, Local extends boolean>(
-  blockPath: string,
-  local: Local,
-  blockDefs: B,
-  cache: Wcache,
-) {
-  const blockDef = blockDefs[blockPath];
-  const unitKeys = getBlockUnitKeys(blockDef, local);
-
-  return new Proxy(
-    {}, // used as a cache for the block
-    {
-      get: <K extends string>(cachedblock: Hashmap, prop: K) => {
-        if (prop in cachedblock) {
-          return cachedblock[prop];
-        }
-
-        if (prop === "$") {
-          throw new Error(`Block '${blockPath}' has no unit named '${prop}'`);
-        }
-
-        if (unitKeys.includes(prop)) {
-          const finalKey = blockPath === "" ? prop : `${blockPath}.${prop}`;
-          if (cache.unit.has(finalKey)) {
-            const unit = cache.unit.get(finalKey);
-            cachedblock[prop] = unit;
-            return unit;
-          }
-
-          const def = blockDef[prop];
-
-          const unit = isFactory(def)
-            ? def()
-            : isUnitDef(def)
-              ? def.opts.isFactory === true &&
-                typeof def[unitSymbol] === "function"
-                ? def[unitSymbol]()
-                : def[unitSymbol]
-              : def;
-
-          cachedblock[prop] = unit;
-          cache.unit.set(finalKey, unit);
-          return unit;
-        }
-
-        throw new Error(`Block '${blockPath}' has no unit named '${prop}'`);
-      },
-
-      ownKeys() {
-        return unitKeys;
-      },
-
-      getOwnPropertyDescriptor() {
-        return {
-          writable: false,
-          enumerable: true,
-          // this is required to allow the proxy to be enumerable
-          configurable: true,
-        };
-      },
-    },
-  );
-}
-
-/** Extracts the paths of the units of a block. */
-function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
-  blockDef: B,
-  local: Local,
-) {
-  return Object.keys(blockDef).filter((key) => {
-    const unit = blockDef[key];
-    if (itemIsBlock(unit) || isBlockTag(unit)) return false;
-    return local ? true : !isPrivate(unit);
-  });
-}
-
-interface UnitOptions {
-  isPrivate?: boolean;
-  isFactory?: boolean;
-  isAsync?: boolean;
-  // isBound?: boolean // Planned
-  // isLazy?: boolean // Planned
-  // isEager?: boolean // Planned
-}
-
-interface UnitDef<U, O extends UnitOptions> {
-  [unitSymbol]: U;
-  opts: O;
-}
-
-export function defineUnit<const T, const O extends UnitOptions>(
-  def: T,
-  opts = {} as O,
-): UnitDef<T, O> {
-  return { [unitSymbol]: def, opts };
-}
-
-function isUnitDef<T>(def: unknown): def is UnitDef<T, UnitOptions> {
-  return typeof def === "object" && def !== null && unitSymbol in def;
-}
-
-function isPromise<T>(value: unknown): value is Promise<T> {
-  return (
-    value instanceof Promise ||
-    (typeof value === "object" &&
-      value !== null &&
-      "then" in value &&
-      typeof value.then == "function")
-  );
-}
-function isPromiseDef<T>(
-  def: unknown,
-): def is UnitDef<Promise<T>, UnitOptions> {
-  if (!isUnitDef(def)) return false;
-  const value = def[unitSymbol];
-
-  return (
-    value instanceof Promise ||
-    (typeof value === "object" &&
-      value !== null &&
-      "then" in value &&
-      typeof value.then == "function")
-  );
-}
-
-type Func = (...args: unknown[]) => unknown;
-
-function isFunction<T>(unit: unknown): unit is () => T {
-  return typeof unit === "function";
-}
-
-function isFunctionDef<T>(unit: unknown): unit is UnitDef<T, UnitOptions> {
-  return isUnitDef(unit) && isFunction(unit[unitSymbol]);
-}
-
-/**
- * Factory function interface. Factories are functions that return configured instances.
- * They're called once and their result is cached.
- */
-interface Factory<T> {
-  (...args: unknown[]): T;
-  (...args: unknown[]): Promise<T>;
-  isFactory: true;
-}
-
-function isFactory<T>(unit: unknown): unit is Factory<T> {
-  if (!isFunction(unit) && !isPromise(unit)) {
-    return false;
-  }
-  return "isFactory" in unit && unit.isFactory === true;
-}
-
-function isFactoryDef<T>(def: unknown): def is UnitDef<T, UnitOptions> {
-  if (!isUnitDef(def)) return false;
-  const unit = def[unitSymbol];
-  if (!isFunction(unit) && !isPromise(unit)) {
-    return false;
-  }
-  return "isFactory" in unit && unit.isFactory === true;
-}
-
-/**
- * Type that checks if a factory is async (returns a Promise or is marked as async).
- */
-type IsAsyncFactory<T> =
-  T extends Factory<unknown>
-    ? T extends { isAsync: true }
-      ? true
-      : false
-    : false;
-
-function isAsyncFactory<T>(unit: T): boolean {
-  if (!isFactory(unit)) return false;
-  if (isPromise(unit)) return true;
-  if (!isFunction(unit)) return false;
-  if ("isAsync" in unit && unit.isAsync === true) return true;
-
-  const AsyncFunction = Object.getPrototypeOf(async function () {
-    // not empty anymore
-  }).constructor;
-  return unit instanceof AsyncFunction;
-}
-
-/**
- * Private unit interface. Private units are not accessible from outside their block.
- */
-interface PrivateUnit extends Func {
-  isPrivate: true;
-}
-
-type IsPrivateUnit<U> = U extends PrivateUnit
-  ? true
-  : U extends UnitDef<unknown, infer O>
-    ? O["isPrivate"] extends true
-      ? true
-      : false
-    : false;
-
-function isPrivate(unit: unknown): unit is PrivateUnit {
-  if (unit === null) return false;
-  if (isFunction(unit) || isPromise(unit)) {
-    return "isPrivate" in unit && unit.isPrivate === true;
-  }
-  if (isUnitDef(unit)) {
-    return !!unit.opts.isPrivate;
-  }
-  return false;
-}
