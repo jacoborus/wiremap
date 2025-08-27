@@ -1,13 +1,14 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
   defineUnit,
-  isBoundFunc,
-  isBoundDef,
-  isPrivate,
-  isFactoryFunc,
-  isFactoryDef,
   isAsyncFactoryDef,
   isAsyncFactoryFunc,
+  isBoundDef,
+  isBoundFunc,
+  isFactoryDef,
+  isFactoryFunc,
+  isPrivate,
+  isUnitDef,
 } from "./unit.ts";
 import { unitSymbol } from "./common.ts";
 
@@ -231,4 +232,30 @@ Deno.test("unit: isAsyncFactoryDef", () => {
 
   assertEquals(isAsyncFactoryDef(factoFunc), false);
   assertEquals(isAsyncFactoryDef(factoDef), true);
+});
+
+Deno.test("unit: isUnitDef", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isFactory: true, isAsync: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isUnitDef(ex1), false);
+  assertEquals(isUnitDef(ex2), false);
+  assertEquals(isUnitDef(exDef1), true);
+  assertEquals(isUnitDef(exDef2), true);
+
+  function factoFunc() {}
+  factoFunc.isFactory = true as const;
+  factoFunc.isAsync = true as const;
+
+  const factoDef = defineUnit(
+    function (this: W, a: number) {
+      return () => a;
+    },
+    { isFactory: true, isAsync: true },
+  );
+
+  assertEquals(isUnitDef(factoFunc), false);
+  assertEquals(isUnitDef(factoDef), true);
 });
