@@ -1,4 +1,4 @@
-import { unitSymbol, isFunction, isPromise, type Func } from "./common.ts";
+import { unitSymbol, isFunction, type Func } from "./common.ts";
 
 interface PrivateUnitFunc extends Func {
   isPrivate: true;
@@ -14,7 +14,7 @@ export type IsPrivateUnit<U> = U extends PrivateUnitFunc
 
 export function isPrivate(unit: unknown): unit is PrivateUnitFunc {
   if (unit === null) return false;
-  if (isFunction(unit) || isPromise(unit)) {
+  if (isFunction(unit)) {
     return "isPrivate" in unit && unit.isPrivate === true;
   }
   if (isUnitDef(unit)) {
@@ -51,7 +51,7 @@ type FactoryFunc<T> = {
 };
 
 export function isFactoryFunc<T>(unit: unknown): unit is FactoryFunc<T> {
-  if (!isFunction(unit) && !isPromise(unit)) {
+  if (!isFunction(unit)) {
     return false;
   }
   return "isFactory" in unit && unit.isFactory === true;
@@ -68,7 +68,7 @@ type AsyncFactoryFunc<T> = {
 export function isAsyncFactoryFunc<T>(
   unit: unknown,
 ): unit is AsyncFactoryFunc<T> {
-  if (!isFunction(unit) && !isPromise(unit)) {
+  if (!isFunction(unit)) {
     return false;
   }
   return (

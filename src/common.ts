@@ -8,16 +8,6 @@ export function isFunction(unit: unknown): unit is Func {
   return typeof unit === "function";
 }
 
-export function isPromise(value: unknown): value is Promise<unknown> {
-  return (
-    value instanceof Promise ||
-    (typeof value === "object" &&
-      value !== null &&
-      "then" in value &&
-      typeof value.then == "function")
-  );
-}
-
 /**
  * Cache structure for storing resolved units and proxies to avoid recomputation.
  */

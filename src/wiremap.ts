@@ -271,7 +271,7 @@ async function resolveAsyncFactories(
     for await (const key of keys) {
       const item = block[key];
 
-      if ((isFunction(item) || isPromise(item)) && isAsyncFactoryFunc(item)) {
+      if (isFunction(item) && isAsyncFactoryFunc(item)) {
         const wire = cache.wire.has(blockKey)
           ? cache.wire.get(blockKey)
           : getWire(blockKey, defs, cache);
