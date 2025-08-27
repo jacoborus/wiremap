@@ -193,7 +193,7 @@ interface PlainUnitOptions {
 
 interface BoundUnitOptions {
   isPrivate?: boolean;
-  isBound?: false;
+  isBound: true;
   isFactory?: false;
   isAsync?: false;
 }
