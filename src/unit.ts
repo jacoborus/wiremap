@@ -131,7 +131,7 @@ type FactoryDef<T extends Func, P extends boolean> = {
 };
 
 export type AsyncFactoryDef<T, P extends boolean> = {
-  [unitSymbol]: Promise<T>;
+  [unitSymbol]: (...args: unknown[]) => Promise<T>;
   opts: {
     isPrivate?: P;
     isBound?: false;
@@ -156,7 +156,7 @@ export function isAsyncFactoryDef<T>(
 ): def is AsyncFactoryDef<T, boolean> {
   if (!isUnitDef(def)) return false;
   const unit = def[unitSymbol];
-  if (!isFunction(unit) && !isPromise(unit)) {
+  if (!isFunction(unit)) {
     return false;
   }
   return (

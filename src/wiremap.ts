@@ -270,14 +270,21 @@ async function resolveAsyncFactories(
 
     for await (const key of keys) {
       const item = block[key];
+
       if ((isFunction(item) || isPromise(item)) && isAsyncFactoryFunc(item)) {
-        const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        const wire = true;
+        const wire = cache.wire.has(blockKey)
+          ? cache.wire.get(blockKey)
+          : getWire(blockKey, defs, cache);
         const resolved = await item(wire);
+
+        const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
         cache.unit.set(finalKey, resolved);
       } else if (isAsyncFactoryDef(item)) {
+        const wire = cache.wire.has(blockKey)
+          ? cache.wire.get(blockKey)
+          : getWire(blockKey, defs, cache);
+        const resolved = await item[unitSymbol](wire);
         const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        const resolved = await item[unitSymbol];
         cache.unit.set(finalKey, resolved);
       }
     }
