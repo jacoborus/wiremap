@@ -2,7 +2,6 @@ import { assertEquals, assertThrows } from "@std/assert";
 import { tagBlock, wireUp, defineUnit } from "./wiremap.ts";
 import { mockUnit } from "./mock.ts";
 import type { InferBlocks } from "./wiremap.ts";
-import { isFactoryFunc } from "./unit.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
   const defs = {
@@ -226,152 +225,152 @@ Deno.test("defineUnit: no options", () => {
   assertEquals(main("o").valor, "hola");
 });
 
-// Deno.test("defineUnit: isPrivate", () => {
-//   const $ = tagBlock();
-//   const $a = tagBlock();
-//   const $b = tagBlock();
-//
-//   const block = {
-//     $,
-//     valor: defineUnit(5),
-//     o: 5,
-//     a: {
-//       $: $a,
-//       valor: defineUnit("hola"),
-//       o: 5,
-//     },
-//     b: {
-//       $: $b,
-//       valor: defineUnit("hola", { isPrivate: true }),
-//       refer: defineUnit(
-//         function (w: W) {
-//           return w(".").valor;
-//         },
-//         { isFactory: true },
-//       ),
-//     },
-//   };
-//
-//   type Defs = InferBlocks<typeof block>;
-//   const main = wireUp(block);
-//
-//   assertEquals(main().valor, 5);
-//   assertEquals(main("a").valor, "hola");
-//   assertThrows(() => {
-//     // @ts-ignore: this is just for the internal test
-//     main("b").valor;
-//   });
-//   assertEquals(main("b").refer, "hola");
-// });
-//
-// Deno.test("defineUnit: isFactory", () => {
-//   const $ = tagBlock();
-//   const $a = tagBlock();
-//   const $b = tagBlock();
-//
-//   const block = {
-//     $,
-//     valor: "rootvalue",
-//     a: {
-//       $: $a,
-//       valor: "avalue",
-//       factory: defineUnit(
-//         (w: W) => {
-//           const rootValue = w().valor;
-//           const avalue = w(".").valor;
-//           const bvalue = w("a.b").valor;
-//           return () => `${rootValue}-${avalue}-${bvalue}`;
-//         },
-//         { isFactory: true },
-//       ),
-//       b: {
-//         $: $b,
-//         valor: "bvalue",
-//         deepFactory: defineUnit(
-//           (w: W) => {
-//             const rootValue = w().valor;
-//             const avalue = w("a").valor;
-//             const bvalue = w(".").valor;
-//             return () => `${rootValue}-${avalue}-${bvalue}`;
-//           },
-//           { isFactory: true },
-//         ),
-//         deepFactory2: defineUnit(
-//           (w: W) => {
-//             return w(".").deepFactory;
-//           },
-//           { isFactory: true },
-//         ),
-//       },
-//     },
-//   };
-//
-//   const main = wireUp(block);
-//
-//   assertEquals(main().valor, "rootvalue");
-//   assertEquals(main("a").valor, "avalue");
-//   assertEquals(main("a").factory(), "rootvalue-avalue-bvalue");
-//   assertEquals(main("a.b").deepFactory(), "rootvalue-avalue-bvalue");
-//   assertEquals(main("a.b").deepFactory2(), "rootvalue-avalue-bvalue");
-// });
-//
-// Deno.test("defineUnit: isAsync", async () => {
-//   const $ = tagBlock();
-//   const $a = tagBlock();
-//   const $b = tagBlock();
-//
-//   const block = {
-//     $,
-//     valor: "rootvalue",
-//     a: {
-//       $: $a,
-//       valor: "avalue",
-//       factory: defineUnit(
-//         (w: W) => {
-//           const rootValue = w().valor;
-//           const avalue = w(".").valor;
-//           const bvalue = w("a.b").valor;
-//           return new Promise((res) => {
-//             res(() => `${rootValue}-${avalue}-${bvalue}`);
-//           });
-//         },
-//         { isFactory: true, isAsync: true },
-//       ),
-//       b: {
-//         $: $b,
-//         valor: "bvalue",
-//         deepFactory: defineUnit(
-//           async (w: W) => {
-//             const rootValue = w().valor;
-//             const avalue = w("a").valor;
-//             const bvalue = w(".").valor;
-//             return await new Promise((res) => {
-//               setTimeout(
-//                 () => res(() => `${rootValue}-${avalue}-${bvalue}`),
-//                 300,
-//               );
-//             });
-//           },
-//           { isFactory: true, isAsync: true },
-//         ),
-//         deepFactory2: defineUnit(
-//           (w: W) => {
-//             return new Promise((res) => {
-//               setTimeout(() => res(w(".").deepFactory), 200);
-//             });
-//           },
-//           { isFactory: true, isAsync: true },
-//         ),
-//       },
-//     },
-//   };
-//
-//   type Defs = InferBlocks<typeof block>;
-//   const main = await wireUp(block);
-//
-//   assertEquals(main().valor, "rootvalue");
-//   assertEquals(main("a").valor, "avalue");
-//   assertEquals(main("a").factory(), "rootvalue-avalue-bvalue");
-//   assertEquals(main("a.b").deepFactory(), "rootvalue-avalue-bvalue");
-//   assertEquals(main("a.b").deepFactory2(), "rootvalue-avalue-bvalue");
-// });
+Deno.test("defineUnit: isPrivate", () => {
+  const $ = tagBlock();
+  const $a = tagBlock();
+  const $b = tagBlock();
+
+  const block = {
+    $,
+    valor: defineUnit(5),
+    o: 5,
+    a: {
+      $: $a,
+      valor: defineUnit("hola"),
+      o: 5,
+    },
+    b: {
+      $: $b,
+      valor: defineUnit("hola", { isPrivate: true }),
+      refer: defineUnit(
+        function (w: W) {
+          return w(".").valor;
+        },
+        { isFactory: true },
+      ),
+    },
+  };
+
+  type Defs = InferBlocks<typeof block>;
+  const main = wireUp(block);
+
+  assertEquals(main().valor, 5);
+  assertEquals(main("a").valor, "hola");
+  assertThrows(() => {
+    // @ts-ignore: this is just for the internal test
+    main("b").valor;
+  });
+  assertEquals(main("b").refer, "hola");
+});
+
+Deno.test("defineUnit: isFactory", () => {
+  const $ = tagBlock();
+  const $a = tagBlock();
+  const $b = tagBlock();
+
+  const block = {
+    $,
+    valor: "rootvalue",
+    a: {
+      $: $a,
+      valor: "avalue",
+      factory: defineUnit(
+        (w: W) => {
+          const rootValue = w().valor;
+          const avalue = w(".").valor;
+          const bvalue = w("a.b").valor;
+          return () => `${rootValue}-${avalue}-${bvalue}`;
+        },
+        { isFactory: true },
+      ),
+      b: {
+        $: $b,
+        valor: "bvalue",
+        deepFactory: defineUnit(
+          (w: W) => {
+            const rootValue = w().valor;
+            const avalue = w("a").valor;
+            const bvalue = w(".").valor;
+            return () => `${rootValue}-${avalue}-${bvalue}`;
+          },
+          { isFactory: true },
+        ),
+        deepFactory2: defineUnit(
+          (w: W) => {
+            return w(".").deepFactory;
+          },
+          { isFactory: true },
+        ),
+      },
+    },
+  };
+
+  const main = wireUp(block);
+
+  assertEquals(main().valor, "rootvalue");
+  assertEquals(main("a").valor, "avalue");
+  assertEquals(main("a").factory(), "rootvalue-avalue-bvalue");
+  assertEquals(main("a.b").deepFactory(), "rootvalue-avalue-bvalue");
+  assertEquals(main("a.b").deepFactory2(), "rootvalue-avalue-bvalue");
+});
+
+Deno.test("defineUnit: isAsync", async () => {
+  const $ = tagBlock();
+  const $a = tagBlock();
+  const $b = tagBlock();
+
+  const block = {
+    $,
+    valor: "rootvalue",
+    a: {
+      $: $a,
+      valor: "avalue",
+      factory: defineUnit(
+        (w: W) => {
+          const rootValue = w().valor;
+          const avalue = w(".").valor;
+          const bvalue = w("a.b").valor;
+          return new Promise((res) => {
+            res(() => `${rootValue}-${avalue}-${bvalue}`);
+          });
+        },
+        { isFactory: true, isAsync: true },
+      ),
+      b: {
+        $: $b,
+        valor: "bvalue",
+        deepFactory: defineUnit(
+          async (w: W) => {
+            const rootValue = w().valor;
+            const avalue = w("a").valor;
+            const bvalue = w(".").valor;
+            return await new Promise((res) => {
+              setTimeout(
+                () => res(() => `${rootValue}-${avalue}-${bvalue}`),
+                300,
+              );
+            });
+          },
+          { isFactory: true, isAsync: true },
+        ),
+        deepFactory2: defineUnit(
+          (w: W) => {
+            return new Promise((res) => {
+              setTimeout(() => res(w(".").deepFactory), 200);
+            });
+          },
+          { isFactory: true, isAsync: true },
+        ),
+      },
+    },
+  };
+
+  type Defs = InferBlocks<typeof block>;
+  const main = await wireUp(block);
+
+  assertEquals(main().valor, "rootvalue");
+  assertEquals(main("a").valor, "avalue");
+  assertEquals(main("a").factory(), "rootvalue-avalue-bvalue");
+  assertEquals(main("a.b").deepFactory(), "rootvalue-avalue-bvalue");
+  assertEquals(main("a.b").deepFactory2(), "rootvalue-avalue-bvalue");
+});
