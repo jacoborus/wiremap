@@ -109,6 +109,17 @@ type BoundDef<T, P extends boolean> = {
   };
 };
 
+export function isBoundDef<T extends Func>(
+  def: unknown,
+): def is BoundDef<T, boolean> {
+  if (!isUnitDef(def)) return false;
+  const unit = def[unitSymbol];
+  if (!isFunction(unit)) {
+    return false;
+  }
+  return "isBound" in def && def.isBound === true;
+}
+
 type FactoryDef<T extends Func, P extends boolean> = {
   [unitSymbol]: T;
   opts: {

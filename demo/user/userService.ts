@@ -1,4 +1,4 @@
-import { tagBlock } from "../../src/wiremap.ts";
+import { tagBlock, type Wire } from "../../src/wiremap.ts";
 import type { Defs } from "../app/app.ts";
 
 export const $ = tagBlock();

@@ -292,31 +292,3 @@ function createCacheObject(): Wcache {
     localProxy: new Map(),
   };
 }
-
-/**
- * Creates a block tag for a module, enabling it to be wired as a block.
- *
- * Export the result as `$` from your module to mark it as a block.
- * All other exports become units of the block.
- *
- * @param namespace - The name/path of the block (should match the key used in wireUp).
- * @returns BlockTag object to be exported as `$`.
- * @example
- * ```ts
- * // In userMod.ts:
- * import * as userService from "./userService.ts"
- * export const $ = tagBlock("user");
- * export const service = userService
- *
- * // In userService.ts:
- * export const $ = tagBlock("user.service");
- * export function addUser () {...}
- * export function getUsers () {...}
- *
- * // In app.ts:
- * import * as userMod from "./userMod.ts";
- * const defs = { user: userMod };
- * const app = wireUp(defs);
- * app("user.service").addUser(...);
- * ```
- */

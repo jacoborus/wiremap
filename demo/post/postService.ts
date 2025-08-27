@@ -1,5 +1,7 @@
-import { defineUnit, tagBlock } from "../../src/wiremap.ts";
+import { tagBlock, type Wire } from "../../src/wiremap.ts";
 import type { Defs } from "../app/app.ts";
+
+type W = Wire<Defs, "post.service">;
 
 export const $ = tagBlock();
 

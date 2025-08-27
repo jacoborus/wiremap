@@ -1,9 +1,10 @@
 import { assertEquals } from "@std/assert";
+import { mockUnit } from "../../src/mock.ts";
 
-import { $, addPost, getPost } from "./postService.ts";
+import * as postService from "./postService.ts";
 
 Deno.test(function addPostTest() {
-  $.feed({
+  const fakeBlocks = {
     "": { db: { users: [], posts: [] } },
     "user.service": {
       getUser: (id: string) => ({
@@ -13,7 +14,10 @@ Deno.test(function addPostTest() {
         isAdmin: true,
       }),
     },
-  });
+  };
+
+  const addPost = mockUnit(postService.addPost, fakeBlocks);
+  const getPost = mockUnit(postService.getPost, fakeBlocks);
 
   const postId = addPost("titulo", "contenido", "11234");
   const post = getPost(postId);
