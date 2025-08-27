@@ -123,6 +123,8 @@ export function isBoundDef<T extends Func>(
     "isBound" in def.opts &&
     typeof def.opts.isBound === "boolean" &&
     def.opts.isBound
+    // TODO: WHY THIS DOES NOT WORK?
+    // def.opts.isBound === true
   );
 }
 
@@ -150,11 +152,13 @@ export function isFactoryDef<T extends Func>(
   def: unknown,
 ): def is FactoryDef<T, boolean> {
   if (!isUnitDef(def)) return false;
+
   const unit = def[unitSymbol];
   if (!isFunction(unit)) {
     return false;
   }
-  return "isFactory" in def && def.isFactory === true;
+
+  return "isFactory" in def.opts && def.opts.isFactory === true;
 }
 
 export function isAsyncFactoryDef<T>(

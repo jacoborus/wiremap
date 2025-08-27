@@ -5,6 +5,7 @@ import {
   isBoundDef,
   isPrivate,
   isFactoryFunc,
+  isFactoryDef,
 } from "./unit.ts";
 import { unitSymbol } from "./common.ts";
 
@@ -127,6 +128,31 @@ Deno.test("unit: isFactoryFunc", () => {
 
   assertEquals(isFactoryFunc(factoFunc), true);
   assertEquals(isFactoryFunc(factoDef), false);
+});
+
+Deno.test("unit: isFactoryDef", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isFactory: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isFactoryDef(ex1), false);
+  assertEquals(isFactoryDef(ex2), false);
+  assertEquals(isFactoryDef(exDef1), false);
+  assertEquals(isFactoryDef(exDef2), false);
+
+  function factoFunc() {}
+  factoFunc.isFactory = true as const;
+
+  const factoDef = defineUnit(
+    function (this: W, a: number) {
+      return a;
+    },
+    { isFactory: true },
+  );
+
+  assertEquals(isFactoryDef(factoFunc), false);
+  assertEquals(isFactoryDef(factoDef), true);
 });
 
 Deno.test("unit: isBoundDef", () => {
