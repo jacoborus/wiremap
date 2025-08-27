@@ -249,6 +249,10 @@ export function defineUnit<const T, const O extends UnitOptions>(
   def: T | ((...args: unknown[]) => T) | ((...args: unknown[]) => Promise<T>),
   opts = {} as O,
 ): UnitDefinition<T, O> {
+  if (opts.isBound || opts.isFactory || opts.isAsync) {
+    if (typeof def !== "function")
+      throw new Error("Wrong unit definition value");
+  }
   return { [unitSymbol]: def, opts } as UnitDefinition<T, O>;
 }
 
