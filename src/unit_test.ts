@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { defineUnit, isPrivate } from "./unit.ts";
+import { defineUnit, isBoundFunc, isPrivate, isFactoryFunc } from "./unit.ts";
 import { unitSymbol } from "./common.ts";
 
 Deno.test("unit: defineUnit", async () => {
@@ -72,4 +72,53 @@ Deno.test("unit: isPrivate", () => {
 
   assertEquals(isPrivate(priv1), true);
   assertEquals(isPrivate(privDef), true);
+});
+
+Deno.test("unit: isBoundFunc", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isBound: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isBoundFunc(ex1), false);
+  assertEquals(isBoundFunc(ex2), false);
+  assertEquals(isBoundFunc(exDef1), false);
+  assertEquals(isBoundFunc(exDef2), false);
+
+  function boundFunc() {}
+  boundFunc.isBound = true as const;
+  const boundDef = defineUnit(
+    function (this: W, a: number) {
+      return a;
+    },
+    { isBound: true },
+  );
+
+  assertEquals(isBoundFunc(boundFunc), true);
+  assertEquals(isBoundFunc(boundDef), false);
+});
+
+Deno.test("unit: isFactoryFunc", () => {
+  const ex1 = 5;
+  const ex2 = { a: 1, isFactory: true };
+  const exDef1 = defineUnit(5);
+  const exDef2 = defineUnit(function () {});
+
+  assertEquals(isFactoryFunc(ex1), false);
+  assertEquals(isFactoryFunc(ex2), false);
+  assertEquals(isFactoryFunc(exDef1), false);
+  assertEquals(isFactoryFunc(exDef2), false);
+
+  function factoFunc() {}
+  factoFunc.isFactory = true as const;
+
+  const factoDef = defineUnit(
+    function (this: W, a: number) {
+      return a;
+    },
+    { isFactory: true },
+  );
+
+  assertEquals(isFactoryFunc(factoFunc), true);
+  assertEquals(isFactoryFunc(factoDef), false);
 });
