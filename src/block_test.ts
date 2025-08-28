@@ -8,7 +8,7 @@ Deno.test("block: defineBlock", () => {
   const b1 = defineBlock({
     a: 1,
   });
-  assertEquals(b1.$, blockSymbol);
+  assertEquals(b1.$[blockSymbol], true);
   assertEquals(b1.a, 1);
 });
 
@@ -51,3 +51,5 @@ Deno.test("block: getBlockUnitKeys", () => {
   assertEquals(getBlockUnitKeys(myBlock2, false), ["a"]);
   assertEquals(getBlockUnitKeys(myBlock2.b, false), ["c"]);
 });
+
+Deno.test("block: createBlockProxy", () => {});

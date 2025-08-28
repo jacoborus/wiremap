@@ -25,7 +25,7 @@ import {
  * A block is a Hashmap with a block tag ($) that identifies its namespace.
  */
 export type BlockDef<T extends Hashmap> = T & {
-  $: typeof blockSymbol;
+  $: BlockTag;
 };
 
 /**
@@ -36,18 +36,22 @@ export type BlocksMap = Record<string, BlockDef<Hashmap>>;
 export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
   return {
     ...defs,
-    $: blockSymbol,
+    $: tagBlock(),
   };
 }
 
-export function tagBlock() {
-  return blockSymbol;
+interface BlockTag {
+  [blockSymbol]: true;
+}
+
+export function tagBlock(): BlockTag {
+  return { [blockSymbol]: true };
 }
 
 /**
  * Type that checks if a given type is a block by looking for the block tag ($).
  */
-export type IsBlock<T> = T extends { $: { [blockSymbol]: string } }
+export type IsBlock<T> = T extends { $: { [blockSymbol]: true } }
   ? true
   : false;
 
@@ -56,7 +60,10 @@ export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
     item !== null &&
     typeof item === "object" &&
     "$" in item &&
-    item["$"] === blockSymbol
+    typeof item["$"] === "object" &&
+    item["$"] !== null &&
+    blockSymbol in item["$"] &&
+    item["$"][blockSymbol] === true
   );
 }
 
@@ -88,7 +95,7 @@ type ExtractPublicPaths<T> = T extends Hashmap //
   ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K }[keyof T] //
   : never;
 
-export function createBlockProxy<B extends BlocksMap, Local extends boolean>(
+function createBlockProxy<B extends BlocksMap, Local extends boolean>(
   blockPath: string,
   local: Local,
   blockDefs: B,
