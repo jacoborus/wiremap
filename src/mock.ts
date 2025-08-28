@@ -27,14 +27,14 @@ export function mockUnit<T>(def: T, fakeBlocks: Hashmap): InferUnitValue<T> {
 
     if (isBoundDef(def)) {
       const defValue = def[unitSymbol];
-      return defValue.bind(wire);
+      return defValue.bind(wire) as InferUnitValue<T>;
     }
 
     return def[unitSymbol] as InferUnitValue<T>;
   }
 
   if (isBoundFunc(def)) {
-    return def.bind(wire);
+    return def.bind(wire) as InferUnitValue<T>;
   }
 
   if (isFactoryFunc(def)) {
