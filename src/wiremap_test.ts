@@ -2,6 +2,7 @@ import { assertEquals, assertThrows } from "@std/assert";
 import { tagBlock, wireUp, defineUnit } from "./wiremap.ts";
 import { mockUnit } from "./mock.ts";
 import type { InferBlocks } from "./wiremap.ts";
+import { isFactoryFunc } from "./unit.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
   const defs = {

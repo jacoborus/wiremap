@@ -89,7 +89,11 @@ export type BlockProxy<
   Local extends boolean,
 > = Local extends true
   ? { [K in keyof B]: InferUnitValue<B[K]> }
-  : { [K in ExtractPublicPaths<B>]: InferPublicUnitValue<B[K]> };
+  : {
+      [K in keyof B]: K extends ExtractPublicPaths<B>
+        ? InferPublicUnitValue<B[K]>
+        : never;
+    };
 
 type ExtractPublicPaths<T> = T extends Hashmap //
   ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K }[keyof T] //

@@ -1,4 +1,4 @@
-import { unitSymbol, isFunction, type Func } from "./common.ts";
+import { unitSymbol, isFunction, type Func, type AsyncFunc } from "./common.ts";
 
 interface PrivateUnitFunc extends Func {
   isPrivate: true;
@@ -23,51 +23,48 @@ export function isPrivate(unit: unknown): unit is PrivateUnitFunc {
   return false;
 }
 
-type BoundFunc<T> = {
-  (...args: unknown[]): T;
+type BoundFunc<T extends Func> = T & {
   isPrivate?: boolean;
   isBound: true;
   isFactory?: false;
   isAsync?: false;
 };
 
-export function isBoundFunc<T>(unit: unknown): unit is BoundFunc<T> {
-  if (!isFunction(unit)) {
-    return false;
-  }
-  return "isBound" in unit && unit.isBound === true;
-}
-
 /**
  * Factory function interface. Factories are functions that return configured instances.
  * They're called once and their result is cached.
  */
-type FactoryFunc<T> = {
-  (...args: unknown[]): T;
+type FactoryFunc<F extends Func> = F & {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;
   isAsync?: false;
 };
 
-export function isFactoryFunc<T>(unit: unknown): unit is FactoryFunc<T> {
-  if (!isFunction(unit)) {
-    return false;
-  }
-  return "isFactory" in unit && unit.isFactory === true;
-}
-
-type AsyncFactoryFunc<T> = {
-  (...args: unknown[]): Promise<T>;
+type AsyncFactoryFunc<F extends AsyncFunc> = F & {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;
   isAsync: true;
 };
 
-export function isAsyncFactoryFunc<T>(
+export function isBoundFunc(unit: unknown): unit is BoundFunc<Func> {
+  if (!isFunction(unit)) {
+    return false;
+  }
+  return "isBound" in unit && unit.isBound === true;
+}
+
+export function isFactoryFunc(unit: unknown): unit is FactoryFunc<Func> {
+  if (!isFunction(unit)) {
+    return false;
+  }
+  return "isFactory" in unit && unit.isFactory === true;
+}
+
+export function isAsyncFactoryFunc(
   unit: unknown,
-): unit is AsyncFactoryFunc<T> {
+): unit is AsyncFactoryFunc<AsyncFunc> {
   if (!isFunction(unit)) {
     return false;
   }
@@ -83,9 +80,9 @@ export function isAsyncFactoryFunc<T>(
  * Type that checks if a factory is async (returns a Promise or is marked as async).
  */
 export type IsAsyncFactory<T> =
-  T extends AsyncFactoryFunc<unknown>
+  T extends AsyncFactoryFunc<AsyncFunc>
     ? true
-    : T extends AsyncFactoryDef<unknown, boolean>
+    : T extends AsyncFactoryDef<AsyncFunc, boolean>
       ? true
       : false;
 
@@ -99,7 +96,7 @@ type PlainDef<T, P extends boolean> = {
   };
 };
 
-type BoundDef<T, P extends boolean> = {
+type BoundDef<T extends Func, P extends boolean> = {
   [unitSymbol]: T;
   opts: {
     isPrivate?: P;
@@ -108,25 +105,6 @@ type BoundDef<T, P extends boolean> = {
     isAsync?: false;
   };
 };
-
-export function isBoundDef<T extends Func>(
-  def: unknown,
-): def is BoundDef<T, boolean> {
-  if (!isUnitDef(def)) return false;
-
-  const unit = def[unitSymbol];
-  if (!isFunction(unit)) {
-    return false;
-  }
-
-  return (
-    "isBound" in def.opts &&
-    typeof def.opts.isBound === "boolean" &&
-    def.opts.isBound
-    // TODO: WHY THIS DOES NOT WORK?
-    // def.opts.isBound === true
-  );
-}
 
 type FactoryDef<T extends Func, P extends boolean> = {
   [unitSymbol]: T;
@@ -138,8 +116,8 @@ type FactoryDef<T extends Func, P extends boolean> = {
   };
 };
 
-export type AsyncFactoryDef<T, P extends boolean> = {
-  [unitSymbol]: (...args: unknown[]) => Promise<T>;
+export type AsyncFactoryDef<F extends AsyncFunc, P extends boolean> = {
+  [unitSymbol]: F;
   opts: {
     isPrivate?: P;
     isBound?: false;
@@ -148,9 +126,22 @@ export type AsyncFactoryDef<T, P extends boolean> = {
   };
 };
 
-export function isFactoryDef<T extends Func>(
-  def: unknown,
-): def is FactoryDef<T, boolean> {
+export function isBoundDef(def: unknown): def is BoundDef<Func, boolean> {
+  if (!isUnitDef(def)) return false;
+
+  const unit = def[unitSymbol];
+  if (!isFunction(unit)) {
+    return false;
+  }
+
+  return (
+    "isBound" in def.opts &&
+    typeof def.opts.isBound === "boolean" &&
+    def.opts.isBound === true
+  );
+}
+
+export function isFactoryDef(def: unknown): def is FactoryDef<Func, boolean> {
   if (!isUnitDef(def)) return false;
 
   const unit = def[unitSymbol];
@@ -161,9 +152,9 @@ export function isFactoryDef<T extends Func>(
   return "isFactory" in def.opts && def.opts.isFactory === true;
 }
 
-export function isAsyncFactoryDef<T>(
+export function isAsyncFactoryDef(
   def: unknown,
-): def is AsyncFactoryDef<T, boolean> {
+): def is AsyncFactoryDef<AsyncFunc, boolean> {
   if (!isUnitDef(def)) return false;
 
   const unit = def[unitSymbol];
@@ -218,54 +209,20 @@ type UnitOptions =
   | FactoryUnitOptions
   | AsyncFactoryUnitOptions;
 
-type UnitDefinition<
-  T,
-  O extends UnitOptions,
-> = O extends AsyncFactoryUnitOptions
-  ? AsyncFactoryDef<
-      () => Promise<T>,
-      O["isPrivate"] extends true ? true : false
-    >
-  : O extends FactoryUnitOptions
-    ? FactoryDef<() => T, O["isPrivate"] extends true ? true : false>
-    : O extends BoundUnitOptions
-      ? BoundDef<T, O["isPrivate"] extends true ? true : false>
-      : O extends PlainUnitOptions
-        ? PlainDef<T, O["isPrivate"] extends true ? true : false>
-        : never;
-
-export function defineUnit<const T, const O extends PlainUnitOptions>(
-  def: T,
-  opts?: O,
-): PlainDef<T, O["isPrivate"] extends true ? true : false>;
-
-export function defineUnit<const T, const O extends BoundUnitOptions>(
-  def: T,
-  opts: O,
-): BoundDef<T, O["isPrivate"] extends true ? true : false>;
-
-export function defineUnit<
-  const T extends Func,
-  const O extends FactoryUnitOptions,
->(
-  def: (...args: unknown[]) => T,
-  opts: O,
-): FactoryDef<T, O["isPrivate"] extends true ? true : false>;
-
-export function defineUnit<const T, const O extends AsyncFactoryUnitOptions>(
-  def: (...args: unknown[]) => Promise<T>,
-  opts: O,
-): AsyncFactoryDef<T, O["isPrivate"] extends true ? true : false>;
+type UnitDefinition<T, O extends UnitOptions> = {
+  [unitSymbol]: T;
+  opts: O;
+};
 
 export function defineUnit<const T, const O extends UnitOptions>(
-  def: T | ((...args: unknown[]) => T) | ((...args: unknown[]) => Promise<T>),
+  def: T,
   opts = {} as O,
 ): UnitDefinition<T, O> {
   if (opts.isBound || opts.isFactory || opts.isAsync) {
     if (typeof def !== "function")
       throw new Error("Wrong unit definition value");
   }
-  return { [unitSymbol]: def, opts } as UnitDefinition<T, O>;
+  return { [unitSymbol]: def, opts };
 }
 
 export function isUnitDef(def: unknown): def is UnitDef {
@@ -277,20 +234,22 @@ export function isUnitDef(def: unknown): def is UnitDef {
  */
 export type InferUnitValue<D> =
   D extends AsyncFactoryDef<infer T, boolean>
-    ? T
+    ? Awaited<ReturnType<T>>
     : D extends FactoryDef<infer T, boolean>
-      ? T
+      ? ReturnType<T>
       : D extends BoundDef<infer T, boolean>
-        ? T
+        ? OmitThisParameter<T>
         : D extends PlainDef<infer T, boolean>
           ? T
           : D extends AsyncFactoryFunc<infer T>
-            ? T
-            : D extends FactoryFunc<infer T>
-              ? T
-              : D extends BoundFunc<infer T>
-                ? T
-                : D;
+            ? Awaited<ReturnType<T>>
+            : D extends FactoryFunc<Func>
+              ? ReturnType<D>
+              : D extends BoundFunc<Func>
+                ? OmitThisParameter<D>
+                : D extends Func
+                  ? OmitThisParameter<D>
+                  : D;
 
 /**
  * Like InferUnitValue but excludes private units from the type.

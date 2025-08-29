@@ -2,9 +2,9 @@ import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory } from "./unit.ts";
 import type { BlockDef, BlocksMap, IsBlock, BlockProxy } from "./block.ts";
 
-import { unitSymbol, blockSymbol, isFunction, isPromise } from "./common.ts";
+import { unitSymbol, isFunction } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
-import { itemIsBlock, getWire } from "./block.ts";
+import { itemIsBlock, getWire, tagBlock } from "./block.ts";
 
 export { defineBlock, tagBlock } from "./block.ts";
 export { defineUnit } from "./unit.ts";
@@ -30,9 +30,9 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
 /**
  * Checks if a specific object contains any async factory functions.
  */
-type ContainsAsyncFactory<T extends Hashmap> = true extends {
+type ContainsAsyncFactory<T extends Hashmap> = {
   [K in keyof T]: IsAsyncFactory<T[K]>;
-}[keyof T]
+}[keyof T] extends true
   ? true
   : false;
 
@@ -42,14 +42,18 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * - (".") returns local block proxy (same block context, includes private units)
  * - ("path.of.the.block") returns specific block proxy
  */
-interface Wire<D extends Hashmap, N extends string> {
+export interface Wire<D extends Hashmap, N extends string> {
   // root block resolution
   (): BlockProxy<FilterUnitValues<D[""]>, false>;
   // local block resolution
-  <K extends ".">(blockPath: K): BlockProxy<FilterUnitValues<D[N]>, true>;
+  (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>, true>;
   // absolute block resolution
   <K extends keyof D>(blockPath: K): BlockProxy<FilterUnitValues<D[K]>, false>;
 }
+
+export type Wires<D extends Hashmap> = {
+  [K in keyof Hashmap]: Wire<D, K>;
+};
 
 /**
  * Filters an object excluding the block tag ($), and any nested blocks.
@@ -97,7 +101,7 @@ export function wireUp<Defs extends Hashmap>(
   const finalDefinitions: BlockDef<Defs> =
     "$" in defs
       ? (defs as BlockDef<Defs>)
-      : (Object.assign(defs, { $: blockSymbol }) as BlockDef<Defs>);
+      : (Object.assign(defs, { $: tagBlock() }) as BlockDef<Defs>);
 
   const blockDefinitions = mapBlocks(finalDefinitions);
   blockDefinitions[""] = finalDefinitions;
@@ -161,7 +165,7 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
  * }>
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
-type BlockPaths<T extends Hashmap, P extends string = ""> =
+export type BlockPaths<T extends Hashmap, P extends string = ""> =
   | ""
   | {
       [K in keyof T]: T[K] extends Hashmap
@@ -215,9 +219,9 @@ function mapBlocks<L extends Hashmap>(blocks: L, prefix?: string): BlocksMap {
  * Used to identify blocks that actually contain any unit
  */
 type HasUnits<T extends Hashmap> = true extends {
-  [K in keyof T]: IsBlock<T[K]> extends true
+  [K in keyof T]: K extends "$"
     ? false
-    : K extends "$"
+    : IsBlock<T[K]> extends true
       ? false
       : true;
 }[keyof T]

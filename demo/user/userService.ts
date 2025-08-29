@@ -6,7 +6,7 @@ export const $ = tagBlock();
 type W = Wire<Defs, "user.service">;
 
 export function getUsers(this: W) {
-  const db = this().db;
+  const { db } = this();
   return db.users;
 }
 getUsers.isBound = true as const;
@@ -33,6 +33,10 @@ export function getUserByEmail(this: W, email: string) {
 }
 getUserByEmail.isBound = true as const;
 
+/**
+ * a;sldkfa;s df;as kdfa;sd fasd
+ * fas df;kalsdf ;kla sdf;aslkd
+ */
 export function addUser(this: W, name: string, email: string, isAdmin = false) {
   const getUserByEmail = this(".").getUserByEmail;
   const existingUser = getUserByEmail(email);
