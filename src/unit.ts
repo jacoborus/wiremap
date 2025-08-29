@@ -244,24 +244,35 @@ export function isUnitDef(def: unknown): def is UnitDef {
 /**
  * Infers the actual value type of a unit, resolving factories to their return types.
  */
-export type InferUnitValue<D> =
-  D extends AsyncFactoryDef<infer T, boolean>
-    ? Awaited<ReturnType<T>>
-    : D extends FactoryDef<infer T, boolean>
-      ? ReturnType<T>
-      : D extends BoundDef<infer T, boolean>
-        ? OmitThisParameter<T>
-        : D extends PlainDef<infer T, boolean>
-          ? T
-          : D extends AsyncFactoryFunc<Func>
-            ? Awaited<ReturnType<D>>
-            : D extends FactoryFunc<Func>
-              ? ReturnType<D>
-              : D extends BoundFunc<Func>
-                ? OmitThisParameter<D>
-                : D extends Func
-                  ? OmitThisParameter<D>
-                  : D;
+export type InferUnitValue<D> = D extends UnitDef
+  ? D["opts"] extends AsyncFactoryUnitOptions
+    ? D[typeof unitSymbol] extends AsyncFunc
+      ? Awaited<ReturnType<D[typeof unitSymbol]>>
+      : never
+    : D["opts"] extends FactoryUnitOptions
+      ? D[typeof unitSymbol] extends Func
+        ? ReturnType<D[typeof unitSymbol]>
+        : never
+      : D["opts"] extends BoundUnitOptions
+        ? D[typeof unitSymbol] extends Func
+          ? OmitThisParameter<D[typeof unitSymbol]>
+          : never
+        : D["opts"] extends PlainUnitOptions
+          ? D[typeof unitSymbol]
+          : never
+  : D extends AsyncFactoryUnitOptions
+    ? D extends AsyncFunc
+      ? Awaited<ReturnType<D>>
+      : never
+    : D extends FactoryUnitOptions
+      ? D extends Func
+        ? ReturnType<D>
+        : never
+      : D extends BoundUnitOptions
+        ? D extends Func
+          ? OmitThisParameter<D>
+          : never
+        : D;
 
 /**
  * Like InferUnitValue but excludes private units from the type.
