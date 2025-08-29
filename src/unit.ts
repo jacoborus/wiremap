@@ -273,12 +273,3 @@ export type InferUnitValue<D> = D extends UnitDef
           ? OmitThisParameter<D>
           : never
         : D;
-
-/**
- * Like InferUnitValue but excludes private units from the type.
- */
-export type InferPublicUnitValue<Def> = Def extends PrivateUnitFunc
-  ? never
-  : Def extends UnitDefinition<unknown, { isPrivate: true }>
-    ? never
-    : InferUnitValue<Def>;

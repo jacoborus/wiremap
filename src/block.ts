@@ -4,11 +4,7 @@ import {
   type Hashmap,
   type Wcache,
 } from "./common.ts";
-import type {
-  IsPrivateUnit,
-  InferUnitValue,
-  InferPublicUnitValue,
-} from "./unit.ts";
+import type { IsPrivateUnit, InferUnitValue } from "./unit.ts";
 import {
   isPrivate,
   isUnitDef,
@@ -89,11 +85,7 @@ export type BlockProxy<
   Local extends boolean,
 > = true extends Local
   ? { [K in keyof B]: InferUnitValue<B[K]> }
-  : {
-      [K in ExtractPublicPaths<B>]: K extends ExtractPublicPaths<B>
-        ? InferPublicUnitValue<B[K]>
-        : never;
-    };
+  : { [K in ExtractPublicPaths<B>]: InferUnitValue<B[K]> };
 
 type ExtractPublicPaths<T> = T extends Hashmap //
   ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K }[keyof T] //
