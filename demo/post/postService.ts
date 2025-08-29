@@ -21,8 +21,8 @@ getPosts.isBound = true as const;
  * const post = getPost('1234abcd')
  * ```
  */
-export function getPost(w: W) {
-  const db = w().db;
+export function getPost(wire: W) {
+  const db = wire().db;
   return (id: string) => db.posts.find((post) => post.id === id);
 }
 getPost.isFactory = true as const;
@@ -47,9 +47,9 @@ addPost.isBound = true as const;
 /**
  * The WRONG docs!!!
  */
-export const collection = async function (w: W) {
-  const db = w().db;
-  return new Promise<typeof db.posts>((res) => {
+export const collection = async function (wire: W) {
+  const db = wire().db;
+  return await new Promise<typeof db.posts>((res) => {
     res(
       /**
        * The CORRECT docs!!!
