@@ -80,11 +80,23 @@ export function isAsyncFactoryFunc(
  * Type that checks if a factory is async (returns a Promise or is marked as async).
  */
 export type IsAsyncFactory<T> =
-  T extends AsyncFactoryFunc<AsyncFunc>
+  true extends IsAsyncFactoryFunc<T>
     ? true
-    : T extends AsyncFactoryDef<AsyncFunc, boolean>
+    : true extends IsAsyncFactoryDef<T>
       ? true
       : false;
+
+type IsAsyncFactoryFunc<T> = T extends AsyncFunc
+  ? T extends AsyncFactoryUnitOptions
+    ? true
+    : false
+  : false;
+
+type IsAsyncFactoryDef<T> = T extends UnitDef
+  ? T["opts"] extends AsyncFactoryUnitOptions
+    ? true
+    : false
+  : false;
 
 type PlainDef<T, P extends boolean> = {
   [unitSymbol]: T;
@@ -116,7 +128,7 @@ type FactoryDef<T extends Func, P extends boolean> = {
   };
 };
 
-export type AsyncFactoryDef<F extends AsyncFunc, P extends boolean> = {
+type AsyncFactoryDef<F extends AsyncFunc, P extends boolean> = {
   [unitSymbol]: F;
   opts: {
     isPrivate?: P;
@@ -170,7 +182,7 @@ export function isAsyncFactoryDef(
   );
 }
 
-export interface UnitDef {
+interface UnitDef {
   [unitSymbol]: unknown;
   opts: UnitOptions;
 }
@@ -196,7 +208,7 @@ interface FactoryUnitOptions {
   isAsync?: false;
 }
 
-interface AsyncFactoryUnitOptions {
+export interface AsyncFactoryUnitOptions {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;
@@ -241,8 +253,8 @@ export type InferUnitValue<D> =
         ? OmitThisParameter<T>
         : D extends PlainDef<infer T, boolean>
           ? T
-          : D extends AsyncFactoryFunc<infer T>
-            ? Awaited<ReturnType<T>>
+          : D extends AsyncFactoryFunc<Func>
+            ? Awaited<ReturnType<D>>
             : D extends FactoryFunc<Func>
               ? ReturnType<D>
               : D extends BoundFunc<Func>

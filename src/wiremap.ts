@@ -30,9 +30,9 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
 /**
  * Checks if a specific object contains any async factory functions.
  */
-type ContainsAsyncFactory<T extends Hashmap> = {
+export type ContainsAsyncFactory<T extends Hashmap> = true extends {
   [K in keyof T]: IsAsyncFactory<T[K]>;
-}[keyof T] extends true
+}[keyof T]
   ? true
   : false;
 

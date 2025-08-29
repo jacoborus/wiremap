@@ -3,7 +3,7 @@ export const blockSymbol = Symbol("BlockSymbol");
 
 export type Hashmap = Record<string, unknown>;
 export type Func = (...args: any[]) => any;
-export type AsyncFunc = (...args: unknown[]) => Promise<unknown>;
+export type AsyncFunc = (...args: any[]) => Promise<any>;
 
 export function isFunction(unit: unknown): unit is Func {
   return typeof unit === "function";

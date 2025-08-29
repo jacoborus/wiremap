@@ -47,11 +47,17 @@ addPost.isBound = true as const;
 /**
  * The wrong docs!!!
  */
-export function collection(w: W) {
+export const collection = function (w: W) {
   const db = w().db;
-  /**
-   * The posts collection of the database
-   */
-  return db.posts;
-}
+  return new Promise((res) => {
+    res(
+      /**
+       * The posts collection of the database
+       * The good docs!!!
+       */
+      db.posts,
+    );
+  });
+};
+collection.isAsync = true as const;
 collection.isFactory = true as const;
