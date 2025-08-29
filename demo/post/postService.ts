@@ -21,11 +21,11 @@ getPosts.isBound = true as const;
  * const post = getPost('1234abcd')
  * ```
  */
-export function getPost(this: W, id: string) {
-  const db = this().db;
-  return db.posts.find((post) => post.id === id);
+export function getPost(w: W) {
+  const db = w().db;
+  return (id: string) => db.posts.find((post) => post.id === id);
 }
-getPost.isBound = true as const;
+getPost.isFactory = true as const;
 
 export function addPost(
   this: W,
@@ -45,19 +45,19 @@ export function addPost(
 addPost.isBound = true as const;
 
 /**
- * The wrong docs!!!
+ * The WRONG docs!!!
  */
-export const collection = function (w: W) {
+export const collection = async function (w: W) {
   const db = w().db;
-  return new Promise((res) => {
+  return new Promise<typeof db.posts>((res) => {
     res(
       /**
+       * The CORRECT docs!!!
        * The posts collection of the database
-       * The good docs!!!
        */
       db.posts,
     );
   });
 };
-collection.isAsync = true as const;
 collection.isFactory = true as const;
+collection.isAsync = true as const;

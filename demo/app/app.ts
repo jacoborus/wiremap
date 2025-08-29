@@ -1,19 +1,16 @@
 import { db } from "../db.ts";
 import * as postMod from "../post/postMod.ts";
 import * as userMod from "../user/userMod.ts";
-import { wireUp, type InferBlocks, type Wire } from "../../src/wiremap.ts";
-import { defineUnit } from "../../src/unit.ts";
-
-type W = Wire<Defs, "">;
+import { wireUp, type InferBlocks } from "../../src/wiremap.ts";
 
 const defs = {
   /**
-   * hola probando
+   * The Database
    */
   db,
   valor: 5,
   /**
-   * a;ksldjf;askldfa
+   * Prints a value
    */
   printValor: () => {
     console.log(app().valor);
