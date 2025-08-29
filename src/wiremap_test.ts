@@ -156,6 +156,7 @@ Deno.test("mockFactory", () => {
 Deno.test("wireUp protects private units", () => {
   type Wa = Wire<Defs, "A">;
   type Wb = Wire<Defs, "B">;
+
   function priv() {
     return "private";
   }
@@ -368,7 +369,7 @@ Deno.test("defineUnit: isAsync", async () => {
             return await new Promise<() => string>((res) => {
               setTimeout(
                 () => res(() => `${rootValue}-${avalue}-${bvalue}`),
-                300,
+                10,
               );
             });
           },
@@ -377,7 +378,7 @@ Deno.test("defineUnit: isAsync", async () => {
         deepFactory2: defineUnit(
           (w: Wb) => {
             return new Promise<() => string>((res) => {
-              setTimeout(() => res(w(".").deepFactory), 200);
+              setTimeout(() => res(w(".").deepFactory), 20);
             });
           },
           { isFactory: true, isAsync: true },

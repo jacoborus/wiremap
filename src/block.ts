@@ -87,10 +87,10 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
 export type BlockProxy<
   B extends Hashmap,
   Local extends boolean,
-> = Local extends true
+> = true extends Local
   ? { [K in keyof B]: InferUnitValue<B[K]> }
   : {
-      [K in keyof B]: K extends ExtractPublicPaths<B>
+      [K in ExtractPublicPaths<B>]: K extends ExtractPublicPaths<B>
         ? InferPublicUnitValue<B[K]>
         : never;
     };
