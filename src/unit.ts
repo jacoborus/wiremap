@@ -89,15 +89,16 @@ export type IsAsyncFactory<T> = T extends UnitDef
     ? IsAsyncFn<T>
     : false;
 
-type PlainDef<T> = {
-  [unitSymbol]: T;
-  opts: {
-    isPrivate?: boolean;
-    isBound?: false;
-    isFactory?: false;
-    isAsync?: false;
-  };
-};
+// it's unused, but keep it anyway
+// type PlainDef<T> = {
+//   [unitSymbol]: T;
+//   opts: {
+//     isPrivate?: boolean;
+//     isBound?: false;
+//     isFactory?: false;
+//     isAsync?: false;
+//   };
+// };
 
 type BoundDef<T extends Func> = {
   [unitSymbol]: T;
