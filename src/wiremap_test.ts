@@ -376,8 +376,8 @@ Deno.test("defineUnit: isAsync", async () => {
           { isFactory: true, isAsync: true },
         ),
         deepFactory2: defineUnit(
-          (w: Wb) => {
-            return new Promise<() => string>((res) => {
+          async (w: Wb) => {
+            return await new Promise<() => string>((res) => {
               setTimeout(() => res(w(".").deepFactory), 20);
             });
           },

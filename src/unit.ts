@@ -86,7 +86,7 @@ export type IsAsyncFactory<T> =
       ? true
       : false;
 
-type IsAsyncFactoryFunc<T> = T extends AsyncFunc
+type IsAsyncFactoryFunc<T> = AsyncFunc extends T
   ? T extends AsyncFactoryUnitOptions
     ? true
     : false
@@ -246,30 +246,30 @@ export function isUnitDef(def: unknown): def is UnitDef {
  */
 export type InferUnitValue<D> = D extends UnitDef
   ? D["opts"] extends AsyncFactoryUnitOptions
-    ? D[typeof unitSymbol] extends AsyncFunc
+    ? D[typeof unitSymbol] extends (...args: infer _A) => Promise<unknown>
       ? Awaited<ReturnType<D[typeof unitSymbol]>>
       : never
     : D["opts"] extends FactoryUnitOptions
-      ? D[typeof unitSymbol] extends Func
+      ? D[typeof unitSymbol] extends (...args: infer _A) => unknown
         ? ReturnType<D[typeof unitSymbol]>
         : never
       : D["opts"] extends BoundUnitOptions
-        ? D[typeof unitSymbol] extends Func
+        ? D[typeof unitSymbol] extends (...args: infer _A) => unknown
           ? OmitThisParameter<D[typeof unitSymbol]>
           : never
         : D["opts"] extends PlainUnitOptions
           ? D[typeof unitSymbol]
           : never
   : D extends AsyncFactoryUnitOptions
-    ? D extends AsyncFunc
+    ? D extends (...args: infer _A) => Promise<unknown>
       ? Awaited<ReturnType<D>>
       : never
     : D extends FactoryUnitOptions
-      ? D extends Func
+      ? D extends (...args: infer _A) => unknown
         ? ReturnType<D>
         : never
       : D extends BoundUnitOptions
-        ? D extends Func
+        ? D extends (...args: infer _A) => unknown
           ? OmitThisParameter<D>
           : never
         : D;

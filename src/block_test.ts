@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals } from "@std/assert";
 
 import { blockSymbol } from "./common.ts";
 import { defineBlock, getBlockUnitKeys, itemIsBlock } from "./block.ts";

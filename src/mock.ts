@@ -1,4 +1,4 @@
-import { Hashmap, unitSymbol } from "./common.ts";
+import { type Hashmap, unitSymbol } from "./common.ts";
 import {
   isUnitDef,
   isBoundFunc,
