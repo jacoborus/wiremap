@@ -48,9 +48,7 @@ export interface Wire<D extends Hashmap, N extends string> {
   // local block resolution
   (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
   // absolute block resolution
-  <K extends keyof D>(
-    blockPath: K,
-  ): BlockProxy<FilterPublicValues<FilterUnitValues<D[K]>>>;
+  <K extends keyof D>(blockPath: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
 
 /**
@@ -60,8 +58,8 @@ type FilterUnitValues<T> = T extends Hashmap
   ? Omit<T, "$" | ExtractBlockKeys<T>>
   : never;
 
-type FilterPublicValues<T> = T extends Hashmap
-  ? Omit<T, ExtractPrivatePaths<T>>
+type FilterPublicUnitValues<T> = T extends Hashmap
+  ? Omit<T, "$" | ExtractPrivatePaths<T> | ExtractBlockKeys<T>>
   : never;
 
 type ExtractPrivatePaths<T> = T extends Hashmap //
