@@ -76,27 +76,18 @@ export function isAsyncFactoryFunc(
   );
 }
 
+export type IsAsyncFn<T> = T extends (...args: infer _A) => Promise<unknown>
+  ? true
+  : false;
+
 /**
  * Type that checks if a factory is async (returns a Promise or is marked as async).
  */
-export type IsAsyncFactory<T> =
-  true extends IsAsyncFactoryFunc<T>
-    ? true
-    : true extends IsAsyncFactoryDef<T>
-      ? true
-      : false;
-
-type IsAsyncFactoryFunc<T> = AsyncFunc extends T
-  ? T extends AsyncFactoryUnitOptions
-    ? true
-    : false
-  : false;
-
-type IsAsyncFactoryDef<T> = T extends UnitDef
-  ? T["opts"] extends AsyncFactoryUnitOptions
-    ? true
-    : false
-  : false;
+export type IsAsyncFactory<T> = T extends UnitDef
+  ? IsAsyncFn<T[typeof unitSymbol]>
+  : T extends AsyncFactoryUnitOptions
+    ? IsAsyncFn<T>
+    : false;
 
 type PlainDef<T, P extends boolean> = {
   [unitSymbol]: T;
