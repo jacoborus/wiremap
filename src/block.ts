@@ -4,7 +4,7 @@ import {
   type Hashmap,
   type Wcache,
 } from "./common.ts";
-import type { IsPrivateUnit, InferUnitValue } from "./unit.ts";
+import type { InferUnitValue } from "./unit.ts";
 import {
   isPrivate,
   isUnitDef,
@@ -69,23 +69,16 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
  * Block proxy type that provides access to units within a block.
  * Local proxies include private units, while public proxies exclude them.
  */
-export type BlockProxy<
-  B extends Hashmap,
-  Local extends boolean,
-> = true extends Local
-  ? { [K in keyof B]: InferUnitValue<B[K]> }
-  : { [K in ExtractPublicPaths<B>]: InferUnitValue<B[K]> };
-
-type ExtractPublicPaths<T> = T extends Hashmap //
-  ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K }[keyof T] //
-  : never;
+export type BlockProxy<B extends Hashmap> = {
+  [K in keyof B]: InferUnitValue<B[K]>;
+};
 
 function createBlockProxy<B extends BlocksMap, Local extends boolean>(
   blockPath: string,
   local: Local,
   blockDefs: B,
   cache: Wcache,
-): BlockProxy<B, Local> {
+): BlockProxy<B> {
   const blockDef = blockDefs[blockPath];
   const unitKeys = getBlockUnitKeys(blockDef, local);
 
@@ -146,7 +139,7 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
         };
       },
     },
-  ) as BlockProxy<B, Local>;
+  ) as BlockProxy<B>;
 }
 
 export function getWire<Defs extends BlocksMap, P extends keyof Defs>(

@@ -1,5 +1,5 @@
 import type { Hashmap, Wcache } from "./common.ts";
-import type { IsAsyncFactory } from "./unit.ts";
+import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
 import type { BlockDef, BlocksMap, IsBlock, BlockProxy } from "./block.ts";
 
 import { unitSymbol, isFunction } from "./common.ts";
@@ -44,11 +44,13 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  */
 export interface Wire<D extends Hashmap, N extends string> {
   // root block resolution
-  (): BlockProxy<FilterUnitValues<D[""]>, false>;
+  (): BlockProxy<FilterUnitValues<D[""]>>;
   // local block resolution
-  (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>, true>;
+  (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
   // absolute block resolution
-  <K extends keyof D>(blockPath: K): BlockProxy<FilterUnitValues<D[K]>, false>;
+  <K extends keyof D>(
+    blockPath: K,
+  ): BlockProxy<FilterPublicValues<FilterUnitValues<D[K]>>>;
 }
 
 /**
@@ -58,11 +60,19 @@ type FilterUnitValues<T> = T extends Hashmap
   ? Omit<T, "$" | ExtractBlockKeys<T>>
   : never;
 
+type FilterPublicValues<T> = T extends Hashmap
+  ? Omit<T, ExtractPrivatePaths<T>>
+  : never;
+
+type ExtractPrivatePaths<T> = T extends Hashmap //
+  ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? K : never }[keyof T]
+  : never;
+
 /**
  * From an object, extract the keys that contain blocks.
  * This is used to filter out nested blocks when creating unit proxies.
  */
-type ExtractBlockKeys<T> = {
+export type ExtractBlockKeys<T> = {
   [K in keyof T]: T[K] extends BlockDef<Hashmap> ? K : never;
 }[keyof T];
 

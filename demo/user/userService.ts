@@ -27,6 +27,12 @@ export function getUser(this: W, id: string) {
 }
 getUser.isBound = true as const;
 
+/**
+ * ASdf; asdf; asdf;a sdf
+ * @param asd;f kasdf; asj -
+ * @param email - sddf asdf asdf
+ * @returns sdfasd fasdfsadfkkk
+ */
 export function getUserByEmail(this: W, email: string) {
   const db = this().db;
   return db.users.find((user) => user.email === email);
