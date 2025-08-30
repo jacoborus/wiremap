@@ -89,47 +89,47 @@ export type IsAsyncFactory<T> = T extends UnitDef
     ? IsAsyncFn<T>
     : false;
 
-type PlainDef<T, P extends boolean> = {
+type PlainDef<T> = {
   [unitSymbol]: T;
   opts: {
-    isPrivate?: P;
+    isPrivate?: boolean;
     isBound?: false;
     isFactory?: false;
     isAsync?: false;
   };
 };
 
-type BoundDef<T extends Func, P extends boolean> = {
+type BoundDef<T extends Func> = {
   [unitSymbol]: T;
   opts: {
-    isPrivate?: P;
+    isPrivate?: boolean;
     isBound: true;
     isFactory?: false;
     isAsync?: false;
   };
 };
 
-type FactoryDef<T extends Func, P extends boolean> = {
+type FactoryDef<T extends Func> = {
   [unitSymbol]: T;
   opts: {
-    isPrivate?: P;
+    isPrivate?: boolean;
     isBound?: false;
     isFactory: true;
     isAsync?: false;
   };
 };
 
-type AsyncFactoryDef<F extends AsyncFunc, P extends boolean> = {
+type AsyncFactoryDef<F extends AsyncFunc> = {
   [unitSymbol]: F;
   opts: {
-    isPrivate?: P;
+    isPrivate?: boolean;
     isBound?: false;
     isFactory: true;
     isAsync: true;
   };
 };
 
-export function isBoundDef(def: unknown): def is BoundDef<Func, boolean> {
+export function isBoundDef(def: unknown): def is BoundDef<Func> {
   if (!isUnitDef(def)) return false;
 
   const unit = def[unitSymbol];
@@ -144,7 +144,7 @@ export function isBoundDef(def: unknown): def is BoundDef<Func, boolean> {
   );
 }
 
-export function isFactoryDef(def: unknown): def is FactoryDef<Func, boolean> {
+export function isFactoryDef(def: unknown): def is FactoryDef<Func> {
   if (!isUnitDef(def)) return false;
 
   const unit = def[unitSymbol];
@@ -157,7 +157,7 @@ export function isFactoryDef(def: unknown): def is FactoryDef<Func, boolean> {
 
 export function isAsyncFactoryDef(
   def: unknown,
-): def is AsyncFactoryDef<AsyncFunc, boolean> {
+): def is AsyncFactoryDef<AsyncFunc> {
   if (!isUnitDef(def)) return false;
 
   const unit = def[unitSymbol];
@@ -173,33 +173,33 @@ export function isAsyncFactoryDef(
   );
 }
 
-interface UnitDef {
+export interface UnitDef {
   [unitSymbol]: unknown;
   opts: UnitOptions;
 }
 
-interface PlainUnitOptions {
+export interface PlainUnitOptions {
   isPrivate?: boolean;
   isBound?: false;
   isFactory?: false;
   isAsync?: false;
 }
 
-interface BoundUnitOptions {
+export interface BoundUnitOptions {
   isPrivate?: boolean;
   isBound: true;
   isFactory?: false;
   isAsync?: false;
 }
 
-interface FactoryUnitOptions {
+export interface FactoryUnitOptions {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;
   isAsync?: false;
 }
 
-interface AsyncFactoryUnitOptions {
+export interface AsyncFactoryUnitOptions {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;
