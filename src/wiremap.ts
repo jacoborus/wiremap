@@ -30,7 +30,7 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
 /**
  * Checks if a specific object contains any async factory functions.
  */
-export type ContainsAsyncFactory<T extends Hashmap> = true extends {
+type ContainsAsyncFactory<T extends Hashmap> = true extends {
   [K in keyof T]: IsAsyncFactory<T[K]>;
 }[keyof T]
   ? true
@@ -50,10 +50,6 @@ export interface Wire<D extends Hashmap, N extends string> {
   // absolute block resolution
   <K extends keyof D>(blockPath: K): BlockProxy<FilterUnitValues<D[K]>, false>;
 }
-
-export type Wires<D extends Hashmap> = {
-  [K in keyof Hashmap]: Wire<D, K>;
-};
 
 /**
  * Filters an object excluding the block tag ($), and any nested blocks.
@@ -165,7 +161,7 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
  * }>
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
-export type BlockPaths<T extends Hashmap, P extends string = ""> =
+type BlockPaths<T extends Hashmap, P extends string = ""> =
   | ""
   | {
       [K in keyof T]: T[K] extends Hashmap

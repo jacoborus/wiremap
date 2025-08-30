@@ -76,7 +76,7 @@ export function isAsyncFactoryFunc(
   );
 }
 
-export type IsAsyncFn<T> = T extends (...args: infer _A) => Promise<unknown>
+type IsAsyncFn<T> = T extends (...args: infer _A) => Promise<unknown>
   ? true
   : false;
 
@@ -199,7 +199,7 @@ interface FactoryUnitOptions {
   isAsync?: false;
 }
 
-export interface AsyncFactoryUnitOptions {
+interface AsyncFactoryUnitOptions {
   isPrivate?: boolean;
   isBound?: false;
   isFactory: true;

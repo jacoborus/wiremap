@@ -9,12 +9,9 @@ export function isFunction(unit: unknown): unit is Func {
   return typeof unit === "function";
 }
 
-/**
- * Cache structure for storing resolved units and proxies to avoid recomputation.
- */
 export interface Wcache {
   unit: Map<string, unknown>;
   wire: Map<string, unknown>;
-  proxy: Map<string, unknown>;
-  localProxy: Map<string, unknown>;
+  proxy: Map<string, Hashmap>;
+  localProxy: Map<string, Hashmap>;
 }

@@ -13,20 +13,12 @@ import {
   isBoundFunc,
 } from "./unit.ts";
 
-/**
- * Represents an object with string keys and any values.
- */
-
-/**
- * A block is a Hashmap with a block tag ($) that identifies its namespace.
- */
+/** A block is a Hashmap with a block tag in '$'. */
 export type BlockDef<T extends Hashmap> = T & {
   $: BlockTag;
 };
 
-/**
- * Map of block names to their block definitions.
- */
+/** Map of block names to their block definitions. */
 export type BlocksMap = Record<string, BlockDef<Hashmap>>;
 
 export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
@@ -44,9 +36,6 @@ export function tagBlock(): BlockTag {
   return { [blockSymbol]: true };
 }
 
-/**
- * Type that checks if a given type is a block by looking for the block tag ($).
- */
 export type IsBlock<T> = T extends { $: { [blockSymbol]: true } }
   ? true
   : false;
@@ -63,7 +52,7 @@ export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
   );
 }
 
-/** Extracts the paths of the units of a block. */
+/** Extracts the paths of the units of a block, excluding sub-blocks. */
 export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
   blockDef: B,
   local: Local,
@@ -161,12 +150,12 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
 }
 
 export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
-  localPath: P,
+  localPath: Extract<P, string>,
   blockDefs: Defs,
   cache: Wcache,
 ) {
-  if (cache.wire.has(localPath as string)) {
-    return cache.wire.get(localPath as string);
+  if (cache.wire.has(localPath)) {
+    return cache.wire.get(localPath);
   }
 
   const wire = function getBlockProxy(key = "") {
@@ -175,18 +164,13 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
     }
 
     if (key === ".") {
-      if (cache.localProxy.has(localPath as string)) {
-        return cache.localProxy.get(localPath as string);
+      if (cache.localProxy.has(localPath)) {
+        return cache.localProxy.get(localPath);
       }
 
-      const localProxy = createBlockProxy(
-        localPath as string,
-        true,
-        blockDefs,
-        cache,
-      );
+      const localProxy = createBlockProxy(localPath, true, blockDefs, cache);
 
-      cache.localProxy.set(localPath as string, localProxy);
+      cache.localProxy.set(localPath, localProxy);
 
       return localProxy;
     }
@@ -210,7 +194,7 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
     return proxy;
   };
 
-  cache.wire.set(localPath as string, wire);
+  cache.wire.set(localPath, wire);
 
   return wire;
 }
