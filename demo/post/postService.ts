@@ -1,5 +1,5 @@
 import { tagBlock, type Wire } from "../../src/wiremap.ts";
-import type { Blocks } from "../app/app.ts";
+import type { Blocks } from "../app.ts";
 
 type W = Wire<Blocks, "post.service">;
 
@@ -22,8 +22,8 @@ getPosts.isBound = true as const;
  * ```
  */
 export function getPost(wire: W) {
-  const db = wire().db;
-  return (id: string) => db.posts.find((post) => post.id === id);
+  const repo = wire("post").repo;
+  return (id: string) => repo.find((post) => post.id === id);
 }
 getPost.isFactory = true as const;
 
@@ -38,9 +38,9 @@ export function addPost(
   const user = getUser(userId);
   if (!user) throw new Error(`User with id ${userId} does not exist.`);
 
-  const db = this().db;
+  const repo = this("post").repo;
   const id = crypto.randomUUID();
-  db.posts.push({ id, title, userId, content });
+  repo.push({ id, title, userId, content });
   return id;
 }
 addPost.isBound = true as const;
@@ -53,11 +53,11 @@ addPost.isBound = true as const;
  * https://github.com/microsoft/TypeScript/issues/53167
  */
 export const collection = async function (wire: W) {
-  const db = wire().db;
-  return await new Promise<typeof db.posts>((res) => {
+  const repo = wire("post").repo;
+  return await new Promise<typeof repo>((res) => {
     res(
       /** The posts collection of the database */
-      db.posts,
+      repo,
     );
   });
 };

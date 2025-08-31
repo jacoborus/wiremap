@@ -1,5 +1,5 @@
 import { tagBlock, type Wire } from "../../src/wiremap.ts";
-import type { Blocks } from "../app/app.ts";
+import type { Blocks } from "../app.ts";
 
 export const $ = tagBlock();
 
@@ -7,8 +7,8 @@ type W = Wire<Blocks, "user.service">;
 
 /** List the users */
 export function getUsers(this: W) {
-  const { db } = this();
-  return db.users;
+  const repo = this("user").repo;
+  return repo.slice();
 }
 getUsers.isBound = true as const;
 
@@ -23,15 +23,15 @@ getUsers.isBound = true as const;
  * ```
  */
 export function getUser(this: W, id: string) {
-  const db = this().db;
-  return db.users.find((user) => user.id === id);
+  const repo = this("user").repo;
+  return repo.find((user) => user.id === id);
 }
 getUser.isBound = true as const;
 
 /** Get a user by its email */
 export function getUserByEmail(this: W, email: string) {
-  const db = this().db;
-  return db.users.find((user) => user.email === email);
+  const repo = this("user").repo;
+  return repo.find((user) => user.email === email);
 }
 getUserByEmail.isBound = true as const;
 
@@ -56,8 +56,8 @@ export function addUser(this: W, name: string, email: string, isAdmin = false) {
     email,
     isAdmin,
   };
-  const db = this().db;
-  db.users.push(user);
+  const repo = this("user").repo;
+  repo.push(user);
   return user.id;
 }
 addUser.isBound = true as const;

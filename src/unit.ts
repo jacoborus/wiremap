@@ -30,10 +30,6 @@ type BoundFunc<T extends Func> = T & {
   isAsync?: false;
 };
 
-/**
- * Factory function interface. Factories are functions that return configured instances.
- * They're called once and their result is cached.
- */
 type FactoryFunc<F extends Func> = F & {
   isPrivate?: boolean;
   isBound?: false;

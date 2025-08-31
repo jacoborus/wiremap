@@ -1,11 +1,8 @@
-import { db } from "../db.ts";
-import * as postMod from "../post/postMod.ts";
-import * as userMod from "../user/userMod.ts";
-import { wireUp, type InferBlocks } from "../../src/wiremap.ts";
+import * as postMod from "./post/postMod.ts";
+import * as userMod from "./user/userMod.ts";
+import { wireUp, type InferBlocks } from "../src/wiremap.ts";
 
 const appSchema = {
-  /** The Database */
-  db,
   /** The User module */
   user: userMod,
   /** The Post module */
