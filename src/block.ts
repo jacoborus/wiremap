@@ -11,6 +11,7 @@ import {
   isFactoryDef,
   isFactoryFunc,
   isBoundFunc,
+  isBoundDef,
 } from "./unit.ts";
 
 /** A block is a Hashmap with a block tag in '$'. */
@@ -115,7 +116,9 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
               : isUnitDef(def)
                 ? isFactoryDef(def)
                   ? def[unitSymbol](wire)
-                  : def[unitSymbol]
+                  : isBoundDef(def)
+                    ? def[unitSymbol].bind(wire)
+                    : def[unitSymbol]
                 : def;
 
           cachedblock[prop] = unit;

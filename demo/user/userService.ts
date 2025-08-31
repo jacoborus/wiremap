@@ -1,4 +1,4 @@
-import { tagBlock, type Wire } from "../../src/wiremap.ts";
+import { defineUnit, tagBlock, type Wire } from "../../src/wiremap.ts";
 import type { Blocks } from "../app.ts";
 
 export const $ = tagBlock();
@@ -22,18 +22,22 @@ getUsers.isBound = true as const;
  * const user = getUser('1234')
  * ```
  */
-export function getUser(this: W, id: string) {
-  const repo = this("user").repo;
-  return repo.find((user) => user.id === id);
-}
-getUser.isBound = true as const;
+export const getUser = defineUnit(
+  (w: W) => {
+    const repo = w("user").repo;
+    return (id: string) => repo.find((user) => user.id === id);
+  },
+  { isFactory: true },
+);
 
 /** Get a user by its email */
-export function getUserByEmail(this: W, email: string) {
-  const repo = this("user").repo;
-  return repo.find((user) => user.email === email);
-}
-getUserByEmail.isBound = true as const;
+export const getUserByEmail = defineUnit(
+  function (this: W, email: string) {
+    const repo = this("user").repo;
+    return repo.find((user) => user.email === email);
+  },
+  { isBound: true },
+);
 
 /**
  * Add a user into the database

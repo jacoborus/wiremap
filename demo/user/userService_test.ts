@@ -5,7 +5,7 @@ import { mockUnit } from "../../src/mock.ts";
 import type { User } from "./userRepo.ts";
 import * as userService from "./userService.ts";
 
-Deno.test(function addUsertTest() {
+Deno.test("addUsertTest", function addUsertTest() {
   const repo = [] as User[];
   const fakeBlocks = {
     user: { repo },
