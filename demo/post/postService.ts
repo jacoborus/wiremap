@@ -1,7 +1,7 @@
 import { tagBlock, type Wire } from "../../src/wiremap.ts";
-import type { Defs } from "../app/app.ts";
+import type { Blocks } from "../app/app.ts";
 
-type W = Wire<Defs, "post.service">;
+type W = Wire<Blocks, "post.service">;
 
 export const $ = tagBlock();
 
@@ -27,6 +27,7 @@ export function getPost(wire: W) {
 }
 getPost.isFactory = true as const;
 
+/** Create a post in the database */
 export function addPost(
   this: W,
   title: string,
@@ -45,16 +46,17 @@ export function addPost(
 addPost.isBound = true as const;
 
 /**
- * The WRONG docs!!!
+ * The posts collection of the database
+ *
+ * This docs will be displayed instead of the ones next to
+ * the returned function. It's a typescript bug:
+ * https://github.com/microsoft/TypeScript/issues/53167
  */
 export const collection = async function (wire: W) {
   const db = wire().db;
   return await new Promise<typeof db.posts>((res) => {
     res(
-      /**
-       * The CORRECT docs!!!
-       * The posts collection of the database
-       */
+      /** The posts collection of the database */
       db.posts,
     );
   });

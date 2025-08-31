@@ -1,10 +1,11 @@
 import { tagBlock, type Wire } from "../../src/wiremap.ts";
-import type { Defs } from "../app/app.ts";
+import type { Blocks } from "../app/app.ts";
 
 export const $ = tagBlock();
 
-type W = Wire<Defs, "user.service">;
+type W = Wire<Blocks, "user.service">;
 
+/** List the users */
 export function getUsers(this: W) {
   const { db } = this();
   return db.users;
@@ -12,7 +13,7 @@ export function getUsers(this: W) {
 getUsers.isBound = true as const;
 
 /**
- * Get an user by id
+ * Get a user by id
  *
  * @param id - Id of the user
  * @returns  a user or undefined
@@ -27,12 +28,7 @@ export function getUser(this: W, id: string) {
 }
 getUser.isBound = true as const;
 
-/**
- * ASdf; asdf; asdf;a sdf
- * @param asd;f kasdf; asj -
- * @param email - sddf asdf asdf
- * @returns sdfasd fasdfsadfkkk
- */
+/** Get a user by its email */
 export function getUserByEmail(this: W, email: string) {
   const db = this().db;
   return db.users.find((user) => user.email === email);
@@ -40,8 +36,12 @@ export function getUserByEmail(this: W, email: string) {
 getUserByEmail.isBound = true as const;
 
 /**
- * a;sldkfa;s df;as kdfa;sd fasd
- * fas df;kalsdf ;kla sdf;aslkd
+ * Add a user into the database
+ *
+ * @param name - Full name of the user
+ * @param email - Email of the user
+ * @param isAdmin - Whether the user is an admin
+ * @returns  The id of the user
  */
 export function addUser(this: W, name: string, email: string, isAdmin = false) {
   const getUserByEmail = this(".").getUserByEmail;

@@ -3,38 +3,29 @@ import * as postMod from "../post/postMod.ts";
 import * as userMod from "../user/userMod.ts";
 import { wireUp, type InferBlocks } from "../../src/wiremap.ts";
 
-const defs = {
-  /**
-   * The Database
-   */
+const appSchema = {
+  /** The Database */
   db,
-  valor: 5,
-  /**
-   * Prints a value
-   */
-  printValor: () => {
-    console.log(app().valor);
-  },
-  test: () => "testtttt",
+  /** The User module */
   user: userMod,
+  /** The Post module */
   post: postMod,
-} as const;
+};
 
-export type Defs = InferBlocks<typeof defs>;
+export type Blocks = InferBlocks<typeof appSchema>;
 
-export const app = await wireUp(defs);
+export const app = await wireUp(appSchema);
 
-app().printValor();
+const userId = app("user.service").addUser(
+  "jacobo",
+  "jacobo@example.com",
+  true,
+);
 
-const addUser = app("user.service").addUser;
+const postService = app("post.service");
+const addPost = postService.addPost;
 
-const userId = addUser("jacobo", "jacobo@example.com", true);
-console.log("userId:", userId);
-console.log("users:", app("user.service").getUsers());
+addPost("Hello World!", "This is a test", userId);
+addPost("Hola Mundo!", "Esto es una prueba", userId);
 
-const addPost = app("post.service").addPost;
-
-addPost("Hello World", "This is a test post", userId);
-addPost("Hola Mundo!", "Esto es una entrada de prueba", userId);
-
-console.log(app("post.service").getPosts());
+console.log(postService.getPosts());
