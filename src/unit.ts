@@ -214,15 +214,16 @@ type UnitDefinition<T, O extends UnitOptions> = {
   opts: O;
 };
 
-export function defineUnit<const T, const O extends UnitOptions>(
+export function defineUnit<const T, const O extends UnitOptions = {}>(
   def: T,
-  opts = {} as O,
+  options?: O,
 ): UnitDefinition<T, O> {
+  const opts = options ?? ({} as UnitOptions);
   if (opts.isBound || opts.isFactory || opts.isAsync) {
     if (typeof def !== "function")
       throw new Error("Wrong unit definition value");
   }
-  return { [unitSymbol]: def, opts };
+  return { [unitSymbol]: def, opts } as UnitDefinition<T, O>;
 }
 
 export function isUnitDef(def: unknown): def is UnitDef {
