@@ -1,7 +1,12 @@
 import { assertEquals } from "@std/assert";
 
 import { blockSymbol } from "./common.ts";
-import { defineBlock, getBlockUnitKeys, itemIsBlock } from "./block.ts";
+import {
+  defineBlock,
+  extractParentPath,
+  getBlockUnitKeys,
+  itemIsBlock,
+} from "./block.ts";
 import { defineUnit } from "./unit.ts";
 
 Deno.test("block: defineBlock", () => {
@@ -53,3 +58,13 @@ Deno.test("block: getBlockUnitKeys", () => {
 });
 
 Deno.test("block: createBlockProxy", () => {});
+
+Deno.test("block: extractParentPath", () => {
+  const singlePath = "single";
+  const parentedPath = "parent.child";
+  const grandParentedPath = "grand.parent.child";
+
+  assertEquals(extractParentPath(singlePath), null);
+  assertEquals(extractParentPath(parentedPath), "parent");
+  assertEquals(extractParentPath(grandParentedPath), "grand.parent");
+});

@@ -8,7 +8,7 @@ import * as postService from "./postService.ts";
 Deno.test("addPostTest", function addPostTest() {
   const repo = [] as Post[];
   const fakeBlocks = {
-    post: { repo },
+    "..": { repo },
     "user.service": {
       getUser: (id: string) => ({
         id,

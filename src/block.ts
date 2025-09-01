@@ -145,6 +145,14 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
   ) as BlockProxy<B>;
 }
 
+export function extractParentPath(localPath: string): string | null {
+  const parts = localPath.split(".");
+  const hasParent = parts.length > 1;
+  if (!hasParent) return null;
+  const parentParts = parts.slice(0, parts.length - 1);
+  return parentParts.join(".");
+}
+
 export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
   localPath: Extract<P, string>,
   blockDefs: Defs,
@@ -153,6 +161,9 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
   if (cache.wire.has(localPath)) {
     return cache.wire.get(localPath);
   }
+
+  const blockPaths = Object.keys(blockDefs);
+  const parentPath = extractParentPath(localPath);
 
   const wire = function getBlockProxy(key = "") {
     if (cache.proxy.has(key)) {
@@ -165,13 +176,26 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
       }
 
       const localProxy = createBlockProxy(localPath, true, blockDefs, cache);
-
       cache.localProxy.set(localPath, localProxy);
 
       return localProxy;
     }
 
-    const blockPaths = Object.keys(blockDefs);
+    if (key === "..") {
+      if (cache.localProxy.has(parentPath)) {
+        return cache.localProxy.get(parentPath);
+      }
+
+      if (parentPath === null) {
+        throw new Error('Block ".." does not exist');
+      }
+
+      const parentProxy = createBlockProxy(parentPath, true, blockDefs, cache);
+      cache.localProxy.set(parentPath, parentProxy);
+
+      return parentProxy;
+    }
+
     const k = String(key);
 
     let proxy;

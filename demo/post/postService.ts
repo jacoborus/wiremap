@@ -22,7 +22,7 @@ getPosts.isBound = true as const;
  * ```
  */
 export function getPost(wire: W) {
-  const repo = wire("post").repo;
+  const repo = wire("..").repo;
   return (id: string) => repo.find((post) => post.id === id);
 }
 getPost.isFactory = true as const;
@@ -38,7 +38,7 @@ export function addPost(
   const user = getUser(userId);
   if (!user) throw new Error(`User with id ${userId} does not exist.`);
 
-  const repo = this("post").repo;
+  const repo = this("..").repo;
   const id = crypto.randomUUID();
   repo.push({ id, title, userId, content });
   return id;
@@ -53,7 +53,7 @@ addPost.isBound = true as const;
  * https://github.com/microsoft/TypeScript/issues/53167
  */
 export const collection = async function (wire: W) {
-  const repo = wire("post").repo;
+  const repo = wire("..").repo;
   return await new Promise<typeof repo>((res) => {
     res(
       /** The posts collection of the database */

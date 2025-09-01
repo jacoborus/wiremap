@@ -13,5 +13,5 @@ export interface Wcache {
   unit: Map<string, unknown>;
   wire: Map<string, unknown>;
   proxy: Map<string, Hashmap>;
-  localProxy: Map<string, Hashmap>;
+  localProxy: Map<string | null, Hashmap>;
 }

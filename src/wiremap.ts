@@ -47,9 +47,31 @@ export interface Wire<D extends Hashmap, N extends string> {
   (): BlockProxy<FilterUnitValues<D[""]>>;
   // local block resolution
   (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
+  // parent block resolution
+  <K extends N extends NoDots<N> ? never : "..">(
+    blockPath: K,
+  ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>, ".">]>>;
   // absolute block resolution
   <K extends keyof D>(blockPath: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
+
+/** Extract keys with no dots in them */
+type NoDots<T extends string> = T extends `${string}.${string}` ? never : T;
+
+type ExtractParentPath<
+  N extends string,
+  P extends string[],
+> = N extends `${infer Parent}.${infer Child}`
+  ? ExtractParentPath<Child, [...P, Parent]>
+  : P;
+
+type Join<T extends string[], D extends string> = T extends []
+  ? ""
+  : T extends [infer F extends string]
+    ? F
+    : T extends [infer F extends string, ...infer R extends string[]]
+      ? `${F}${D}${Join<R, D>}`
+      : string;
 
 /**
  * Filters an object excluding the block tag ($), and any nested blocks.
