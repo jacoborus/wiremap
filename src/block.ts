@@ -154,7 +154,7 @@ export function extractParentPath(localPath: string): string | null {
 }
 
 export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
-  localPath: Extract<P, string>,
+  localPath: P & string,
   blockDefs: Defs,
   cache: Wcache,
 ) {
@@ -170,6 +170,7 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
       return cache.proxy.get(key);
     }
 
+    // Local block resolution, includes private units
     if (key === ".") {
       if (cache.localProxy.has(localPath)) {
         return cache.localProxy.get(localPath);
@@ -181,6 +182,7 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
       return localProxy;
     }
 
+    // Parent block resolution
     if (key === "..") {
       if (cache.localProxy.has(parentPath)) {
         return cache.localProxy.get(parentPath);
@@ -190,28 +192,27 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
         throw new Error('Block ".." does not exist');
       }
 
-      const parentProxy = createBlockProxy(parentPath, true, blockDefs, cache);
+      const parentProxy = createBlockProxy(parentPath, false, blockDefs, cache);
       cache.localProxy.set(parentPath, parentProxy);
 
       return parentProxy;
     }
 
-    const k = String(key);
-
-    let proxy;
-
-    if (k === "") {
-      // root block resolution
-      proxy = createBlockProxy("", false, blockDefs, cache);
-    } else if (blockPaths.includes(k)) {
-      // external block resolution, uses absolute path of the block
-      proxy = createBlockProxy(k, false, blockDefs, cache);
-    } else {
-      throw new Error(`Unit ${k} not found from block "${String(localPath)}"`);
+    // root block resolution
+    if (key === "") {
+      const proxy = createBlockProxy("", false, blockDefs, cache);
+      cache.proxy.set(key, proxy);
+      return proxy;
     }
 
-    cache.proxy.set(k, proxy);
-    return proxy;
+    // external block resolution, uses absolute path of the block
+    if (blockPaths.includes(key)) {
+      const proxy = createBlockProxy(key, false, blockDefs, cache);
+      cache.proxy.set(key, proxy);
+      return proxy;
+    }
+
+    throw new Error(`Unit ${key} not found from block "${localPath}"`);
   };
 
   cache.wire.set(localPath, wire);
