@@ -198,14 +198,22 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
       return parentProxy;
     }
 
-    // root block resolution
+    // Child block resolution
+    if (key.startsWith(".")) {
+      const blockPath = localPath + key;
+      const proxy = createBlockProxy(blockPath, false, blockDefs, cache);
+      cache.proxy.set(blockPath, proxy);
+      return proxy;
+    }
+
+    // Root block resolution
     if (key === "") {
       const proxy = createBlockProxy("", false, blockDefs, cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
 
-    // external block resolution, uses absolute path of the block
+    // External block resolution, uses absolute path of the block
     if (blockPaths.includes(key)) {
       const proxy = createBlockProxy(key, false, blockDefs, cache);
       cache.proxy.set(key, proxy);

@@ -47,6 +47,10 @@ export interface Wire<D extends Hashmap, N extends string> {
   (): BlockProxy<FilterUnitValues<D[""]>>;
   // local block resolution
   (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
+  // child block resolution
+  <K extends ExtractChildPaths<N, D>>(
+    blockPath: K,
+  ): BlockProxy<FilterPublicUnitValues<D[`${N}${K}`]>>;
   // parent block resolution
   <K extends N extends NoDots<N> ? never : "..">(
     blockPath: K,
@@ -54,6 +58,14 @@ export interface Wire<D extends Hashmap, N extends string> {
   // absolute block resolution
   <K extends keyof D>(blockPath: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
+
+/**
+ * Find the keys of a hashmap that match the beginning of another string,
+ * then extract the resulting substrings and prefix them with a dot '.'
+ */
+type ExtractChildPaths<P extends string, H extends Hashmap> = {
+  [K in keyof H]: K extends `${P}.${infer C}` ? `.${C}` : never;
+}[keyof H];
 
 /** Extract keys with no dots in them */
 type NoDots<T extends string> = T extends `${string}.${string}` ? never : T;

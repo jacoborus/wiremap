@@ -25,4 +25,4 @@ const addPost = postService.addPost;
 addPost("Hello World!", "This is a test", userId);
 addPost("Hola Mundo!", "Esto es una prueba", userId);
 
-console.log(postService.getPosts());
+console.log(app("post").childResolution());
