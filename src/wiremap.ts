@@ -1,5 +1,5 @@
 import type { Hashmap, Wcache } from "./common.ts";
-import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
+import type { IsAsyncFactory, IsPrivateUnit, UnitDef } from "./unit.ts";
 import type { BlockDef, BlocksMap, IsBlock, BlockProxy } from "./block.ts";
 
 import { unitSymbol, isFunction } from "./common.ts";
@@ -40,6 +40,7 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * The main wire function interface that provides different access patterns:
  * - () returns root block proxy
  * - (".") returns local block proxy (same block context, includes private units)
+ * - (".child.path") returns the proxy of a descendent block
  * - ("path.of.the.block") returns specific block proxy
  */
 export interface Wire<D extends Hashmap, N extends string> {
@@ -77,6 +78,7 @@ type ExtractParentPath<
   ? ExtractParentPath<Child, [...P, Parent]>
   : P;
 
+/** Array.join but with types */
 type Join<T extends string[], D extends string> = T extends []
   ? ""
   : T extends [infer F extends string]
@@ -85,9 +87,7 @@ type Join<T extends string[], D extends string> = T extends []
       ? `${F}${D}${Join<R, D>}`
       : string;
 
-/**
- * Filters an object excluding the block tag ($), and any nested blocks.
- */
+/** Filters an object excluding the block tag ($), and any nested blocks */
 type FilterUnitValues<T> = T extends Hashmap
   ? Omit<T, "$" | ExtractBlockKeys<T>>
   : never;
@@ -104,7 +104,7 @@ type ExtractPrivatePaths<T> = T extends Hashmap //
  * From an object, extract the keys that contain blocks.
  * This is used to filter out nested blocks when creating unit proxies.
  */
-export type ExtractBlockKeys<T> = {
+type ExtractBlockKeys<T> = {
   [K in keyof T]: T[K] extends BlockDef<Hashmap> ? K : never;
 }[keyof T];
 
@@ -203,27 +203,29 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
  * }>
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
-type BlockPaths<T extends Hashmap, P extends string = ""> =
+export type BlockPaths<T extends Hashmap, P extends string = ""> =
   | ""
   | {
-      [K in keyof T]: T[K] extends Hashmap
-        ?
-            | (HasUnits<T[K]> extends true
-                ? P extends ""
-                  ? `${Extract<K, string>}`
-                  : `${P}.${Extract<K, string>}`
-                : never)
-            | (T[K] extends BlockDef<T[K]>
-                ? HasBlocks<T[K]> extends true
-                  ? BlockPaths<
-                      T[K],
-                      P extends ""
-                        ? Extract<K, string>
-                        : `${P}.${Extract<K, string>}`
-                    >
-                  : never
-                : never)
-        : never;
+      [K in keyof T]: T[K] extends UnitDef
+        ? never
+        : T[K] extends Hashmap
+          ?
+              | (HasUnits<T[K]> extends true
+                  ? P extends ""
+                    ? `${Extract<K, string>}`
+                    : `${P}.${Extract<K, string>}`
+                  : never)
+              | (T[K] extends BlockDef<T[K]>
+                  ? HasBlocks<T[K]> extends true
+                    ? BlockPaths<
+                        T[K],
+                        P extends ""
+                          ? Extract<K, string>
+                          : `${P}.${Extract<K, string>}`
+                      >
+                    : never
+                  : never)
+          : never;
     }[keyof T];
 
 function mapBlocks<L extends Hashmap>(blocks: L, prefix?: string): BlocksMap {
