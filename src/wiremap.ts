@@ -14,8 +14,8 @@ export { defineUnit } from "./unit.ts";
  */
 type WiredUp<Defs extends Hashmap> =
   AnyItemContainsAnyAsyncFactory<Defs> extends true
-    ? Promise<Wire<Defs, "">>
-    : Wire<Defs, "">;
+    ? Promise<InferWire<Defs, "">>
+    : InferWire<Defs, "">;
 
 /**
  * Recursively checks if any item in the definitions contains an async factory.
@@ -43,7 +43,7 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * - (".child.path") returns the proxy of a descendent block
  * - ("path.of.the.block") returns specific block proxy
  */
-export interface Wire<D extends Hashmap, N extends string> {
+export interface InferWire<D extends Hashmap, N extends string> {
   // root block resolution
   (): BlockProxy<FilterUnitValues<D[""]>>;
   // local block resolution

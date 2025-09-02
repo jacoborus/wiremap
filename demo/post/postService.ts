@@ -1,7 +1,7 @@
-import { tagBlock, type Wire } from "../../src/wiremap.ts";
+import { tagBlock, type InferWire } from "../../src/wiremap.ts";
 import type { Blocks } from "../app.ts";
 
-type W = Wire<Blocks, "post.service">;
+type W = InferWire<Blocks, "post.service">;
 
 export const $ = tagBlock();
 

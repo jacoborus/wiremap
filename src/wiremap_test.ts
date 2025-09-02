@@ -1,7 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { tagBlock, wireUp, defineUnit } from "./wiremap.ts";
 import { mockUnit } from "./mock.ts";
-import type { InferBlocks, Wire } from "./wiremap.ts";
+import type { InferBlocks, InferWire } from "./wiremap.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
   const defs = {
@@ -28,7 +28,7 @@ Deno.test("wireUp resolves dependencies", () => {
 
 Deno.test("wireUp resolves async factories that return a promise", async () => {
   const $ = tagBlock();
-  type W = Wire<InferBlocks<Defs>, "">;
+  type W = InferWire<InferBlocks<Defs>, "">;
 
   function factoryFn(w: W) {
     const theKey = w().keyName;
@@ -154,8 +154,8 @@ Deno.test("mockFactory", () => {
 });
 
 Deno.test("wireUp protects private units", () => {
-  type Wa = Wire<Defs, "A">;
-  type Wb = Wire<Defs, "B">;
+  type Wa = InferWire<Defs, "A">;
+  type Wb = InferWire<Defs, "B">;
 
   function priv() {
     return "private";
@@ -242,7 +242,7 @@ Deno.test("defineUnit: isPrivate", () => {
   const $ = tagBlock();
   const $a = tagBlock();
   const $b = tagBlock();
-  type Wb = Wire<Defs, "b">;
+  type Wb = InferWire<Defs, "b">;
 
   const block = {
     $,
@@ -282,8 +282,8 @@ Deno.test("defineUnit: isFactory", () => {
   const $a = tagBlock();
   const $b = tagBlock();
 
-  type Wa = Wire<Defs, "a">;
-  type Wb = Wire<Defs, "a.b">;
+  type Wa = InferWire<Defs, "a">;
+  type Wb = InferWire<Defs, "a.b">;
 
   const defs = {
     $,
@@ -337,8 +337,8 @@ Deno.test("defineUnit: isAsync", async () => {
   const $a = tagBlock();
   const $b = tagBlock();
 
-  type Wa = Wire<Defs, "a">;
-  type Wb = Wire<Defs, "a.b">;
+  type Wa = InferWire<Defs, "a">;
+  type Wb = InferWire<Defs, "a.b">;
 
   const defs = {
     $,

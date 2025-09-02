@@ -1,7 +1,7 @@
-import { defineUnit, tagBlock, Wire } from "../../src/wiremap.ts";
+import { defineUnit, tagBlock, InferWire } from "../../src/wiremap.ts";
 import type { Blocks } from "../app.ts";
 
-type W = Wire<Blocks, "post">;
+type W = InferWire<Blocks, "post">;
 
 import * as postService from "./postService.ts";
 import postRepo from "./postRepo.ts";
