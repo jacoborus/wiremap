@@ -55,7 +55,11 @@ export interface Wire<D extends Hashmap, N extends string> {
   // parent block resolution
   <K extends N extends NoDots<N> ? never : "..">(
     blockPath: K,
-  ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>, ".">]>>;
+  ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>>]>>;
+  // relative block resolution
+  <K extends GetRelativePath<N, ExtractModulePaths<N, D>>>(
+    blockPath: K,
+  ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>>]>>;
   // absolute block resolution
   <K extends keyof D>(blockPath: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
@@ -71,6 +75,25 @@ type ExtractChildPaths<P extends string, H extends Hashmap> = {
 /** Extract keys with no dots in them */
 type NoDots<T extends string> = T extends `${string}.${string}` ? never : T;
 
+/**
+ * Extract the paths of every block in a module, excluding the ones that already
+ * belong to the target block
+ */
+export type ExtractModulePaths<P extends string, H extends Hashmap> = {
+  [K in keyof H]: K extends `${ExtractModuleName<P>}.${string}` //
+    ? K extends `${P}.${string}`
+      ? never
+      : K extends P
+        ? never
+        : K
+    : never;
+}[keyof H];
+
+/** Extract the part of the string before the dot */
+type ExtractModuleName<P extends string> = P extends `${infer M}.${string}`
+  ? M
+  : never;
+
 type ExtractParentPath<
   N extends string,
   P extends string[],
@@ -78,13 +101,83 @@ type ExtractParentPath<
   ? ExtractParentPath<Child, [...P, Parent]>
   : P;
 
-/** Array.join but with types */
-type Join<T extends string[], D extends string> = T extends []
+/**
+ * Remove the common root path and return rest of second string
+ *
+ * GetRelativePath<"a.b.c", "a.b.f.e.g">; // ..f.e.g
+ * GetRelativePath<"a.b.c", "a.b.d.e">; // ..d.e
+ * GetRelativePath<"a.o.c", "a.b.f.e">; // ...b.f.e
+ * GetRelativePath<"a.b.c.d", "a.e.f">; // ....e.f
+ */
+type GetRelativePath<
+  From extends string,
+  To extends string,
+> = `${CountDotsAfterPath<From, ExtractRootPath<To, SubstractRootPath<From, To>>>}${SubstractRootPath<From, To>}`;
+
+/**
+ * Remove the common root path and return rest of second string
+ *
+ * SubstractRootPath<"a.b.c", "a.b.f.e.g">; // f.e.g
+ * SubstractRootPath<"a.b.c", "a.b.d.e">; // d.e
+ * SubstractRootPath<"a.o.c", "a.b.f.e">; // b.f.e
+ * SubstractRootPath<"a.b.c.d", "a.e.f">; // e.f
+ */
+type SubstractRootPath<A extends string, B extends string> = A extends B
   ? ""
-  : T extends [infer F extends string]
-    ? F
-    : T extends [infer F extends string, ...infer R extends string[]]
-      ? `${F}${D}${Join<R, D>}`
+  : A extends `${infer APrefix}.${infer ASuffix}`
+    ? B extends `${infer BPrefix}.${infer Bsuffix}`
+      ? APrefix extends BPrefix
+        ? SubstractRootPath<ASuffix, Bsuffix>
+        : B
+      : APrefix extends B
+        ? never
+        : B
+    : B extends `${infer BPrefix}.${infer Bsuffix}`
+      ? A extends BPrefix
+        ? Bsuffix
+        : B
+      : B;
+
+/**
+ * Remove the tail from a path
+ *
+ * SubstractRootPath<"a.b.c.d.e.f.g", "b.c.d.e.f.g">; // a
+ * SubstractRootPath<"a.b.c.d.e.f.g", "d.e.f.g">; // a.b.c
+ * SubstractRootPath<"a.b.c.d.e.f.g", "f.g">; // a.b.c.d.e
+ */
+type ExtractRootPath<
+  Path extends string,
+  Tail extends string,
+> = Path extends `${infer RootPath}.${Tail}` ? RootPath : never;
+
+/**
+ * Count the dots after the head of the string
+ *
+ * CountDotsAfterPath<"a.b.c.d", "a.b">; // "..."
+ * CountDotsAfterPath<"a.b.c.d.e.f.g", "a.b.c.d">; // "...."
+ * CountDotsAfterPath<"a.b.c.d.e.f", "a.b">; // "....."
+ */
+
+type CountDotsAfterPath<
+  Fullpath extends string,
+  RootPath extends string,
+> = Fullpath extends `${RootPath}.${string}.${string}.${string}.${string}`
+  ? "....."
+  : Fullpath extends `${RootPath}.${string}.${string}.${string}`
+    ? "...."
+    : Fullpath extends `${RootPath}.${string}.${string}`
+      ? "..."
+      : Fullpath extends `${RootPath}.${string}`
+        ? ".."
+        : never;
+
+/** Array.join but with types */
+type Join<T extends string[]> = T extends []
+  ? ""
+  : T extends [infer H extends string]
+    ? H
+    : T extends [infer H extends string, ...infer R extends string[]]
+      ? `${H}.${Join<R>}`
       : string;
 
 /** Filters an object excluding the block tag ($), and any nested blocks */

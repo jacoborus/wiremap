@@ -1,6 +1,10 @@
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
-import { wireUp, type InferBlocks } from "../src/wiremap.ts";
+import {
+  wireUp,
+  type InferBlocks,
+  type ExtractModulePaths,
+} from "../src/wiremap.ts";
 
 const appSchema = {
   /** The User module */
@@ -10,6 +14,7 @@ const appSchema = {
 };
 
 export type Blocks = InferBlocks<typeof appSchema>;
+type X = ExtractModulePaths<"post.service", Blocks>;
 
 export const app = await wireUp(appSchema);
 

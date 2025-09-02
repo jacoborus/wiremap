@@ -9,6 +9,8 @@ import postRepo from "./postRepo.ts";
 export const $ = tagBlock();
 
 export const service = postService;
+export const service2 = postService;
+export const service3 = postService;
 export const repo = defineUnit(postRepo);
 
 export function childResolution(this: W) {
