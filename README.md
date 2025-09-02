@@ -35,6 +35,211 @@ deno add jsr:@jacobo/wiremap
 bun add wiremap
 ```
 
+## Concepts
+
+**Wiremap** apps are structured in **units** arranged in hierarchical composed **blocks**. Units can be injected into each other using **wires** provided by their blocks.
+
+### Block
+
+Blocks are objects containing units or other blocks. There are 2 ways to create a block: with a file or with the `defineBlock` helper
+
+#### Define a block as a file
+
+To tag a file as a block, export a block tag as "**$**":
+
+```ts
+// -- myBlock.ts --
+import { tagBlock } from 'wiremap';
+// tag the file as a block
+export const $ = tagBlock();
+// export your units and blocks
+export const myUnit = ...;
+export const otherBlock = ...;
+```
+
+Use file blocks by importing them as "*":
+
+```ts
+// -- myParentBlock.ts --
+import { tagBlock } from 'wiremap';
+export * as myBlock from './myBlock.ts';
+// tag the file as a block
+export const $ = tagBlock();
+// expose myBlock as aService
+export const myService = myBlock;
+```
+
+Blocks can be directly imported and exported in one line:
+
+```ts
+// -- myParentBlock.ts --
+import { tagBlock } from 'wiremap';
+// export it as part of another block 
+export * as myService from './myBlock.ts';
+// tag the file as a block
+export const $ = tagBlock();
+```
+
+#### Define a block with the `defineBlock` helper
+
+The `defineBlock` helper is useful to define several blocks in the same file
+
+```ts
+import { defineBlock } from 'wiremap';
+
+export const myService = defineBlock({
+  // units and blocks here
+});
+export const myController = defineBlock({
+  // ....
+});
+```
+
+
+### Unit
+
+A unit can be of any type, and to define it, it has to be added to a block, directly as a property, or with the `defineUnit` helper.
+
+Units are resolved on demand, and cached for quick later access.
+
+```ts
+import { defineUnit, tagBlock } from 'wiremap'
+
+export const $ = tagBlock()
+
+// direct unit definition
+export const myUnit = function () {}
+
+// with the unit helper
+export const myUnit = defineUnit(
+  function () {},
+)
+```
+
+
+#### Private units
+
+Private units are only accesible by other units directly inside the same block. To define a unit as private add the `isPrivate` property as `true`.
+
+Direct private unit definition:
+
+```ts
+// define your unit
+export function myUnit () {}
+// mark it as private
+myUnit.isPrivate = true as const;
+```
+
+Define private units with the `defineUnit` helper:
+
+```ts
+// define your unit
+export const myUnit = defineUnit(
+  function () {},
+  // mark it as private
+  { isPrivate: true }
+)
+```
+
+#### Factory units
+
+Factory units are functions that receive the wire as first argument, and return the unit.
+
+Direct factory unit definition:
+
+```ts
+// define your unit
+export const myUnit = (wire: MyWire) => () => {
+  // do something with the wire
+  // return the unit
+  return theUnitValue
+}
+// mark it as factory
+myUnit.isFactory = true as const;
+```
+
+With `defineUnit` helper:
+
+```ts
+export const myUnit = defineUnit(
+  (wire: MyWire) => () => {
+    return theUnitValue
+  },
+  // mark it as factory
+  { isFactory: true }
+)
+```
+
+#### Async Factory units
+
+Async factory units define the units as their awaited return type.
+All async factory units will be resolved at start time.
+
+Direct async factory unit definition:
+
+```ts
+// define your unit
+export async function myUnit (wire: MyWire) {
+  await whatEver()
+  return function () {} 
+}
+// mark it as factory
+myUnit.isFactory = true as const;
+// mark it as async factory
+myUnit.isAsync = true as const;
+```
+
+With `defineUnit` helper:
+
+```ts
+export const myUnit = defineUnit(
+  async (wire: MyWire) => {
+    await whatEver()
+    return function () {} 
+  },
+  // mark it as async factory
+  {
+    isFactory: true,
+    isAsync: true,
+  }
+)
+```
+
+#### Bound units
+
+Bound units are functions that receive the wire as `this`. Bound functions have to be declared with the `function` keyword.
+
+Direct bound unit definition:
+
+```ts
+// define your unit
+export function myUnit (this: MyWire) {
+  const otherUnit = this().otherUnit
+  // do something with otherUnit
+}
+// mark it as bound
+myUnit.isBound = true as const;
+```
+
+With `defineUnit` helper:
+
+```ts
+export const myUnit = defineUnit(
+  function (this: MyWire) {
+    const otherUnit = this().otherUnit
+      // do something with otherUnit
+    }
+  }.
+  // mark it as bound
+  { isBound: true }
+)
+```
+
+### Wire
+
+// TODO: continue here
+
+
 ## 🚀 Examples
 
 ### Basic Application Setup
