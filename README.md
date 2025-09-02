@@ -43,6 +43,8 @@ bun add wiremap
 
 Blocks are objects containing units or other blocks. There are 2 ways to create a block: with a file or with the `defineBlock` helper
 
+Note: The main/root block (the one at the highest level) does not need to be tagged of defined. It can be a regular plain object
+
 #### Define a block as a file
 
 To tag a file as a block, export a block tag as "**$**":
@@ -50,8 +52,10 @@ To tag a file as a block, export a block tag as "**$**":
 ```ts
 // -- myBlock.ts --
 import { tagBlock } from 'wiremap';
+
 // tag the file as a block
 export const $ = tagBlock();
+
 // export your units and blocks
 export const myUnit = ...;
 export const otherBlock = ...;
@@ -62,9 +66,11 @@ Use file blocks by importing them as "*":
 ```ts
 // -- myParentBlock.ts --
 import { tagBlock } from 'wiremap';
-export * as myBlock from './myBlock.ts';
+import * as myBlock from './myBlock.ts';
+
 // tag the file as a block
 export const $ = tagBlock();
+
 // expose myBlock as aService
 export const myService = myBlock;
 ```
@@ -74,8 +80,10 @@ Blocks can be directly imported and exported in one line:
 ```ts
 // -- myParentBlock.ts --
 import { tagBlock } from 'wiremap';
+
 // export it as part of another block 
 export * as myService from './myBlock.ts';
+
 // tag the file as a block
 export const $ = tagBlock();
 ```
@@ -126,6 +134,7 @@ Direct private unit definition:
 ```ts
 // define your unit
 export function myUnit () {}
+
 // mark it as private
 myUnit.isPrivate = true as const;
 ```
@@ -136,6 +145,7 @@ Define private units with the `defineUnit` helper:
 // define your unit
 export const myUnit = defineUnit(
   function () {},
+
   // mark it as private
   { isPrivate: true }
 )
@@ -165,6 +175,7 @@ export const myUnit = defineUnit(
   (wire: MyWire) => () => {
     return theUnitValue
   },
+
   // mark it as factory
   { isFactory: true }
 )
@@ -183,6 +194,7 @@ export async function myUnit (wire: MyWire) {
   await whatEver()
   return function () {} 
 }
+
 // mark it as factory
 myUnit.isFactory = true as const;
 // mark it as async factory
@@ -197,6 +209,7 @@ export const myUnit = defineUnit(
     await whatEver()
     return function () {} 
   },
+
   // mark it as async factory
   {
     isFactory: true,
@@ -217,6 +230,7 @@ export function myUnit (this: MyWire) {
   const otherUnit = this().otherUnit
   // do something with otherUnit
 }
+
 // mark it as bound
 myUnit.isBound = true as const;
 ```
@@ -229,7 +243,8 @@ export const myUnit = defineUnit(
     const otherUnit = this().otherUnit
       // do something with otherUnit
     }
-  }.
+  },
+
   // mark it as bound
   { isBound: true }
 )
@@ -237,7 +252,95 @@ export const myUnit = defineUnit(
 
 ### Wire
 
-// TODO: continue here
+Every block that contains units has a wire, this wire is a function that provides access to units from other blocks. It's automatically injected into every bound function as `this`, and every factory and async factory function as the first argument.
+
+Wires can only be called from within function units.
+
+This means you don't have to create any wire, but you'll want to infer its type. To do this you'll first need to infer the type of the main/root block of your app with `InferBlocks`, and export it:
+
+```ts
+// -- main.ts --
+import { type InferBlocks } from "wiremap";
+
+// import your blocks
+import * as postMod from "./post/postMod.ts";
+import * as userMod from "./user/userMod.ts";
+
+const mainBlock = {
+  user: userMod,
+  post: postMod,
+};
+
+export type Blocks = InferBlocks<typeof mainBlock>;
+```
+
+Import the type of your main block, and use it with the namespace or your block to infer the type of the wire with `InferWire`
+
+```ts
+// -- userService.ts --
+import { tagBlock, Wire } from "wiremap";
+import type { Blocks } from "../main.ts";
+
+type Wire = InferWire<Blocks, "user.service">;
+
+export const $ = tagBlock();
+
+export function myUnit(this: Wire) {
+  const getPosts = this("post.service").getPosts;
+  return getPosts();
+}
+myUnit.isBound = true as const;
+```
+
+The wire can get called with the namespace, or relative path of any block that contains units, it will return a proxy containing all the units of that block. Those units will get resolved the first time they get called, and cached it for later.
+
+#### Current block resolution
+
+To access the units of the same block, call the wire with a dot "." as argument:
+
+```ts
+export function myUnit(this: Wire) {
+  const config = this(".").config;
+  return config
+}
+myUnit.isBound = true as const;
+```
+
+#### Root block resolution
+
+To access the units of the main block of your app, call the wire with no arguments:
+
+```ts
+export function myUnit(this: Wire) {
+  const config = this().config;
+  return config
+}
+myUnit.isBound = true as const;
+```
+
+#### Child block resolution
+
+To access the units of blocks under the current one, use the relative path beginning with a dot ".":
+
+```ts
+export function myUnit(this: Wire) {
+  const getPosts = this(".service").getPosts;
+  return getPosts();
+}
+myUnit.isBound = true as const;
+```
+
+#### Absolute block resolution
+
+To access the units of any block of the app, use the absolute path of the block:
+
+```ts
+export function myUnit(this: Wire) {
+  const getPosts = this("post.service").getPosts;
+  return getPosts();
+}
+myUnit.isBound = true as const;
+```
 
 
 ## 🚀 Examples
