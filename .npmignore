@@ -4,4 +4,4 @@ deno.json
 deno.lock
 package-lock.json
 demo/
-src/wiremap_test.ts
+src/*_test.ts
