@@ -214,10 +214,10 @@ type UnitDefinition<T, O extends UnitOptions> = {
   opts: O;
 };
 
-export function defineUnit<const T, const O extends UnitOptions = {}>(
-  def: T,
-  options?: O,
-): UnitDefinition<T, O> {
+export function defineUnit<
+  const T,
+  const O extends UnitOptions = Record<PropertyKey, never>,
+>(def: T, options?: O): UnitDefinition<T, O> {
   const opts = options ?? ({} as UnitOptions);
   if (opts.isBound || opts.isFactory || opts.isAsync) {
     if (typeof def !== "function")
