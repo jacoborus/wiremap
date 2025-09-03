@@ -1,10 +1,10 @@
 import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit, UnitDef } from "./unit.ts";
-import type { BlockDef, BlocksMap, IsBlock, BlockProxy } from "./block.ts";
+import type { BlockDef, BlockProxy, BlocksMap, IsBlock } from "./block.ts";
 
-import { unitSymbol, isFunction } from "./common.ts";
+import { isFunction, unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
-import { itemIsBlock, getWire, tagBlock } from "./block.ts";
+import { getWire, itemIsBlock, tagBlock } from "./block.ts";
 
 export { defineBlock, tagBlock } from "./block.ts";
 export { defineUnit } from "./unit.ts";
@@ -37,38 +37,38 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
   : false;
 
 /**
- * The main wire function interface that provides different access patterns for 
+ * The main wire function interface that provides different access patterns for
  * blocks and units with full type safety.
- * 
+ *
  * This interface ensures type safety when navigating between blocks using the wire function.
  * It provides overloaded signatures for different block resolution patterns, enabling
  * both relative and absolute path navigation through your application's dependency graph.
- * 
+ *
  * @template D - The blocks definitions type extending Hashmap
  * @template N - The current block path context as a string
- * 
+ *
  * @example Basic wire usage in a service
  * ```typescript
  * import type { InferWire } from "wiremap";
  * import type { Blocks } from "../app.ts";
- * 
+ *
  * type Wire = InferWire<Blocks, "user.service">;
- * 
+ *
  * export function addUser(this: Wire, name: string, email: string) {
  *   // Local block access (includes private units)
  *   const getUserByEmail = this(".").getUserByEmail;
- *   
- *   // Parent block access  
+ *
+ *   // Parent block access
  *   const repo = this("user").repo;
- *   
+ *
  *   // Cross-module absolute access
  *   const logger = this("shared.logger");
- *   
+ *
  *   // Root block access
  *   const config = this().config;
  * }
  * ```
- * 
+ *
  * @example Different access patterns
  * ```typescript
  * // From context "post.service":
@@ -78,7 +78,7 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * wire(".repository")    // → Child block proxy (post.service.repository)
  * wire("user.service")   // → Absolute block path (user.service)
  * ```
- * 
+ *
  * @public
  * @since 1.0.0
  */
@@ -149,7 +149,7 @@ type ExtractBlockKeys<T> = {
 
 /**
  * Wires up a set of unit definitions and blocks for dependency injection.
- * 
+ *
  * This is the main bootstrap function that creates the dependency injection container
  * and returns a wire function for accessing units across your application. It handles
  * both synchronous and asynchronous factory initialization automatically.
@@ -157,42 +157,42 @@ type ExtractBlockKeys<T> = {
  * @template Defs - The definitions object type
  * @param defs - Object containing unit definitions and imported blocks. Each block should export a `$` tag via `tagBlock`.
  * @returns Promise<Wire> if any async factory units exist, otherwise Wire for synchronous resolution.
- * 
+ *
  * @example Basic application setup
  * ```typescript
  * // app.ts
  * import * as userMod from "./user/userMod.ts";
  * import * as postMod from "./post/postMod.ts";
- * 
+ *
  * const appSchema = {
  *   user: userMod,
  *   post: postMod,
  *   config: { port: 3000, dbUrl: "localhost:5432" }
  * };
- * 
+ *
  * const app = await wireUp(appSchema);
- * 
+ *
  * // Access root units
  * console.log(app().config.port); // 3000
- * 
+ *
  * // Access nested block units
  * const userId = app("user.service").addUser("John", "john@example.com");
  * app("post.service").addPost("Hello World", "Content", userId);
  * ```
- * 
+ *
  * @example Synchronous vs Asynchronous
  * ```typescript
  * // Synchronous - no async factories
  * const syncApp = wireUp({ config: { port: 3000 } });
  * syncApp().config.port; // Available immediately
- * 
+ *
  * // Asynchronous - contains async factories
  * const asyncApp = await wireUp({
  *   database: defineUnit(async () => await connectToDb(), { isFactory: true, isAsync: true })
  * });
  * asyncApp().database.query("SELECT * FROM users");
  * ```
- * 
+ *
  * @public
  * @since 1.0.0
  */
@@ -222,37 +222,37 @@ export function wireUp<Defs extends Hashmap>(
 
 /**
  * Infers the structure of all blocks and units from a definitions object.
- * 
- * This utility type analyzes your definitions object and generates a mapped type 
- * containing all block paths and their corresponding unit structures. It's essential 
- * for getting proper TypeScript support when working with wire functions across 
+ *
+ * This utility type analyzes your definitions object and generates a mapped type
+ * containing all block paths and their corresponding unit structures. It's essential
+ * for getting proper TypeScript support when working with wire functions across
  * your application.
  *
  * @template R - The definitions object type extending Hashmap
- * 
+ *
  * @example Basic usage
  * ```typescript
- * const appSchema = { 
- *   user: userMod, 
+ * const appSchema = {
+ *   user: userMod,
  *   post: postMod,
- *   config: { port: 3000 } 
+ *   config: { port: 3000 }
  * };
- * 
+ *
  * export type Blocks = InferBlocks<typeof appSchema>;
  * // Result: Blocks contains paths like "", "user", "user.service", "post", "post.service"
  * ```
- * 
+ *
  * @example Using with wire types
  * ```typescript
  * import type { InferBlocks, InferWire } from "wiremap";
- * 
+ *
  * const defs = { user: userMod, post: postMod };
  * export type Blocks = InferBlocks<typeof defs>;
- * 
+ *
  * // Now use in your services
  * type Wire = InferWire<Blocks, "user.service">;
  * ```
- * 
+ *
  * @public
  * @since 1.0.0
  */
@@ -293,7 +293,7 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
  * }>
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
-export type BlockPaths<T extends Hashmap, P extends string = ""> =
+type BlockPaths<T extends Hashmap, P extends string = ""> =
   | ""
   | {
       [K in keyof T]: T[K] extends UnitDef
