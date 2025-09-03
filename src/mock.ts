@@ -1,20 +1,27 @@
-import { type Hashmap, unitSymbol } from "./common.ts";
+import type { Hashmap } from "./common.ts";
+import type { InferUnitValue, IsAsyncFactory } from "./unit.ts";
+
+import { unitSymbol } from "./common.ts";
 import {
-  isUnitDef,
-  isBoundFunc,
+  isAsyncFactoryDef,
+  isAsyncFactoryFunc,
   isBoundDef,
-  isFactoryFunc,
+  isBoundFunc,
   isFactoryDef,
-  // isAsyncFactoryFunc, // TODO
-  // isAsyncFactoryDef, // TODO
+  isFactoryFunc,
+  isUnitDef,
 } from "./unit.ts";
-import type { InferUnitValue } from "./unit.ts";
 
 function fakeWire<F extends Hashmap>(fakeBlocks: F) {
   return function <P extends "" | keyof F>(blockPath = "" as P) {
     return fakeBlocks[blockPath];
   };
 }
+
+type Mocked<T> =
+  IsAsyncFactory<T> extends true
+    ? Promise<InferUnitValue<T>>
+    : InferUnitValue<T>;
 
 /**
  * Creates a mock instance of a unit for testing with controlled fake dependencies.
@@ -102,30 +109,39 @@ function fakeWire<F extends Hashmap>(fakeBlocks: F) {
  * @public
  * @since 1.0.0
  */
-export function mockUnit<T>(def: T, fakeBlocks: Hashmap): InferUnitValue<T> {
+export function mockUnit<T>(def: T, fakeBlocks: Hashmap): Mocked<T> {
   const wire = fakeWire(fakeBlocks);
 
   if (isUnitDef(def)) {
     if (isFactoryDef(def)) {
       const defValue = def[unitSymbol];
-      return defValue(wire) as InferUnitValue<T>;
+      return defValue(wire) as Mocked<T>;
     }
 
     if (isBoundDef(def)) {
       const defValue = def[unitSymbol];
-      return defValue.bind(wire) as InferUnitValue<T>;
+      return defValue.bind(wire) as Mocked<T>;
     }
 
-    return def[unitSymbol] as InferUnitValue<T>;
+    if (isAsyncFactoryDef(def)) {
+      const defValue = def[unitSymbol];
+      return defValue(wire) as Mocked<T>;
+    }
+
+    return def[unitSymbol] as Mocked<T>;
   }
 
   if (isBoundFunc(def)) {
-    return def.bind(wire) as InferUnitValue<T>;
+    return def.bind(wire) as Mocked<T>;
   }
 
   if (isFactoryFunc(def)) {
-    return def(wire) as InferUnitValue<T>;
+    return def(wire) as Mocked<T>;
   }
 
-  return def as InferUnitValue<T>;
+  if (isAsyncFactoryFunc(def)) {
+    return def(wire) as Mocked<T>;
+  }
+
+  return def as Mocked<T>;
 }
