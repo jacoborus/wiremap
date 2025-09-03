@@ -1,100 +1,98 @@
 # Wiremap
 
 **Wiremap** is a lightweight, type-safe dependency injection framework for
-TypeScript that favors composition over inheritance. Build scalable,
-maintainable, and testable applications with intuitive and powerful dependency
+TypeScript that favors **composition over inheritance**. It helps you build
+scalable, maintainable, and testable applications with intuitive dependency
 management.
 
 ---
 
 ⚠️ **PRE-RELEASE SOFTWARE**
 
-This is an alpha version under active development. The API is subject to change.
+This is an alpha version under active development. The API may change at any
+time.
 
 ---
 
 ## ✨ Features
 
-- **🔒 Type-Safe**: Full TypeScript support without manual type annotations
-- **🧱 Compositional**: Compose complex applications from small, reusable units
-- **♻️ Circular Dependency-Free**: Designed to eliminate circular dependencies
-- **🤯 No decorators, no classes**, no gorillas, no jungles. Just the bananas
-- **🌲 Hierarchical**: Organize dependencies using namespaces and blocks
-- **🧪 Testable**: Built-in utilities for easy mocking and isolated testing
-- **🪶 Lightweight**: Minimal runtime overhead with smart, built-in caching
-- **🔌 Zero Configuration**: Just install and import, no setup needed
+- **🔒 Type-Safe**: Full TypeScript support without extra boilerplate
+- **🧱 Compositional**: Build complex apps from small, reusable units
+- **♻️ Circular Dependency-Free**: Designed to avoid circular dependencies
+- **🤯 No decorators. No classes.** No gorillas, no jungles. Just the bananas 🍌
+- **🌲 Hierarchical**: Organize dependencies with namespaces and blocks
+- **🧪 Testable**: Built-in utilities for mocking and isolation
+- **🪶 Lightweight**: Minimal runtime overhead with smart caching
+- **🔌 Zero Configuration**: Install and import, nothing else
 - **🔨 Simple API**: So simple, it hurts
 
 ## 📦 Installation
 
 ```bash
-# choose your poison
+# pick your package manager
 npm install wiremap
 pnpm add wiremap
 deno add jsr:@jacobo/wiremap
 bun add wiremap
 ```
 
-## Concepts
+## 🧩 Core Concepts
 
-Wiremap applications are composed of **units** organized into **hierarchical
-blocks**. Units can be injected into each other using **wires** provided by
-their blocks.
+Wiremap applications are composed of **units**, organized into **hierarchical
+blocks**. Units can depend on each other via **wires** provided by their blocks.
 
 ### Block
 
-Blocks are objects containing units or other blocks. There are 2 ways to create
-a block: with a file or with the `defineBlock` helper
+A block is an object that contains units or other blocks.\
+There are two ways to define a block: as a file or with the `defineBlock`
+helper.
 
-Note: The main/root block (the one at the highest level) does not need to be
-tagged of defined. It can be a regular plain object
+> ℹ️ The root block (the top-level one) doesn’t need to be tagged or defined.\
+> It can simply be a plain object.
 
-#### Define a block as a file
+#### Defining a block as a file
 
-To tag a file as a block, export a block tag as "**$**":
+To mark a file as a block, export a special tag named `$`:
 
 ```ts
 // -- myBlock.ts --
-import { tagBlock } from 'wiremap';
+import { tagBlock } from "wiremap";
 
 // tag the file as a block
 export const $ = tagBlock();
 
-// export your units and blocks
+// export your units and sub-blocks
 export const myUnit = ...;
 export const otherBlock = ...;
 ```
 
-Use file blocks by importing them as "*":
+Use file blocks by importing them as `*`:
 
 ```ts
 // -- myParentBlock.ts --
 import { tagBlock } from "wiremap";
 import * as myBlock from "./myBlock.ts";
 
-// tag the file as a block
 export const $ = tagBlock();
 
-// expose myBlock as aService
+// expose myBlock as a service
 export const myService = myBlock;
 ```
 
-Blocks can be directly imported and exported in one line:
+Or directly re-export them in one line:
 
 ```ts
 // -- myParentBlock.ts --
 import { tagBlock } from "wiremap";
 
-// export it as part of another block
 export * as myService from "./myBlock.ts";
-
-// tag the file as a block
 export const $ = tagBlock();
 ```
 
-#### Define a block with the `defineBlock` helper
+#### Defining a block with `defineBlock`
 
-The `defineBlock` helper is useful to define several blocks in the same file
+`defineBlock` is useful when you want to define multiple blocks in the same
+file:
 
 ```ts
 import { defineBlock } from "wiremap";
@@ -103,199 +101,153 @@ export const myService = defineBlock({
   // units and blocks here
 });
 export const myController = defineBlock({
-  // ....
+  // ...
 });
 ```
 
 ### Unit
 
-Units are the building blocks of your application. They can be any kind of value
-and are resolved and cached on demand. To define a unit, it has to be added to a
-block, directly as a property, or with the `defineUnit` helper.
+Units are the smallest building blocks of your app.\
+They can hold **any value** and are resolved lazily (on demand) and cached.\
+To define a unit, add it to a block—either directly or with `defineUnit`.
 
 ```ts
 import { defineUnit, tagBlock } from "wiremap";
 
 export const $ = tagBlock();
 
-// direct unit definition
+// direct unit
 export const myUnit = function () {};
 
-// with the unit helper
-export const myUnit = defineUnit(
-  function () {},
-);
+// using the helper
+export const myUnit = defineUnit(function () {});
 ```
 
-**Important**: The `as const` assertion ensures TypeScript infers the literal
-type `true` rather than the broader `boolean` type.
+👉 Use `as const` to ensure TypeScript infers precise literal types (e.g. `true`
+instead of `boolean`).
+
+---
 
 #### Private units
 
-Private units are only accessible within their own block and cannot be accessed
-from other blocks or the root level. To mark a unit as private, set the
-`isPrivate` property to `true as const`.
-
-Direct private unit definition:
+Private units can only be used within their own block.\
+Mark them with `isPrivate = true as const`:
 
 ```ts
-// define your unit
+// direct definition
 export function myUnit() {}
-
-// mark it as private
 myUnit.isPrivate = true as const;
-```
 
-Define private units with the `defineUnit` helper:
-
-```ts
-// define your unit
+// with helper
 export const myUnit = defineUnit(
-  function () {},
-  // mark it as private
+  () => {},
   { isPrivate: true },
 );
 ```
 
+---
+
 #### Factory units
 
-Factory units are functions that receive the wire as first argument, and return
-the unit.
-
-Factories are resolved lazily (on first access) and their results are cached for
-quick resolution on subsequent calls. This provides efficient initialization
-because only the units you actually use get created.
-
-Direct factory unit definition:
+Factory units are functions that take the **wire** as their first argument and
+return the unit.\
+They’re lazy (initialized on first access) and cached.
 
 ```ts
-// define your unit
 export const myUnit = (wire: MyWire) => () => {
-  // do something with the wire
-  // return the unit
   return theUnitValue;
 };
-// mark it as factory
 myUnit.isFactory = true as const;
 ```
 
-With `defineUnit` helper:
+With helper:
 
 ```ts
 export const myUnit = defineUnit(
-  (wire: MyWire) => () => {
-    return theUnitValue;
-  },
-  // mark it as factory
+  (wire: MyWire) => () => theUnitValue,
   { isFactory: true },
 );
 ```
 
-#### Async Factory units
+---
 
-Async factory units define the units as their awaited return type.
+#### Async factory units
 
-When async factories are present, `wireUp()` returns a Promise that resolves
-once all async factories have completed their initialization. This ensures that
-by the time you can access units, all asynchronous dependencies are fully ready.
-Like all factories, the resolved values are cached for quick access on
-subsequent calls.
-
-Direct async factory unit definition:
+Async factories return a Promise.\
+When async factories exist, `wireUp()` returns a Promise that resolves once
+everything is initialized and ready.
 
 ```ts
-// define your unit
 export async function myUnit(wire: MyWire) {
   await whatEver();
-  return function () {};
+  return () => {};
 }
-
-// mark it as factory
 myUnit.isFactory = true as const;
-// mark it as async factory
 myUnit.isAsync = true as const;
 ```
 
-With `defineUnit` helper:
+With helper:
 
 ```ts
 export const myUnit = defineUnit(
   async (wire: MyWire) => {
     await whatEver();
-    return function () {};
+    return () => {};
   },
-  // mark it as async factory
-  {
-    isFactory: true,
-    isAsync: true,
-  },
+  { isFactory: true, isAsync: true },
 );
 ```
 
+---
+
 #### Bound units
 
-Bound units are functions that receive the wire as `this`. Bound functions have
-to be declared with the `function` keyword.
-
-Direct bound unit definition:
+Bound units are functions that receive the wire as `this`.\
+They must use the `function` keyword:
 
 ```ts
-// define your unit
 export function myUnit(this: MyWire) {
   const otherUnit = this().otherUnit;
-  // do something with otherUnit
 }
-
-// mark it as bound
 myUnit.isBound = true as const;
 ```
 
-With `defineUnit` helper:
+With helper:
 
 ```ts
 export const myUnit = defineUnit(
   function (this: MyWire) {
-    const otherUnit = this().otherUnit
-      // do something with otherUnit
-    }
+    const otherUnit = this().otherUnit;
   },
-
-  // mark it as bound
-  { isBound: true }
-)
+  { isBound: true },
+);
 ```
+
+---
 
 ### Wire
 
-Every block that contains units has a wire, this wire is a function that
-provides access to units from other blocks. It's automatically injected into
-every bound function as `this`, and every factory and async factory function as
-the first argument.
+Every block with units has a **wire**: a function that gives access to units in
+other blocks.\
+It’s automatically injected into:
 
-Wires can only be called from within function units.
+- **bound functions** as `this`
+- **factories / async factories** as the first argument
 
-This means you don't have to create any wire, but you'll want to infer its type.
-To do this you'll first need to infer the type of the main/root block of your
-app with `InferBlocks`, and export it:
+You don’t need to create wires yourself, but you’ll usually want to infer their
+types using `InferBlocks` and `InferWire`.
 
 ```ts
 // -- main.ts --
 import { type InferBlocks } from "wiremap";
-
-// import your blocks
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
 
-const mainBlock = {
-  user: userMod,
-  post: postMod,
-};
-
+const mainBlock = { user: userMod, post: postMod };
 export type Blocks = InferBlocks<typeof mainBlock>;
 ```
 
-Import the type of your main block, and use it with the namespace or your block
-to infer the type of the wire with `InferWire`
+Now use `InferWire` to type your wire:
 
 ```ts
 // -- userService.ts --
@@ -307,70 +259,39 @@ type Wire = InferWire<Blocks, "user.service">;
 export const $ = tagBlock();
 
 export function myUnit(this: Wire) {
-  const getPosts = this("post.service").getPosts;
-  return getPosts();
+  return this("post.service").getPosts();
 }
 myUnit.isBound = true as const;
 ```
 
-The wire can get called with the namespace, or relative path of any block that
-contains units, it will return a proxy containing all the units of that block.
-Those units will get resolved the first time they get called, and cached it for
-later.
+Wires can resolve **current**, **root**, **child**, or **absolute** blocks:
 
-#### Current block resolution
+- `this(".")` → current block
+- `this()` → root block
+- `this(".child")` → child block
+- `this("path.to.block")` → absolute path
 
-To access the units of the same block, call the wire with a dot "." as argument:
+---
+
+### Wire Up
+
+To bootstrap your app, pass the root block to `wireUp()`.\
+It returns the main wire (or a Promise if async factories exist):
 
 ```ts
-export function myUnit(this: Wire) {
-  const config = this(".").config;
-  return config;
-}
-myUnit.isBound = true as const;
+import { type InferBlocks, wireUp } from "wiremap";
+import * as mod1 from "./module1.ts";
+import * as mod2 from "./module2.ts";
+
+const mainBlock = { mod1, mod2 };
+export type Blocks = InferBlocks<typeof mainBlock>;
+
+const main = await wireUp(mainBlock);
+
+const myUnit = main("mod1.service").myUnit;
 ```
 
-#### Root block resolution
-
-To access the units of the main block of your app, call the wire with no
-arguments:
-
-```ts
-export function myUnit(this: Wire) {
-  const config = this().config;
-  return config;
-}
-myUnit.isBound = true as const;
-```
-
-#### Child block resolution
-
-To access the units of blocks under the current one, use the relative path
-beginning with a dot ".":
-
-```ts
-export function myUnit(this: Wire) {
-  const getPosts = this(".service").getPosts;
-  return getPosts();
-}
-myUnit.isBound = true as const;
-```
-
-#### Absolute path block resolution
-
-To access the units of any block of the app, use the absolute path of the block:
-
-```ts
-export function myUnit(this: Wire) {
-  const getPosts = this("post.service").getPosts;
-  return getPosts();
-}
-myUnit.isBound = true as const;
-```
-
-### Start up
-
-// TODO
+---
 
 ## 🚀 Example
 
@@ -379,9 +300,7 @@ myUnit.isBound = true as const;
 export const config = {
   port: 3000,
   host: "localhost",
-  database: {
-    url: "postgresql://localhost:5432/myapp",
-  },
+  database: { url: "postgresql://localhost:5432/myapp" },
 };
 
 // userService.ts
@@ -392,20 +311,21 @@ export const $ = tagBlock("user.service");
 type Wire = InferWire<Blocks, "user.service">;
 
 export function getUsers(this: Wire) {
-  const db = this().database;
-  return db.users.findAll();
+  return this().database.users.findAll();
 }
 getUsers.isBound = true as const;
 
-export function createUser(wire: Wire) {
-  const db = wire().database;
-  return function (name: string, email: string) {
-    const user = { id: crypto.randomUUID(), name, email };
-    db.users.create(user);
-    return user;
-  };
-}
-createUser.isFactory = true as const;
+export const createUser = defineUnit(
+  (wire: Wire) => {
+    const db = wire().database;
+    return (name: string, email: string) => {
+      const user = { id: crypto.randomUUID(), name, email };
+      db.users.create(user);
+      return user;
+    };
+  },
+  { isFactory: true },
+);
 
 // app.ts
 import { type InferBlocks, wireUp } from "wiremap";
@@ -424,88 +344,20 @@ export type Blocks = InferBlocks<typeof main>;
 const app = await wireUp(main);
 
 // Use the application
-const users = app("user.service").getUsers();
-console.log("Users:", users);
+console.log("Users:", app("user.service").getUsers());
 ```
 
-## 📖 API Reference
-
-Check https://jsr.io/@jacobo/wiremap
+---
 
 ## 🧪 Testing
 
-Wiremap provides a simple and powerful testing approach using the `.feed()`
-method on block tags to inject test dependencies.
+// TODO
 
-### Testing with `.feed()`
+---
 
-Use the `.feed()` method on block tags to provide mock implementations for
-testing:
+## 📖 API Reference
 
-```ts
-import { assertEquals } from "@std/assert";
-import { $, addUser, getUsers } from "./userService.ts";
-import type { Database } from "../db.ts";
-
-Deno.test(function addUserTest() {
-  // Create test database
-  const db: Database = { users: [], posts: [] };
-
-  // Feed mock dependencies to the block
-  $.feed({
-    "": {
-      db, // Root-level dependency
-    },
-    "user.service": {
-      // Mock local dependencies within the same block
-      getUserByEmail: (email: string) => {
-        return db.users.find((user) => user.email === email);
-      },
-    },
-  });
-
-  // Test the functionality
-  let users = getUsers();
-  assertEquals(users.length, 0);
-
-  addUser("john", "john@example.com", true);
-
-  users = getUsers();
-  assertEquals(users.length, 1);
-  assertEquals(users[0].name, "john");
-});
-```
-
-### Cross-Block Testing
-
-You can mock dependencies from other blocks:
-
-```ts
-import { $, addPost, getPost } from "./postService.ts";
-
-Deno.test(function addPostTest() {
-  $.feed({
-    "": {
-      db: { users: [], posts: [] },
-    },
-    "user.service": {
-      // Mock dependency from another block
-      getUser: (id: string) => ({
-        id,
-        name: "testuser",
-        email: "test@example.com",
-        isAdmin: true,
-      }),
-    },
-  });
-
-  const postId = addPost("Test Title", "Test Content", "user123");
-  const post = getPost(postId);
-
-  assertEquals(post?.title, "Test Title");
-  assertEquals(post?.userId, "user123");
-});
-```
+👉 [API Documentation](https://jsr.io/@jacobo/wiremap)
 
 ## 🤝 Contributing
 
