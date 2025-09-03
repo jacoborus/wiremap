@@ -22,6 +22,44 @@ export type BlockDef<T extends Hashmap> = T & {
 /** Map of block names to their block definitions. */
 export type BlocksMap = Record<string, BlockDef<Hashmap>>;
 
+/**
+ * Creates a block definition by adding the required block tag to a definitions object.
+ *
+ * This function is useful when you want to define multiple blocks in the same file
+ * or when you need explicit control over block structure. For single-block files,
+ * the more common pattern is to use `tagBlock()` with `export const $ = tagBlock()`.
+ *
+ * @template T - The definitions object type extending Hashmap
+ * @param defs - Object containing unit definitions and nested blocks
+ * @returns Block definition with added `$` tag marker
+ *
+ * @example Multiple blocks in one file
+ * ```typescript
+ * import { defineBlock } from "wiremap";
+ *
+ * export const userService = defineBlock({
+ *   getUser: userGetterFactory,
+ *   createUser: userCreatorFactory,
+ *   config: { maxUsers: 1000 }
+ * });
+ *
+ * export const userController = defineBlock({
+ *   handleGetUser: getUserHandler,
+ *   handleCreateUser: createUserHandler
+ * });
+ * ```
+ *
+ * @example Wrapping simple values as units
+ * ```typescript
+ * // demo/post/postMod.ts
+ * export const repo = defineBlock(postRepo);  // Wrap simple value as unit
+ * ```
+ *
+ * @see {@link tagBlock} For the more common file-based block pattern
+ *
+ * @public
+ * @since 1.0.0
+ */
 export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
   return {
     ...defs,
@@ -33,6 +71,52 @@ interface BlockTag {
   [blockSymbol]: true;
 }
 
+/**
+ * Creates a block tag marker used to identify objects as blocks in the dependency injection system.
+ *
+ * This function creates the special `$` marker that `wireUp` uses to identify which objects are blocks.
+ *
+ * @returns Block tag object with internal symbol
+ *
+ * @example File-based block pattern (most common)
+ * ```typescript
+ * // userService.ts
+ * import { tagBlock } from "wiremap";
+ *
+ * export const $ = tagBlock();  // Mark entire file as block
+ * export const getUser = userGetterFactory;
+ * export const createUser = userCreatorFactory;
+ * export const config = { maxUsers: 1000 };
+ * ```
+ *
+ * @example Usage in application setup
+ * ```typescript
+ * // app.ts
+ * import * as userMod from "./user/userMod.ts";
+ * import * as postMod from "./post/postMod.ts";
+ *
+ * const appSchema = {
+ *   user: userMod,    // userMod.$ identifies this as a block
+ *   post: postMod,    // postMod.$ identifies this as a block
+ *   config: { port: 3000 }
+ * };
+ *
+ * const app = await wireUp(appSchema);
+ * ```
+ *
+ * @example Nested block structure
+ * ```typescript
+ * // userMod.ts - Parent block
+ * export const $ = tagBlock();
+ * export const service = userService;  // userService.ts also has tagBlock()
+ * export const repository = userRepo;
+ * ```
+ *
+ * @see {@link defineBlock} For explicit block definition with multiple blocks per file
+ *
+ * @public
+ * @since 1.0.0
+ */
 export function tagBlock(): BlockTag {
   return { [blockSymbol]: true };
 }
