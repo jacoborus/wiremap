@@ -14,7 +14,11 @@
     "include": [
       "LICENSE",
       "README.md",
-      "src/wiremap.ts"
+      "src/wiremap.ts",
+      "src/block.ts",
+      "src/unit.ts",
+      "src/mock.ts",
+      "src/common.ts"
     ]
   },
   "imports": {
