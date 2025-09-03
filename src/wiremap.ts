@@ -37,11 +37,50 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
   : false;
 
 /**
- * The main wire function interface that provides different access patterns:
- * - () returns root block proxy
- * - (".") returns local block proxy (same block context, includes private units)
- * - (".child.path") returns the proxy of a descendent block
- * - ("path.of.the.block") returns specific block proxy
+ * The main wire function interface that provides different access patterns for 
+ * blocks and units with full type safety.
+ * 
+ * This interface ensures type safety when navigating between blocks using the wire function.
+ * It provides overloaded signatures for different block resolution patterns, enabling
+ * both relative and absolute path navigation through your application's dependency graph.
+ * 
+ * @template D - The blocks definitions type extending Hashmap
+ * @template N - The current block path context as a string
+ * 
+ * @example Basic wire usage in a service
+ * ```typescript
+ * import type { InferWire } from "wiremap";
+ * import type { Blocks } from "../app.ts";
+ * 
+ * type Wire = InferWire<Blocks, "user.service">;
+ * 
+ * export function addUser(this: Wire, name: string, email: string) {
+ *   // Local block access (includes private units)
+ *   const getUserByEmail = this(".").getUserByEmail;
+ *   
+ *   // Parent block access  
+ *   const repo = this("user").repo;
+ *   
+ *   // Cross-module absolute access
+ *   const logger = this("shared.logger");
+ *   
+ *   // Root block access
+ *   const config = this().config;
+ * }
+ * ```
+ * 
+ * @example Different access patterns
+ * ```typescript
+ * // From context "post.service":
+ * wire()                 // → Root block proxy
+ * wire(".")              // → Local block proxy (post.service, includes private units)
+ * wire("..")             // → Parent block proxy (post)
+ * wire(".repository")    // → Child block proxy (post.service.repository)
+ * wire("user.service")   // → Absolute block path (user.service)
+ * ```
+ * 
+ * @public
+ * @since 1.0.0
  */
 export interface InferWire<D extends Hashmap, N extends string> {
   // root block resolution
@@ -110,28 +149,52 @@ type ExtractBlockKeys<T> = {
 
 /**
  * Wires up a set of unit definitions and blocks for dependency injection.
+ * 
+ * This is the main bootstrap function that creates the dependency injection container
+ * and returns a wire function for accessing units across your application. It handles
+ * both synchronous and asynchronous factory initialization automatically.
  *
- * To create a block, export a `$` variable from your module using `tagBlock("blockName")`.
- * All exported properties (except `$`) become units of the block.
- *
+ * @template Defs - The definitions object type
  * @param defs - Object containing unit definitions and imported blocks. Each block should export a `$` tag via `tagBlock`.
  * @returns Promise<Wire> if any async factory units exist, otherwise Wire for synchronous resolution.
- * @example
- * ```ts
- * // In app.ts:
- * import * as userMod from "./userMod.ts";
- * const defs = {
- *   config: { port: 3000 },
- *   userService: userMod
+ * 
+ * @example Basic application setup
+ * ```typescript
+ * // app.ts
+ * import * as userMod from "./user/userMod.ts";
+ * import * as postMod from "./post/postMod.ts";
+ * 
+ * const appSchema = {
+ *   user: userMod,
+ *   post: postMod,
+ *   config: { port: 3000, dbUrl: "localhost:5432" }
  * };
- * const app = wireUp(defs);
- *
+ * 
+ * const app = await wireUp(appSchema);
+ * 
  * // Access root units
  * console.log(app().config.port); // 3000
- *
- * // Access block units
- * app("user.service").addUser("name", "email");
+ * 
+ * // Access nested block units
+ * const userId = app("user.service").addUser("John", "john@example.com");
+ * app("post.service").addPost("Hello World", "Content", userId);
  * ```
+ * 
+ * @example Synchronous vs Asynchronous
+ * ```typescript
+ * // Synchronous - no async factories
+ * const syncApp = wireUp({ config: { port: 3000 } });
+ * syncApp().config.port; // Available immediately
+ * 
+ * // Asynchronous - contains async factories
+ * const asyncApp = await wireUp({
+ *   database: defineUnit(async () => await connectToDb(), { isFactory: true, isAsync: true })
+ * });
+ * asyncApp().database.query("SELECT * FROM users");
+ * ```
+ * 
+ * @public
+ * @since 1.0.0
  */
 export function wireUp<Defs extends Hashmap>(
   defs: Defs,
@@ -159,12 +222,39 @@ export function wireUp<Defs extends Hashmap>(
 
 /**
  * Infers the structure of all blocks and units from a definitions object.
+ * 
+ * This utility type analyzes your definitions object and generates a mapped type 
+ * containing all block paths and their corresponding unit structures. It's essential 
+ * for getting proper TypeScript support when working with wire functions across 
+ * your application.
  *
- * Use this type to get the correct typings for your wired app.
- *
- * @example
- * const defs = { user: userMod, config: { port: 3000 } };
- * export type Defs = InferBlocks<typeof defs>;
+ * @template R - The definitions object type extending Hashmap
+ * 
+ * @example Basic usage
+ * ```typescript
+ * const appSchema = { 
+ *   user: userMod, 
+ *   post: postMod,
+ *   config: { port: 3000 } 
+ * };
+ * 
+ * export type Blocks = InferBlocks<typeof appSchema>;
+ * // Result: Blocks contains paths like "", "user", "user.service", "post", "post.service"
+ * ```
+ * 
+ * @example Using with wire types
+ * ```typescript
+ * import type { InferBlocks, InferWire } from "wiremap";
+ * 
+ * const defs = { user: userMod, post: postMod };
+ * export type Blocks = InferBlocks<typeof defs>;
+ * 
+ * // Now use in your services
+ * type Wire = InferWire<Blocks, "user.service">;
+ * ```
+ * 
+ * @public
+ * @since 1.0.0
  */
 export type InferBlocks<R extends Hashmap> = {
   [K in BlockPaths<R>]: K extends "" ? R : PathValue<R, K>;
