@@ -1,4 +1,10 @@
-import { unitSymbol, isFunction, type Func, type AsyncFunc } from "./common.ts";
+import {
+  unitSymbol,
+  isFunction,
+  type Func,
+  type AsyncFunc,
+  type Hashmap,
+} from "./common.ts";
 
 interface PrivateUnitFunc extends Func {
   isPrivate: true;
@@ -214,10 +220,10 @@ type UnitDefinition<T, O extends UnitOptions> = {
   opts: O;
 };
 
-export function defineUnit<
-  const T,
-  const O extends UnitOptions = Record<PropertyKey, never>,
->(def: T, options?: O): UnitDefinition<T, O> {
+export function defineUnit<const T, const O extends UnitOptions = Hashmap>(
+  def: T,
+  options?: O,
+): UnitDefinition<T, O> {
   const opts = options ?? ({} as UnitOptions);
   if (opts.isBound || opts.isFactory || opts.isAsync) {
     if (typeof def !== "function")
