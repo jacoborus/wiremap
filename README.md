@@ -26,6 +26,33 @@ time.
 - **🔌 Zero Configuration**: Install and import, nothing else
 - **🔨 Simple API**: So simple, it hurts
 
+## 📑 Table of contents
+
+- [Wiremap](#wiremap)
+  - [✨ Features](#-features)
+  - [📑 TOC](#-table-of-contents)
+  - [🏛 Architecture-Agnostic](#-architecture-agnostic)
+  - [📦 Installation](#-installation)
+  - [🧩 Core Concepts](#-core-concepts)
+  - [🚀 Example](#-example)
+  - [🧪 Testing](#-testing)
+  - [📖 API Reference](#-api-reference)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+
+
+## 🏛 Architecture-Agnostic
+
+Wiremap is architecture-agnostic. It doesn’t enforce a particular structure but
+adapts naturally to any software design approach. Whether you’re building with
+**Hexagonal Architecture**, **Domain-Driven Design (DDD)**, or the **Ports and
+Adapters** pattern, Wiremap makes it simple to express clear boundaries between
+layers. Its compositional blocks and type-safe wires let you organize services,
+domains, infrastructure, and application logic in a way that fits your chosen
+methodology. You can even combine patterns (e.g. **CQRS** + DDD) without
+fighting the framework—Wiremap’s role is to provide clean, dependency-free
+wiring, no matter how you shape your architecture.
+
 ## 📦 Installation
 
 ```bash
