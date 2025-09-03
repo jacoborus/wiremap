@@ -38,12 +38,12 @@ time.
     - [Unit](#unit)
     - [Wire](#wire)
     - [Wire Up](#wire-up)
+    - [Mock unit](#mock-unit)
   - [🚀 Example](#-example)
   - [🧪 Testing](#-testing)
   - [📖 API Reference](#-api-reference)
   - [🤝 Contributing](#-contributing)
   - [📄 License](#-license)
-
 
 ## 🏛 Architecture-Agnostic
 
@@ -53,7 +53,7 @@ adapts naturally to any software design approach. Whether you’re building with
 Adapters** pattern, Wiremap makes it simple to express clear boundaries between
 layers. Its compositional blocks and type-safe wires let you organize services,
 domains, infrastructure, and application logic in a way that fits your chosen
-methodology. You can even combine patterns  without fighting the framework.\ 
+methodology. You can even combine patterns without fighting the framework.\
 Wiremap’s role is to provide clean, dependency-free wiring, no matter how you
 shape your architecture.
 
@@ -324,6 +324,59 @@ const myUnit = main("mod1.service").myUnit;
 
 ---
 
+### Mock unit
+
+Wiremap includes built-in utilities to make testing easy and reliable. Because
+blocks and units are fully compositional, you can swap out real implementations
+with mocks, stubs, or fakes, ensuring tests stay isolated and predictable.
+
+The `mockUnit` helper lets you replace the dependencies of a unit under test
+with controlled fake values. This way you can test logic in complete isolation,
+without touching databases, APIs, or other external systems.
+
+Here’s an example using a `postService` module:
+
+```ts
+import { mockUnit } from "../../src/mock.ts";
+
+import * as postService from "./postService.ts";
+
+// Fake blocks used during testing
+const fakeBlocks = {
+  // override a repository with an in-memory array
+  "..": { repo: [] },
+
+  // replace user service with a mock
+  "user.service": {
+    getUser: (id: string) => ({
+      id,
+      name: "jacobo",
+      email: "jacobo@example.com",
+      isAdmin: true,
+    }),
+  },
+};
+
+// Create mocked versions of the real units
+const addPost = mockUnit(postService.addPost, fakeBlocks);
+const getPost = mockUnit(postService.getPost, fakeBlocks);
+
+// Run the test
+const postId = addPost("titulo", "contenido", "11234");
+const post = getPost(postId);
+
+if (!post) throw new Error("Post not found");
+
+assertEquals(post.id, postId);
+assertEquals(post.title, "titulo");
+assertEquals(post.content, "contenido");
+assertEquals(post.userId, "11234");
+```
+
+This allows you to test the business logic of your unit without depending on
+real infrastructure. By controlling the wire through fakeBlocks, you can
+precisely simulate the environment needed for each test case.
+
 ## 🚀 Example
 
 ```ts
@@ -377,60 +430,6 @@ const app = await wireUp(main);
 // Use the application
 console.log("Users:", app("user.service").getUsers());
 ```
-
----
-
-## 🧪 Testing
-
-Wiremap includes built-in utilities to make testing easy and reliable.
-Because blocks and units are fully compositional, you can swap out real implementations with mocks, stubs, or fakes, ensuring tests stay isolated and predictable.
-
-### Mocking units
-
-The `mockUnit` helper lets you replace the dependencies of a unit under test with controlled fake values. This way you can test logic in complete isolation, without touching databases, APIs, or other external systems.
-
-Here’s an example using a `postService` module:
-
-```ts
-import { mockUnit } from "../../src/mock.ts";
-
-import * as postService from "./postService.ts";
-
-// Fake blocks used during testing
-const fakeBlocks = {
-  // override a repository with an in-memory array
-  "..": { repo: [] },
-
-  // replace user service with a mock
-  "user.service": {
-    getUser: (id: string) => ({
-      id,
-      name: "jacobo",
-      email: "jacobo@example.com",
-      isAdmin: true,
-    }),
-  },
-};
-
-// Create mocked versions of the real units
-const addPost = mockUnit(postService.addPost, fakeBlocks);
-const getPost = mockUnit(postService.getPost, fakeBlocks);
-
-// Run the test
-const postId = addPost("titulo", "contenido", "11234");
-const post = getPost(postId);
-
-if (!post) throw new Error("Post not found");
-
-assertEquals(post.id, postId);
-assertEquals(post.title, "titulo");
-assertEquals(post.content, "contenido");
-assertEquals(post.userId, "11234");
-```
-
-This allows you to test the business logic of your unit without depending on real infrastructure. By controlling the wire through fakeBlocks, you can precisely simulate the environment needed for each test case.
-
----
 
 ## 📖 API Reference
 
