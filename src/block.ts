@@ -49,12 +49,6 @@ export type BlocksMap = Record<string, BlockDef<Hashmap>>;
  * });
  * ```
  *
- * @example Wrapping simple values as units
- * ```typescript
- * // demo/post/postMod.ts
- * export const repo = defineBlock(postRepo);  // Wrap simple value as unit
- * ```
- *
  * @see {@link tagBlock} For the more common file-based block pattern
  *
  * @public
