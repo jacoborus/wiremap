@@ -2,12 +2,12 @@ import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit, UnitDef } from "./unit.ts";
 import type { BlockDef, BlockProxy, BlocksMap, IsBlock } from "./block.ts";
 
-import { isFunction, unitSymbol } from "./common.ts";
+import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import { getWire, itemIsBlock, tagBlock } from "./block.ts";
 
-export { defineBlock, tagBlock } from "./block.ts";
 export { defineUnit } from "./unit.ts";
+export { defineBlock, tagBlock } from "./block.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -405,7 +405,7 @@ async function resolveAsyncFactories(
     for await (const key of keys) {
       const item = block[key];
 
-      if (isFunction(item) && isAsyncFactoryFunc(item)) {
+      if (isAsyncFactoryFunc(item)) {
         const wire = cache.wire.has(blockKey)
           ? cache.wire.get(blockKey)
           : getWire(blockKey, defs, cache);

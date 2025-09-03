@@ -1,10 +1,12 @@
-import {
-  unitSymbol,
-  isFunction,
-  type Func,
-  type AsyncFunc,
-  type Hashmap,
-} from "./common.ts";
+import type { Hashmap } from "./common.ts";
+import { unitSymbol } from "./common.ts";
+
+type Func = (...args: unknown[]) => unknown;
+type AsyncFunc = (...args: unknown[]) => Promise<unknown>;
+
+function isFunction(unit: unknown): unit is Func {
+  return typeof unit === "function";
+}
 
 interface PrivateUnitFunc extends Func {
   isPrivate: true;
@@ -222,27 +224,27 @@ type UnitDefinition<T, O extends UnitOptions> = {
 
 /**
  * Creates a unit definition with specific behavior options for dependency injection.
- * 
+ *
  * Units are the smallest building blocks of your application. They can hold any value
  * and are resolved lazily (on demand) and cached. This function allows you to configure
  * how units behave within the dependency injection system.
- * 
+ *
  * @template T - The unit value type
  * @template O - The unit options type extending UnitOptions
  * @param def - The unit value (can be any type, but functions have special behavior)
  * @param options - Configuration object controlling unit behavior
  * @param options.isPrivate - Makes unit accessible only within the same block (default: false)
- * @param options.isBound - Binds function to the wire (this = wire) (default: false)  
+ * @param options.isBound - Binds function to the wire (this = wire) (default: false)
  * @param options.isFactory - Calls function with wire as parameter (default: false)
  * @param options.isAsync - For async factory functions (must be used with isFactory) (default: false)
  * @returns Unit definition object with specified behavior
- * 
+ *
  * @example Plain unit (default behavior)
  * ```typescript
  * export const config = defineUnit({ port: 3000, dbUrl: "localhost" });
  * // or simply: export const config = { port: 3000, dbUrl: "localhost" };
  * ```
- * 
+ *
  * @example Factory unit - lazy initialization with dependencies
  * ```typescript
  * export const userService = defineUnit(
@@ -250,17 +252,17 @@ type UnitDefinition<T, O extends UnitOptions> = {
  *   { isFactory: true }
  * );
  * ```
- * 
+ *
  * @example Bound unit - function with wire as 'this'
  * ```typescript
  * export const getUsers = defineUnit(
- *   function(this: Wire) { 
- *     return this().database.users.findAll(); 
+ *   function(this: Wire) {
+ *     return this().database.users.findAll();
  *   },
  *   { isBound: true }
  * );
  * ```
- * 
+ *
  * @example Async factory unit - for async initialization
  * ```typescript
  * export const dbConnection = defineUnit(
@@ -271,7 +273,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  *   { isFactory: true, isAsync: true }
  * );
  * ```
- * 
+ *
  * @example Private unit - only accessible within same block
  * ```typescript
  * export const internalHelper = defineUnit(
@@ -279,7 +281,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  *   { isPrivate: true, isFactory: true }
  * );
  * ```
- * 
+ *
  * @example Alternative syntax without helper
  * ```typescript
  * export function getUsers(this: Wire) {
@@ -287,9 +289,9 @@ type UnitDefinition<T, O extends UnitOptions> = {
  * }
  * getUsers.isBound = true as const;
  * ```
- * 
+ *
  * @throws {Error} When isBound, isFactory, or isAsync is true but def is not a function
- * 
+ *
  * @public
  * @since 1.0.0
  */
