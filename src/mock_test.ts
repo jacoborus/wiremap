@@ -14,7 +14,7 @@ Deno.test("mockUnit: bound", () => {
       getUser: (id: string) => ({
         id,
         name: "jacobo",
-        email: "asdfasdf@qfasdfasd.asdf",
+        email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
     },
@@ -28,7 +28,42 @@ Deno.test("mockUnit: bound", () => {
   assertEquals(user, {
     id: "11234",
     name: "jacobo",
-    email: "asdfasdf@qfasdfasd.asdf",
+    email: "asdfasdf@asdfasdf.asdf",
+    isAdmin: true,
+  });
+});
+
+Deno.test("mockUnit: factory", () => {
+  function factoryFunc(
+    wire: <K extends keyof typeof fakeBlocks>(k: K) => (typeof fakeBlocks)[K],
+  ) {
+    return function (id: string) {
+      const getUser = wire("user.service").getUser;
+      return getUser(id);
+    };
+  }
+  factoryFunc.isFactory = true as const;
+
+  const fakeBlocks = {
+    "user.service": {
+      getUser: (id: string) => ({
+        id,
+        name: "jacobo",
+        email: "asdfasdf@asdfasdf.asdf",
+        isAdmin: true,
+      }),
+    },
+  };
+
+  const factory = mockUnit(factoryFunc, fakeBlocks);
+  const user = factory("11234");
+
+  if (!user) throw new Error("Post not found");
+
+  assertEquals(user, {
+    id: "11234",
+    name: "jacobo",
+    email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
 });
