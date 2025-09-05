@@ -1,6 +1,6 @@
 {
   "name": "wiremap",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Compositional dependency injection framework.",
   "main": "./dist/wiremap.js",
   "scripts": {
