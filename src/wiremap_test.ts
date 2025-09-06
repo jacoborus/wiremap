@@ -1,6 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { tagBlock, wireUp, defineUnit } from "./wiremap.ts";
-import { mockUnit } from "./mock.ts";
 import type { InferBlocks, InferWire } from "./wiremap.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
@@ -36,8 +35,7 @@ Deno.test("wireUp resolves async factories that return a promise", async () => {
       resolve(theKey);
     });
   }
-  factoryFn.isFactory = true as const;
-  factoryFn.isAsync = true as const;
+  factoryFn.is = "asyncFactory" as const;
 
   const defs = {
     $,
@@ -106,53 +104,6 @@ Deno.test("error handling for missing dependencies", () => {
   }
 });
 
-Deno.test("mock injection", () => {
-  const fakeBlocks = {
-    "test.service": {
-      getByEmail: (email: string) => {
-        assertEquals(email, "email");
-        return { email };
-      },
-    },
-  };
-
-  type W = <K extends keyof typeof fakeBlocks>(k: K) => (typeof fakeBlocks)[K];
-
-  function bound(this: W, email: string) {
-    // const getByEmail = injector(".").getByEmail;
-    const getByEmail = this("test.service").getByEmail;
-    return getByEmail(email);
-  }
-  bound.isBound = true as const;
-
-  const getUser = mockUnit(bound, fakeBlocks);
-
-  assertEquals(getUser("email").email, "email");
-});
-
-Deno.test("mockFactory", () => {
-  const fakeBlocks = {
-    "@test.service": {
-      getByEmail: (email: string) => {
-        assertEquals(email, "email");
-        return { email };
-      },
-    },
-  };
-
-  type W = <K extends keyof typeof fakeBlocks>(k: K) => (typeof fakeBlocks)[K];
-
-  function getUserFactory(w: W) {
-    const getByEmail = w("@test.service").getByEmail;
-    return (email: string) => getByEmail(email);
-  }
-  getUserFactory.isFactory = true as const;
-
-  const getUser = mockUnit(getUserFactory, fakeBlocks);
-
-  assertEquals(getUser("email").email, "email");
-});
-
 Deno.test("wireUp protects private units", () => {
   type Wa = InferWire<Defs, "A">;
   type Wb = InferWire<Defs, "B">;
@@ -166,7 +117,7 @@ Deno.test("wireUp protects private units", () => {
     const f = this(".").priv;
     return f();
   }
-  pub.isBound = true as const;
+  pub.is = "bound" as const;
 
   function other(this: Wb) {
     // @ts-ignore: this is just for the internal test
@@ -260,7 +211,7 @@ Deno.test("defineUnit: isPrivate", () => {
         function (w: Wb) {
           return w(".").valor;
         },
-        { isFactory: true },
+        { is: "factory" },
       ),
     },
   };
@@ -298,7 +249,7 @@ Deno.test("defineUnit: isFactory", () => {
           const bvalue = w("a.b").valor;
           return () => `${rootValue}-${avalue}-${bvalue}`;
         },
-        { isFactory: true },
+        { is: "factory" },
       ),
       b: {
         $: $b,
@@ -310,13 +261,13 @@ Deno.test("defineUnit: isFactory", () => {
             const bvalue = w(".").valor;
             return () => `${rootValue}-${avalue}-${bvalue}`;
           },
-          { isFactory: true },
+          { is: "factory" },
         ),
         deepFactory2: defineUnit(
           (w: Wb) => {
             return w(".").deepFactory;
           },
-          { isFactory: true },
+          { is: "factory" },
         ),
       },
     },
@@ -356,7 +307,7 @@ Deno.test("defineUnit: isAsync", async () => {
           });
           return () => `${rootValue}-${avalue}-${bvalue}`;
         },
-        { isFactory: true, isAsync: true },
+        { is: "asyncFactory" },
       ),
       b: {
         $: $b,
@@ -373,7 +324,7 @@ Deno.test("defineUnit: isAsync", async () => {
               );
             });
           },
-          { isFactory: true, isAsync: true },
+          { is: "asyncFactory" },
         ),
         deepFactory2: defineUnit(
           async (w: Wb) => {
@@ -381,7 +332,7 @@ Deno.test("defineUnit: isAsync", async () => {
               setTimeout(() => res(w(".").deepFactory), 20);
             });
           },
-          { isFactory: true, isAsync: true },
+          { is: "asyncFactory" },
         ),
       },
     },

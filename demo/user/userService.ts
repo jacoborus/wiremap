@@ -10,7 +10,7 @@ export function getUsers(this: W) {
   const repo = this("user").repo;
   return repo.slice();
 }
-getUsers.isBound = true as const;
+getUsers.is = "bound" as const;
 
 /**
  * Get a user by id
@@ -27,7 +27,7 @@ export const getUser = defineUnit(
     const repo = w("user").repo;
     return (id: string) => repo.find((user) => user.id === id);
   },
-  { isFactory: true },
+  { is: "factory" },
 );
 
 /** Get a user by its email */
@@ -36,7 +36,7 @@ export const getUserByEmail = defineUnit(
     const repo = this("user").repo;
     return repo.find((user) => user.email === email);
   },
-  { isBound: true },
+  { is: "bound" },
 );
 
 /**
@@ -64,4 +64,4 @@ export function addUser(this: W, name: string, email: string, isAdmin = false) {
   repo.push(user);
   return user.id;
 }
-addUser.isBound = true as const;
+addUser.is = "bound" as const;

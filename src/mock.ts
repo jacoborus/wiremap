@@ -82,14 +82,14 @@ type Mocked<T> =
  * const mockService = mockUnit(
  *   defineUnit(
  *     (wire) => new Service(wire().db),
- *     { isFactory: true }
+ *     { is: 'factory' }
  *   ),
  *   fakeBlocks
  * );
  *
  * // Bound unit
  * const mockHandler = mockUnit(
- *   defineUnit(function(this: Wire) { return this().db; }, { isBound: true }),
+ *   defineUnit(function(this: Wire) { return this().db; }, { is: 'bound' }),
  *   fakeBlocks
  * );
  * ```

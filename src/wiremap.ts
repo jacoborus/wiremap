@@ -188,7 +188,7 @@ type ExtractBlockKeys<T> = {
  *
  * // Asynchronous - contains async factories
  * const asyncApp = await wireUp({
- *   database: defineUnit(async () => await connectToDb(), { isFactory: true, isAsync: true })
+ *   database: defineUnit(async () => await connectToDb(), { is: 'asyncFactory' })
  * });
  * asyncApp().database.query("SELECT * FROM users");
  * ```

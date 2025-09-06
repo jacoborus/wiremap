@@ -1,4 +1,3 @@
-import type { Hashmap } from "./common.ts";
 import { unitSymbol } from "./common.ts";
 
 type Func = (...args: unknown[]) => unknown;
@@ -33,37 +32,31 @@ export function isPrivate(unit: unknown): unit is PrivateUnitFunc {
 
 type BoundFunc<T extends Func> = T & {
   isPrivate?: boolean;
-  isBound: true;
-  isFactory?: false;
-  isAsync?: false;
+  is: "bound";
 };
 
 type FactoryFunc<F extends Func> = F & {
   isPrivate?: boolean;
-  isBound?: false;
-  isFactory: true;
-  isAsync?: false;
+  is: "factory";
 };
 
 type AsyncFactoryFunc<F extends AsyncFunc> = F & {
   isPrivate?: boolean;
-  isBound?: false;
-  isFactory: true;
-  isAsync: true;
+  is: "asyncFactory";
 };
 
 export function isBoundFunc(unit: unknown): unit is BoundFunc<Func> {
   if (!isFunction(unit)) {
     return false;
   }
-  return "isBound" in unit && unit.isBound === true;
+  return "is" in unit && unit.is === "bound";
 }
 
 export function isFactoryFunc(unit: unknown): unit is FactoryFunc<Func> {
   if (!isFunction(unit)) {
     return false;
   }
-  return "isFactory" in unit && unit.isFactory === true;
+  return "is" in unit && unit.is === "factory";
 }
 
 export function isAsyncFactoryFunc(
@@ -72,12 +65,7 @@ export function isAsyncFactoryFunc(
   if (!isFunction(unit)) {
     return false;
   }
-  return (
-    "isFactory" in unit &&
-    unit.isFactory === true &&
-    "isAsync" in unit &&
-    unit.isAsync === true
-  );
+  return "is" in unit && unit.is === "asyncFactory";
 }
 
 type IsAsyncFn<T> = T extends (...args: infer _A) => Promise<unknown>
@@ -98,9 +86,7 @@ export type IsAsyncFactory<T> = T extends UnitDef
 //   [unitSymbol]: T;
 //   opts: {
 //     isPrivate?: boolean;
-//     isBound?: false;
-//     isFactory?: false;
-//     isAsync?: false;
+//     is: undefined
 //   };
 // };
 
@@ -108,9 +94,7 @@ type BoundDef<T extends Func> = {
   [unitSymbol]: T;
   opts: {
     isPrivate?: boolean;
-    isBound: true;
-    isFactory?: false;
-    isAsync?: false;
+    is: "bound";
   };
 };
 
@@ -118,9 +102,7 @@ type FactoryDef<T extends Func> = {
   [unitSymbol]: T;
   opts: {
     isPrivate?: boolean;
-    isBound?: false;
-    isFactory: true;
-    isAsync?: false;
+    is: "factory";
   };
 };
 
@@ -128,9 +110,7 @@ type AsyncFactoryDef<F extends AsyncFunc> = {
   [unitSymbol]: F;
   opts: {
     isPrivate?: boolean;
-    isBound?: false;
-    isFactory: true;
-    isAsync: true;
+    is: "asyncFactory";
   };
 };
 
@@ -142,11 +122,7 @@ export function isBoundDef(def: unknown): def is BoundDef<Func> {
     return false;
   }
 
-  return (
-    "isBound" in def.opts &&
-    typeof def.opts.isBound === "boolean" &&
-    def.opts.isBound === true
-  );
+  return def.opts.is === "bound";
 }
 
 export function isFactoryDef(def: unknown): def is FactoryDef<Func> {
@@ -157,7 +133,7 @@ export function isFactoryDef(def: unknown): def is FactoryDef<Func> {
     return false;
   }
 
-  return "isFactory" in def.opts && def.opts.isFactory === true;
+  return def.opts.is === "factory";
 }
 
 export function isAsyncFactoryDef(
@@ -170,12 +146,7 @@ export function isAsyncFactoryDef(
     return false;
   }
 
-  return (
-    "isFactory" in def.opts &&
-    def.opts.isFactory === true &&
-    "isAsync" in def.opts &&
-    def.opts.isAsync === true
-  );
+  return def.opts.is === "asyncFactory";
 }
 
 export interface UnitDef {
@@ -185,30 +156,22 @@ export interface UnitDef {
 
 export interface PlainUnitOptions {
   isPrivate?: boolean;
-  isBound?: false;
-  isFactory?: false;
-  isAsync?: false;
+  is?: "bound" | "factory" | "asyncFactory";
 }
 
 export interface BoundUnitOptions {
   isPrivate?: boolean;
-  isBound: true;
-  isFactory?: false;
-  isAsync?: false;
+  is: "bound";
 }
 
 export interface FactoryUnitOptions {
   isPrivate?: boolean;
-  isBound?: false;
-  isFactory: true;
-  isAsync?: false;
+  is: "factory";
 }
 
 export interface AsyncFactoryUnitOptions {
   isPrivate?: boolean;
-  isBound?: false;
-  isFactory: true;
-  isAsync: true;
+  is: "asyncFactory";
 }
 
 type UnitOptions =
@@ -234,9 +197,9 @@ type UnitDefinition<T, O extends UnitOptions> = {
  * @param def - The unit value (can be any type, but functions have special behavior)
  * @param options - Configuration object controlling unit behavior
  * @param options.isPrivate - Makes unit accessible only within the same block (default: false)
- * @param options.isBound - Binds function to the wire (this = wire) (default: false)
- * @param options.isFactory - Calls function with wire as parameter (default: false)
- * @param options.isAsync - For async factory functions (must be used with isFactory) (default: false)
+ * @param options.is - 'bound': Binds function to the wire (this = wire)\
+ *    'factory': Calls function with wire as parameter.\
+ *    'asyncFactory': For async factory functions
  * @returns Unit definition object with specified behavior
  *
  * @example Plain unit (default behavior)
@@ -249,7 +212,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  * ```typescript
  * export const userService = defineUnit(
  *   (wire) => new UserService(wire().database, wire().logger),
- *   { isFactory: true }
+ *   { is: 'factory' }
  * );
  * ```
  *
@@ -259,7 +222,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  *   function(this: Wire) {
  *     return this().database.users.findAll();
  *   },
- *   { isBound: true }
+ *   { is: 'bound' }
  * );
  * ```
  *
@@ -270,7 +233,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  *     const config = wire().config;
  *     return await connectToDatabase(config.dbUrl);
  *   },
- *   { isFactory: true, isAsync: true }
+ *   { is: 'asyncFactory' }
  * );
  * ```
  *
@@ -278,7 +241,7 @@ type UnitDefinition<T, O extends UnitOptions> = {
  * ```typescript
  * export const internalHelper = defineUnit(
  *   () => ({ format: (str: string) => str.toUpperCase() }),
- *   { isPrivate: true, isFactory: true }
+ *   { isPrivate: true, is: 'factory' }
  * );
  * ```
  *
@@ -287,20 +250,24 @@ type UnitDefinition<T, O extends UnitOptions> = {
  * export function getUsers(this: Wire) {
  *   return this().database.users.findAll();
  * }
- * getUsers.isBound = true as const;
+ * getUsers.is = 'bound' as const;
  * ```
  *
- * @throws {Error} When isBound, isFactory, or isAsync is true but def is not a function
+ * @throws {Error} When is equals 'bound', 'factory', or 'asyncFactory' but def is not a function
  *
  * @public
  * @since 1.0.0
  */
-export function defineUnit<const T, const O extends UnitOptions = Hashmap>(
+export function defineUnit<const T, const O extends UnitOptions = UnitOptions>(
   def: T,
   options?: O,
 ): UnitDefinition<T, O> {
   const opts = options ?? ({} as UnitOptions);
-  if (opts.isBound || opts.isFactory || opts.isAsync) {
+  if (
+    opts.is === "bound" ||
+    opts.is === "factory" ||
+    opts.is === "asyncFactory"
+  ) {
     if (typeof def !== "function")
       throw new Error("Wrong unit definition value");
   }

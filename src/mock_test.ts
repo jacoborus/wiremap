@@ -9,7 +9,7 @@ Deno.test("mockUnit: bound function", () => {
     const getUser = this("user.service").getUser;
     return getUser(id);
   }
-  boundFunc.isBound = true as const;
+  boundFunc.is = "bound" as const;
 
   const fakeBlocks = {
     "user.service": {
@@ -44,7 +44,7 @@ Deno.test("mockUnit: factory function", () => {
       return getUser(id);
     };
   }
-  factoryFunc.isFactory = true as const;
+  factoryFunc.is = "factory" as const;
 
   const fakeBlocks = {
     "user.service": {
@@ -81,8 +81,7 @@ Deno.test("mockUnit: async factory function", async () => {
       return getUser(id);
     };
   }
-  factoryFunc.isFactory = true as const;
-  factoryFunc.isAsyncFactory = true as const;
+  factoryFunc.is = "asyncFactory" as const;
 
   const fakeBlocks = {
     "user.service": {
@@ -115,7 +114,7 @@ Deno.test("mockUnit: bound definition", () => {
       const getUser = this("user.service").getUser;
       return getUser(id);
     },
-    { isBound: true },
+    { is: "bound" },
   );
 
   const fakeBlocks = {
@@ -151,7 +150,7 @@ Deno.test("mockUnit: factory definition", () => {
         return getUser(id);
       };
     },
-    { isFactory: true },
+    { is: "factory" },
   );
 
   const fakeBlocks = {
@@ -189,7 +188,7 @@ Deno.test("mockUnit: async factory definition", async () => {
         return getUser(id);
       };
     },
-    { isFactory: true, isAsync: true },
+    { is: "asyncFactory" },
   );
 
   const fakeBlocks = {

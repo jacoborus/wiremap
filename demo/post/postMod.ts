@@ -15,4 +15,4 @@ export function childResolution(this: W) {
   const getPosts = this(".service").getPosts;
   return getPosts();
 }
-childResolution.isBound = true as const;
+childResolution.is = "bound" as const;

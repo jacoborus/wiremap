@@ -9,7 +9,7 @@ export function getPosts(this: W) {
   const collection = this(".").collection;
   return collection.slice();
 }
-getPosts.isBound = true as const;
+getPosts.is = "bound" as const;
 
 /**
  * Retrieve a post from the database
@@ -25,7 +25,7 @@ export function getPost(wire: W) {
   const repo = wire("..").repo;
   return (id: string) => repo.find((post) => post.id === id);
 }
-getPost.isFactory = true as const;
+getPost.is = "factory" as const;
 
 /** Create a post in the database */
 export function addPost(
@@ -43,7 +43,7 @@ export function addPost(
   repo.push({ id, title, userId, content });
   return id;
 }
-addPost.isBound = true as const;
+addPost.is = "bound" as const;
 
 /**
  * The posts collection of the database
@@ -61,5 +61,4 @@ export const collection = async function (wire: W) {
     );
   });
 };
-collection.isFactory = true as const;
-collection.isAsync = true as const;
+collection.is = "asyncFactory" as const;

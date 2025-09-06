@@ -188,7 +188,7 @@ They’re lazy (initialized on first access) and cached.
 export const myUnit = (wire: MyWire) => () => {
   return theUnitValue;
 };
-myUnit.isFactory = true as const;
+myUnit.is = 'factory' as const;
 ```
 
 With helper:
@@ -196,7 +196,7 @@ With helper:
 ```ts
 export const myUnit = defineUnit(
   (wire: MyWire) => () => theUnitValue,
-  { isFactory: true },
+  { is: 'factory' },
 );
 ```
 
@@ -213,8 +213,7 @@ export async function myUnit(wire: MyWire) {
   await whatEver();
   return () => {};
 }
-myUnit.isFactory = true as const;
-myUnit.isAsync = true as const;
+myUnit.is = 'asyncFactory' as const;
 ```
 
 With helper:
@@ -225,7 +224,7 @@ export const myUnit = defineUnit(
     await whatEver();
     return () => {};
   },
-  { isFactory: true, isAsync: true },
+  { is: 'asyncFactory' },
 );
 ```
 
@@ -240,7 +239,7 @@ They must use the `function` keyword:
 export function myUnit(this: MyWire) {
   const otherUnit = this().otherUnit;
 }
-myUnit.isBound = true as const;
+myUnit.is = 'bound' as const;
 ```
 
 With helper:
@@ -250,7 +249,7 @@ export const myUnit = defineUnit(
   function (this: MyWire) {
     const otherUnit = this().otherUnit;
   },
-  { isBound: true },
+  { is: 'bound' },
 );
 ```
 
@@ -292,7 +291,7 @@ export const $ = tagBlock();
 export function myUnit(this: Wire) {
   return this("post.service").getPosts();
 }
-myUnit.isBound = true as const;
+myUnit.is = 'bound' as const;
 ```
 
 Wires can resolve **current**, **root**, **child**, or **absolute** blocks:
@@ -397,7 +396,7 @@ type Wire = InferWire<Blocks, "user.service">;
 export function getUsers(this: Wire) {
   return this().database.users.findAll();
 }
-getUsers.isBound = true as const;
+getUsers.is = 'bound' as const;
 
 export const createUser = defineUnit(
   (wire: Wire) => {
@@ -408,7 +407,7 @@ export const createUser = defineUnit(
       return user;
     };
   },
-  { isFactory: true },
+  { is: 'factory' },
 );
 
 // app.ts
