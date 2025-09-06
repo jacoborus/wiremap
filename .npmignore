@@ -9,3 +9,4 @@ src/unit_test.ts
 src/block_test.ts
 AGENTS.md
 .vscode/
+.github/
