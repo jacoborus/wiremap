@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 
-import { mockUnit } from "../../src/mock.ts";
+import { mockUnit } from "../../../src/mock.ts";
 
 import type { Post } from "./postRepo.ts";
 import * as postService from "./postService.ts";

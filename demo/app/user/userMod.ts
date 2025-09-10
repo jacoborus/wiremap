@@ -1,4 +1,4 @@
-import { tagBlock } from "../../src/wiremap.ts";
+import { tagBlock } from "../../../src/wiremap.ts";
 
 import * as userService from "./userService.ts";
 import userRepo from "./userRepo.ts";

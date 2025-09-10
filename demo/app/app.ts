@@ -1,6 +1,6 @@
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
-import { wireUp, type InferBlocks } from "../src/wiremap.ts";
+import { wireUp, type InferBlocks } from "../../src/wiremap.ts";
 
 const appSchema = {
   /** The User module */
