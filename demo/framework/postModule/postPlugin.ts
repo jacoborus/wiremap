@@ -6,12 +6,6 @@ import * as postMod from "./postMod.ts";
 export const postPlugin = definePlugin<{
   getUser: Framework["user.service"]["getUserByEmail"];
   userService: Framework["user.service"];
-}>({
-  plugin: postMod,
-  deps: {
-    getUserByEmail: "unit",
-    userService: "block",
-  },
-});
+}>(postMod, ["getUserByEmail", "userService"]);
 
 export type PostPlugin = InferPlugin<typeof postPlugin>;
