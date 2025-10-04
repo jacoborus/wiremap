@@ -55,10 +55,11 @@ export type BlocksMap = Record<string, BlockDef<Hashmap>>;
  * @since 1.0.0
  */
 export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
+  if ("$" in defs) return defs as BlockDef<T>;
   return {
     ...defs,
     $: tagBlock(),
-  };
+  } as BlockDef<T>;
 }
 
 interface BlockTag {
@@ -304,4 +305,45 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
   cache.wire.set(localPath, wire);
 
   return wire;
+}
+
+export function mapBlocks<L extends Hashmap>(
+  blocks: L,
+  prefix?: string,
+): BlocksMap {
+  const mapped: BlocksMap = {};
+
+  Object.keys(blocks).forEach((key) => {
+    const block = blocks[key];
+
+    if (itemIsBlock(block)) {
+      // this is the key of the block given the path
+      const finalKey = prefix ? `${prefix}.${key}` : key;
+
+      // only blocks with units are wireable
+      if (hasUnits(block)) {
+        mapped[finalKey] = block;
+      }
+
+      // loop through sub-blocks
+      if (hasBlocks(block)) {
+        const subBlocks = mapBlocks(block, finalKey);
+        Object.assign(mapped, subBlocks);
+      }
+    }
+  });
+
+  return mapped;
+}
+
+function hasUnits(item: BlockDef<Hashmap>): boolean {
+  return Object.keys(item).some((key) => {
+    if (key === "$") return false;
+    return !itemIsBlock(item[key]);
+  });
+}
+
+function hasBlocks(item: Hashmap): boolean {
+  if (item === null || typeof item !== "object") return false;
+  return Object.keys(item).some((key) => itemIsBlock(item[key]));
 }

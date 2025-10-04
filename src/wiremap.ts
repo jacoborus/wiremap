@@ -4,10 +4,16 @@ import type { BlockDef, BlockProxy, BlocksMap, IsBlock } from "./block.ts";
 
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
-import { getWire, itemIsBlock, tagBlock } from "./block.ts";
+import { defineBlock, getWire, mapBlocks } from "./block.ts";
+import type { Circuit, Rehash } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
+export {
+  defineCircuit,
+  defineCircuit as circuit,
+  defineInputs,
+} from "./circuit.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -26,6 +32,9 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
 }[keyof R]
   ? true
   : false;
+
+type InferDef<T extends Hashmap> =
+  T extends Circuit<infer C, Hashmap, Rehash> ? C : T;
 
 /**
  * Checks if a specific object contains any async factory functions.
@@ -196,13 +205,10 @@ type ExtractBlockKeys<T> = {
  * @public
  * @since 1.0.0
  */
-export function wireUp<Defs extends Hashmap>(
+export function wireUp<Defs extends Circuit<Hashmap, Hashmap, Rehash>>(
   defs: Defs,
-): WiredUp<InferBlocks<Defs>> {
-  const finalDefinitions: BlockDef<Defs> =
-    "$" in defs
-      ? (defs as BlockDef<Defs>)
-      : (Object.assign(defs, { $: tagBlock() }) as BlockDef<Defs>);
+): WiredUp<InferBlocks<InferDef<Defs>>> {
+  const finalDefinitions = defineBlock(defs.__circuit);
 
   const blockDefinitions = mapBlocks(finalDefinitions);
   blockDefinitions[""] = finalDefinitions;
@@ -214,10 +220,12 @@ export function wireUp<Defs extends Hashmap>(
     // when all async factories are resolved
     return resolveAsyncFactories(blockDefinitions, cache).then(() => {
       return getWire("", blockDefinitions, cache);
-    }) as WiredUp<InferBlocks<Defs>>;
+    }) as WiredUp<InferBlocks<InferDef<Defs>>>;
   }
 
-  return getWire("", blockDefinitions, cache) as WiredUp<InferBlocks<Defs>>;
+  return getWire("", blockDefinitions, cache) as WiredUp<
+    InferBlocks<InferDef<Defs>>
+  >;
 }
 
 /**
@@ -256,9 +264,14 @@ export function wireUp<Defs extends Hashmap>(
  * @public
  * @since 1.0.0
  */
-export type InferBlocks<R extends Hashmap> = {
-  [K in BlockPaths<R>]: K extends "" ? R : PathValue<R, K>;
-};
+export type InferBlocks<R extends Hashmap> =
+  R extends Circuit<infer C, Hashmap, Rehash>
+    ? {
+        [K in BlockPaths<C>]: K extends "" ? C : PathValue<C, K>;
+      }
+    : {
+        [K in BlockPaths<R>]: K extends "" ? R : PathValue<R, K>;
+      };
 
 /**
  * Access type by a dot notated path.
@@ -318,32 +331,6 @@ type BlockPaths<T extends Hashmap, P extends string = ""> =
           : never;
     }[keyof T];
 
-function mapBlocks<L extends Hashmap>(blocks: L, prefix?: string): BlocksMap {
-  const mapped: BlocksMap = {};
-
-  Object.keys(blocks).forEach((key) => {
-    const block = blocks[key];
-
-    if (itemIsBlock(block)) {
-      // this is the key of the block given the path
-      const finalKey = prefix ? `${prefix}.${key}` : key;
-
-      // only blocks with units are wireable
-      if (hasUnits(block)) {
-        mapped[finalKey] = block;
-      }
-
-      // loop through sub-blocks
-      if (hasBlocks(block)) {
-        const subBlocks = mapBlocks(block, finalKey);
-        Object.assign(mapped, subBlocks);
-      }
-    }
-  });
-
-  return mapped;
-}
-
 /**
  * Determines whether an object contains items that are neither blocks nor blockTags.
  * Used to identify blocks that actually contain any unit
@@ -358,13 +345,6 @@ type HasUnits<T extends Hashmap> = true extends {
   ? true
   : false;
 
-function hasUnits(item: BlockDef<Hashmap>): boolean {
-  return Object.keys(item).some((key) => {
-    if (key === "$") return false;
-    return !itemIsBlock(item[key]);
-  });
-}
-
 /**
  * Determines whether an object contains items that are blocks.
  * Used to identify if we need to recursively process nested blocks.
@@ -374,11 +354,6 @@ type HasBlocks<T extends Hashmap> = true extends {
 }[keyof T]
   ? true
   : false;
-
-function hasBlocks(item: Hashmap): boolean {
-  if (item === null || typeof item !== "object") return false;
-  return Object.keys(item).some((key) => itemIsBlock(item[key]));
-}
 
 /** Check if any of the definitions are async factories */
 function hasAsyncKeys(blockDefs: BlocksMap): boolean {

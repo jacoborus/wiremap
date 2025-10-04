@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { tagBlock, wireUp, defineUnit } from "./wiremap.ts";
+import { tagBlock, wireUp, defineUnit, defineCircuit } from "./wiremap.ts";
 import type { InferBlocks, InferWire } from "./wiremap.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
@@ -12,7 +12,7 @@ Deno.test("wireUp resolves dependencies", () => {
     },
   };
 
-  const app = wireUp(defs);
+  const app = wireUp(defineCircuit(defs));
 
   const keys = Object.keys(app());
   assertEquals(keys.length, 1, "block proxies are ennumerable");
@@ -48,7 +48,7 @@ Deno.test("wireUp resolves async factories that return a promise", async () => {
   };
   type Defs = typeof defs;
 
-  const app = await wireUp(defs);
+  const app = await wireUp(defineCircuit(defs));
 
   assertEquals(app().keyName, "value");
   assertEquals(app("nested").subKey, "subValue");
@@ -67,7 +67,7 @@ Deno.test("block creates namespaced definitions", () => {
     namespace: blockInstance,
   };
 
-  const mainWire = wireUp({ parent: blockParent });
+  const mainWire = wireUp(defineCircuit({ parent: blockParent }));
 
   assertEquals(mainWire("parent.namespace").key, 5);
   assertEquals(mainWire("parent.namespace").key2, 6);
@@ -79,27 +79,14 @@ Deno.test("error handling for missing dependencies", () => {
     key: "value",
   };
 
-  const app = wireUp(defs);
+  const app = wireUp(defineCircuit(defs));
 
   try {
-    try {
-      try {
-        app("nonexistent" as ".");
-        throw new Error("Should have thrown an error");
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          assertEquals(e.message, 'Unit nonexistent not found from block ""');
-        }
-      }
-    } catch (e) {
-      assertEquals(
-        (e as Error).message,
-        'Key nonexistent not found from block ""',
-      );
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      assertEquals(error.message, 'Key nonexistent not found from block ""');
+    app("nonexistent" as ".");
+    throw new Error("Should have thrown an error");
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      assertEquals(e.message, 'Unit nonexistent not found from block ""');
     }
   }
 });
@@ -139,7 +126,7 @@ Deno.test("wireUp protects private units", () => {
   };
   type Defs = InferBlocks<typeof defs>;
 
-  const main = wireUp(defs);
+  const main = wireUp(defineCircuit(defs));
 
   assertThrows(
     // @ts-ignore: this is just for the internal test
@@ -184,7 +171,7 @@ Deno.test("defineUnit: no options", () => {
       valor: defineUnit("hola"),
     },
   };
-  const main = wireUp(block);
+  const main = wireUp(defineCircuit(block));
   assertEquals(main().valor, 5);
   assertEquals(main("o").valor, "hola");
 });
@@ -217,7 +204,7 @@ Deno.test("defineUnit: isPrivate", () => {
   };
 
   type Defs = InferBlocks<typeof block>;
-  const main = wireUp(block);
+  const main = wireUp(defineCircuit(block));
 
   assertEquals(main().valor, 5);
   assertEquals(main("a").valor, "hola");
@@ -274,7 +261,7 @@ Deno.test("defineUnit: isFactory", () => {
   };
   type Defs = InferBlocks<typeof defs>;
 
-  const main = wireUp(defs);
+  const main = wireUp(defineCircuit(defs));
 
   assertEquals(main().valor, "rootvalue");
   assertEquals(main("a").valor, "avalue");
@@ -339,7 +326,7 @@ Deno.test("defineUnit: isAsync", async () => {
   };
 
   type Defs = InferBlocks<typeof defs>;
-  const main = await wireUp(defs);
+  const main = await wireUp(defineCircuit(defs));
 
   assertEquals(main().valor, "rootvalue");
   assertEquals(main("a").valor, "avalue");

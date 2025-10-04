@@ -1,4 +1,4 @@
-import { tagBlock, type InferWire } from "../../../../src/wiremap.ts";
+import { type InferWire, tagBlock } from "../../../../src/wiremap.ts";
 import type { Framework } from "../core.ts";
 import { type User } from "./userRepo.ts";
 

@@ -1,5 +1,5 @@
-import { defineUnit, tagBlock, type InferWire } from "../../../src/wiremap.ts";
-import type { Blocks } from "../app.ts";
+import { defineUnit, type InferWire, tagBlock } from "../../../src/wiremap.ts";
+import type { Blocks } from "../appCircuit.ts";
 
 export const $ = tagBlock();
 

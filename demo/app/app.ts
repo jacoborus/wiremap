@@ -1,17 +1,14 @@
-import * as postMod from "./post/postMod.ts";
-import * as userMod from "./user/userMod.ts";
-import { wireUp, type InferBlocks } from "../../src/wiremap.ts";
+import { wireUp } from "../../src/wiremap.ts";
+import { safename } from "safename";
 
-const appSchema = {
-  /** The User module */
-  user: userMod,
-  /** The Post module */
-  post: postMod,
-};
+import { appCircuit } from "./appCircuit.ts";
 
-export type Blocks = InferBlocks<typeof appSchema>;
-
-export const app = await wireUp(appSchema);
+export const app = await wireUp(
+  appCircuit,
+  // , {
+  //   safename: plug(safename),
+  // }
+);
 
 const userId = app("user.service").addUser(
   "jacobo",
@@ -25,4 +22,4 @@ const addPost = postService.addPost;
 addPost("Hello World!", "This is a test", userId);
 addPost("Hola Mundo!", "Esto es una prueba", userId);
 
-console.log(app("post").childResolution());
+console.log(app("post.service").getPosts());

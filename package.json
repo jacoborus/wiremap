@@ -18,6 +18,9 @@
     "url": "https://github.com/jacoborus/wiremap/issues"
   },
   "homepage": "https://github.com/jacoborus/wiremap#readme",
+  "dependencies": {
+    "safename": "^2.0.0"
+  },
   "devDependencies": {
     "typescript": "^5.8.3"
   },
