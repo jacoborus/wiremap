@@ -3,7 +3,7 @@ import {
   circuit,
   defineBlock,
   defineInputs,
-  type InferBlocks,
+  type InferCircuitBlocks,
 } from "../../src/wiremap.ts";
 
 import * as postMod from "./post/postMod.ts";
@@ -21,4 +21,4 @@ export const appCircuit = circuit(
   },
 );
 
-export type Blocks = InferBlocks<typeof appCircuit>;
+export type Blocks = InferCircuitBlocks<typeof appCircuit>;

@@ -5,13 +5,17 @@ export interface Rehash {
 }
 
 export interface BulkCircuit {
-  __circuit: Hashmap;
+  __hub: Hashmap;
   __inputs: Hashmap;
   __outputs: Rehash;
 }
 
-export type Circuit<C extends Hashmap, I extends Hashmap, O extends Rehash> = {
-  __circuit: C;
+export type CircuitDef<
+  H extends Hashmap,
+  I extends Hashmap,
+  O extends Rehash,
+> = {
+  __hub: H;
   __inputs: I;
   __outputs: O;
 };
@@ -22,14 +26,14 @@ interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
 }
 
 export function defineCircuit<
-  const T extends Hashmap,
+  const H extends Hashmap,
   I extends Hashmap,
   O extends Rehash,
->(mainBlock: T, options?: CircuitOptions<I, O>): Circuit<T, I, O> {
+>(mainBlock: H, options?: CircuitOptions<I, O>): CircuitDef<H, I, O> {
   return {
-    __circuit: mainBlock,
+    __hub: mainBlock,
     __outputs: options?.outputs || {},
-  } as Circuit<T, I, O>;
+  } as CircuitDef<H, I, O>;
 }
 
 export function defineInputs<Deps extends Hashmap>() {

@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { tagBlock, wireUp, defineUnit, defineCircuit } from "./wiremap.ts";
-import type { InferBlocks, InferWire } from "./wiremap.ts";
+import type { InferCircuitBlocks, InferWire } from "./wiremap.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
   const defs = {
@@ -27,7 +27,7 @@ Deno.test("wireUp resolves dependencies", () => {
 
 Deno.test("wireUp resolves async factories that return a promise", async () => {
   const $ = tagBlock();
-  type W = InferWire<InferBlocks<Defs>, "">;
+  type W = InferWire<InferCircuitBlocks<Defs>, "">;
 
   function factoryFn(w: W) {
     const theKey = w().keyName;
@@ -124,7 +124,7 @@ Deno.test("wireUp protects private units", () => {
       other,
     },
   };
-  type Defs = InferBlocks<typeof defs>;
+  type Defs = InferCircuitBlocks<typeof defs>;
 
   const main = wireUp(defineCircuit(defs));
 
@@ -203,7 +203,7 @@ Deno.test("defineUnit: isPrivate", () => {
     },
   };
 
-  type Defs = InferBlocks<typeof block>;
+  type Defs = InferCircuitBlocks<typeof block>;
   const main = wireUp(defineCircuit(block));
 
   assertEquals(main().valor, 5);
@@ -259,7 +259,7 @@ Deno.test("defineUnit: isFactory", () => {
       },
     },
   };
-  type Defs = InferBlocks<typeof defs>;
+  type Defs = InferCircuitBlocks<typeof defs>;
 
   const main = wireUp(defineCircuit(defs));
 
@@ -325,7 +325,7 @@ Deno.test("defineUnit: isAsync", async () => {
     },
   };
 
-  type Defs = InferBlocks<typeof defs>;
+  type Defs = InferCircuitBlocks<typeof defs>;
   const main = await wireUp(defineCircuit(defs));
 
   assertEquals(main().valor, "rootvalue");

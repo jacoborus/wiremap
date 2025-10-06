@@ -1,4 +1,4 @@
-import { type InferBlocks } from "../../../src/wiremap.ts";
+import { type InferCircuitBlocks } from "../../../src/wiremap.ts";
 
 import * as userMod from "./user/userMod.ts";
 
@@ -13,4 +13,4 @@ export const coreDefs = {
   hola: "hola",
 };
 
-export type Framework = InferBlocks<typeof coreDefs>;
+export type Framework = InferCircuitBlocks<typeof coreDefs>;
