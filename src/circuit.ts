@@ -1,10 +1,11 @@
+import { BlocksMap } from "./block.ts";
 import { Hashmap } from "./common.ts";
 
 export interface Rehash {
   [K: string]: string | Rehash;
 }
 
-export interface BulkCircuit {
+export interface BulkCircuitDef {
   __hub: Hashmap;
   __inputs: Hashmap;
   __outputs: Rehash;
@@ -12,6 +13,22 @@ export interface BulkCircuit {
 
 export type CircuitDef<
   H extends Hashmap,
+  I extends Hashmap,
+  O extends Rehash,
+> = {
+  __hub: H;
+  __inputs: I;
+  __outputs: O;
+};
+
+export interface BulkCircuitFull {
+  __hub: BlocksMap;
+  __inputs: Hashmap;
+  __outputs: Rehash;
+}
+
+export type CircuitFull<
+  H extends BlocksMap,
   I extends Hashmap,
   O extends Rehash,
 > = {

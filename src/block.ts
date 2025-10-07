@@ -1,3 +1,4 @@
+import { BulkCircuitFull } from "./circuit.ts";
 import {
   unitSymbol,
   blockSymbol,
@@ -153,12 +154,13 @@ export type BlockProxy<B extends Hashmap> = {
   [K in keyof B]: InferUnitValue<B[K]>;
 };
 
-function createBlockProxy<B extends BlocksMap, Local extends boolean>(
+function createBlockProxy<C extends BulkCircuitFull, Local extends boolean>(
   blockPath: string,
   local: Local,
-  blockDefs: B,
+  circuit: C,
   cache: Wcache,
-): BlockProxy<B> {
+): BlockProxy<C["__hub"]> {
+  const blockDefs = circuit.__hub;
   const blockDef = blockDefs[blockPath];
   const unitKeys = getBlockUnitKeys(blockDef, local);
 
@@ -186,7 +188,7 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
           const def = blockDef[prop];
           const wire = cache.wire.has(blockPath)
             ? cache.wire.get(blockPath)
-            : getWire(blockPath, blockDefs, cache);
+            : getWire(blockPath, circuit, cache);
 
           const unit = isFactoryFunc(def)
             ? def(wire)
@@ -221,7 +223,7 @@ function createBlockProxy<B extends BlocksMap, Local extends boolean>(
         };
       },
     },
-  ) as BlockProxy<B>;
+  ) as BlockProxy<C["__hub"]>;
 }
 
 export function extractParentPath(localPath: string): string | null {
@@ -232,11 +234,12 @@ export function extractParentPath(localPath: string): string | null {
   return parentParts.join(".");
 }
 
-export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
+export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
   localPath: P & string,
-  blockDefs: Defs,
+  circuit: C,
   cache: Wcache,
 ) {
+  const blockDefs = circuit.__hub;
   if (cache.wire.has(localPath)) {
     return cache.wire.get(localPath);
   }
@@ -255,7 +258,7 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
         return cache.localProxy.get(localPath);
       }
 
-      const localProxy = createBlockProxy(localPath, true, blockDefs, cache);
+      const localProxy = createBlockProxy(localPath, true, circuit, cache);
       cache.localProxy.set(localPath, localProxy);
 
       return localProxy;
@@ -271,7 +274,7 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
         throw new Error('Block ".." does not exist');
       }
 
-      const parentProxy = createBlockProxy(parentPath, false, blockDefs, cache);
+      const parentProxy = createBlockProxy(parentPath, false, circuit, cache);
       cache.localProxy.set(parentPath, parentProxy);
 
       return parentProxy;
@@ -280,21 +283,21 @@ export function getWire<Defs extends BlocksMap, P extends keyof Defs>(
     // Child block resolution
     if (key.startsWith(".")) {
       const blockPath = localPath + key;
-      const proxy = createBlockProxy(blockPath, false, blockDefs, cache);
+      const proxy = createBlockProxy(blockPath, false, circuit, cache);
       cache.proxy.set(blockPath, proxy);
       return proxy;
     }
 
     // Root block resolution
     if (key === "") {
-      const proxy = createBlockProxy("", false, blockDefs, cache);
+      const proxy = createBlockProxy("", false, circuit, cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
 
     // External block resolution, uses absolute path of the block
     if (blockPaths.includes(key)) {
-      const proxy = createBlockProxy(key, false, blockDefs, cache);
+      const proxy = createBlockProxy(key, false, circuit, cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
@@ -321,7 +324,7 @@ export function mapBlocks<L extends Hashmap>(
       const finalKey = prefix ? `${prefix}.${key}` : key;
 
       // only blocks with units are wireable
-      if (hasUnits(block)) {
+      if (blockHasUnits(block)) {
         mapped[finalKey] = block;
       }
 
@@ -336,10 +339,60 @@ export function mapBlocks<L extends Hashmap>(
   return mapped;
 }
 
-function hasUnits(item: BlockDef<Hashmap>): boolean {
+export function mapInputBlocks<L extends Hashmap>(
+  blocks: L,
+  prefix?: string,
+): Hashmap {
+  const mapped: Hashmap = {};
+
+  Object.keys(blocks).forEach((key) => {
+    const block = blocks[key];
+
+    if (isInputBlockKey(key)) {
+      if (typeof block !== "object" || block == null) return;
+
+      const realKey = key.slice(1);
+
+      // this is the key of the block given the path
+      const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
+
+      if (!isHashmap(block)) return;
+      // only blocks with units are wireable
+      if (objectHasUnits(block)) {
+        mapped[finalKey] = block;
+      }
+
+      // loop through sub-blocks
+      if (hasBlocks(block)) {
+        const subBlocks = mapBlocks(block, finalKey);
+        Object.assign(mapped, subBlocks);
+      }
+    }
+  });
+
+  return mapped;
+}
+
+function isInputBlockKey(key: string): boolean {
+  return key.startsWith("$");
+}
+
+function isHashmap(item: Object): item is Hashmap {
+  return Object.keys(item).every((key) => {
+    return typeof key === "string";
+  });
+}
+
+function blockHasUnits(item: BlockDef<Hashmap>): boolean {
   return Object.keys(item).some((key) => {
     if (key === "$") return false;
     return !itemIsBlock(item[key]);
+  });
+}
+
+function objectHasUnits(item: Hashmap): boolean {
+  return Object.keys(item).some((key) => {
+    return !key.startsWith("$");
   });
 }
 

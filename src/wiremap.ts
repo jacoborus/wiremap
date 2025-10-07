@@ -4,8 +4,8 @@ import type { BlockDef, BlockProxy, BlocksMap, IsBlock } from "./block.ts";
 
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
-import { defineBlock, getWire, mapBlocks } from "./block.ts";
-import type { CircuitDef, Rehash } from "./circuit.ts";
+import { defineBlock, getWire, mapBlocks, mapInputBlocks } from "./block.ts";
+import type { BulkCircuitFull, CircuitDef, Rehash } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -213,17 +213,25 @@ export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
   const blockDefinitions = mapBlocks(finalDefinitions);
   blockDefinitions[""] = finalDefinitions;
 
+  const inputDefinitions = mapInputBlocks(defs.__inputs || {});
+  inputDefinitions[""] = defs.__inputs;
+
   const cache = createCacheObject();
+  const circuit = {
+    __hub: blockDefinitions,
+    __inputs: inputDefinitions,
+    __outputs: {},
+  };
 
   if (hasAsyncKeys(blockDefinitions)) {
     // This will cause wireUp to return a promise that resolves
     // when all async factories are resolved
-    return resolveAsyncFactories(blockDefinitions, cache).then(() => {
-      return getWire("", blockDefinitions, cache);
+    return resolveAsyncFactories(circuit, cache).then(() => {
+      return getWire("", circuit, cache);
     }) as WiredUp<InferCircuitBlocks<InferDef<Defs>>>;
   }
 
-  return getWire("", blockDefinitions, cache) as WiredUp<
+  return getWire("", circuit, cache) as WiredUp<
     InferCircuitBlocks<InferDef<Defs>>
   >;
 }
@@ -368,9 +376,10 @@ function hasAsyncKeys(blockDefs: BlocksMap): boolean {
 }
 
 async function resolveAsyncFactories(
-  defs: BlocksMap,
+  circuit: BulkCircuitFull,
   cache: Wcache,
 ): Promise<void> {
+  const defs = circuit.__hub;
   const blockKeys = Object.keys(defs);
 
   for await (const blockKey of blockKeys) {
@@ -383,7 +392,7 @@ async function resolveAsyncFactories(
       if (isAsyncFactoryFunc(item)) {
         const wire = cache.wire.has(blockKey)
           ? cache.wire.get(blockKey)
-          : getWire(blockKey, defs, cache);
+          : getWire(blockKey, circuit, cache);
         const resolved = await item(wire);
 
         const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
@@ -391,7 +400,7 @@ async function resolveAsyncFactories(
       } else if (isAsyncFactoryDef(item)) {
         const wire = cache.wire.has(blockKey)
           ? cache.wire.get(blockKey)
-          : getWire(blockKey, defs, cache);
+          : getWire(blockKey, circuit, cache);
         const resolved = await item[unitSymbol](wire);
         const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
         cache.unit.set(finalKey, resolved);
