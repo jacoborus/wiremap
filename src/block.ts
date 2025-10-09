@@ -4,6 +4,7 @@ import {
   blockSymbol,
   type Hashmap,
   type Wcache,
+  Hashmaps,
 } from "./common.ts";
 import type { InferUnitValue } from "./unit.ts";
 import {
@@ -21,7 +22,7 @@ export type BlockDef<T extends Hashmap> = T & {
 };
 
 /** Map of block names to their block definitions. */
-export type BlocksMap = Record<string, BlockDef<Hashmap>>;
+export type BlocksMap = Record<string, Hashmap>;
 
 /**
  * Creates a block definition by adding the required block tag to a definitions object.
@@ -172,10 +173,6 @@ function createBlockProxy<C extends BulkCircuitFull, Local extends boolean>(
           return cachedblock[prop];
         }
 
-        if (prop === "$") {
-          throw new Error(`Block '${blockPath}' has no unit named '${prop}'`);
-        }
-
         if (unitKeys.includes(prop)) {
           const finalKey = blockPath === "" ? prop : `${blockPath}.${prop}`;
 
@@ -239,13 +236,9 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
   circuit: C,
   cache: Wcache,
 ) {
-  const blockDefs = circuit.__hub;
   if (cache.wire.has(localPath)) {
     return cache.wire.get(localPath);
   }
-
-  const blockPaths = Object.keys(blockDefs);
-  const parentPath = extractParentPath(localPath);
 
   const wire = function getBlockProxy(key = "") {
     if (cache.proxy.has(key)) {
@@ -266,6 +259,8 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
 
     // Parent block resolution
     if (key === "..") {
+      const parentPath = extractParentPath(localPath);
+
       if (cache.localProxy.has(parentPath)) {
         return cache.localProxy.get(parentPath);
       }
@@ -296,11 +291,22 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
     }
 
     // External block resolution, uses absolute path of the block
+    const blockPaths = Object.keys(circuit.__hub);
+
     if (blockPaths.includes(key)) {
       const proxy = createBlockProxy(key, false, circuit, cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
+
+    // input block resolution, uses absolute path of the input block
+    // const inputPaths = Object.keys(circuit.__inputs);
+    //
+    // if (inputPaths.includes(key)) {
+    //   const proxy = createInputBlockProxy(key, false, circuit, cache);
+    //   cache.proxy.set(key, proxy);
+    //   return proxy;
+    // }
 
     throw new Error(`Unit ${key} not found from block "${localPath}"`);
   };
@@ -325,7 +331,7 @@ export function mapBlocks<L extends Hashmap>(
 
       // only blocks with units are wireable
       if (blockHasUnits(block)) {
-        mapped[finalKey] = block;
+        mapped[finalKey] = filterBlocks(block);
       }
 
       // loop through sub-blocks
@@ -339,11 +345,22 @@ export function mapBlocks<L extends Hashmap>(
   return mapped;
 }
 
+/**
+ * Filter out the blocks from an object of units and blocks
+ */
+function filterBlocks(block: Hashmap): Hashmap {
+  return Object.fromEntries(
+    Object.keys(block)
+      .map((key) => [key, block[key]])
+      .filter(([_, item]) => !itemIsBlock(item)),
+  );
+}
+
 export function mapInputBlocks<L extends Hashmap>(
   blocks: L,
   prefix?: string,
-): Hashmap {
-  const mapped: Hashmap = {};
+): Hashmaps {
+  const mapped: Hashmaps = {};
 
   Object.keys(blocks).forEach((key) => {
     const block = blocks[key];
@@ -357,6 +374,7 @@ export function mapInputBlocks<L extends Hashmap>(
       const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
 
       if (!isHashmap(block)) return;
+
       // only blocks with units are wireable
       if (objectHasUnits(block)) {
         mapped[finalKey] = block;
@@ -377,7 +395,8 @@ function isInputBlockKey(key: string): boolean {
   return key.startsWith("$");
 }
 
-function isHashmap(item: Object): item is Hashmap {
+export function isHashmap(item: unknown): item is Hashmap {
+  if (typeof item !== "object" || item === null) return false;
   return Object.keys(item).every((key) => {
     return typeof key === "string";
   });

@@ -1,10 +1,16 @@
 import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit, UnitDef } from "./unit.ts";
-import type { BlockDef, BlockProxy, BlocksMap, IsBlock } from "./block.ts";
+import type { BlockDef, BlockProxy, IsBlock } from "./block.ts";
 
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
-import { defineBlock, getWire, mapBlocks, mapInputBlocks } from "./block.ts";
+import {
+  defineBlock,
+  getWire,
+  isHashmap,
+  mapBlocks,
+  mapInputBlocks,
+} from "./block.ts";
 import type { BulkCircuitFull, CircuitDef, Rehash } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
@@ -364,9 +370,11 @@ type HasBlocks<T extends Hashmap> = true extends {
   : false;
 
 /** Check if any of the definitions are async factories */
-function hasAsyncKeys(blockDefs: BlocksMap): boolean {
+function hasAsyncKeys(blockDefs: Hashmap): boolean {
   return Object.keys(blockDefs).some((blockKey) => {
     const block = blockDefs[blockKey];
+
+    if (!isHashmap(block)) return false;
 
     return Object.keys(block).some((key) => {
       const item = block[key];
@@ -384,29 +392,36 @@ async function resolveAsyncFactories(
 
   for await (const blockKey of blockKeys) {
     const block = defs[blockKey];
+
+    if (!isHashmap(block)) continue;
+
     const keys = Object.keys(block);
 
     for await (const key of keys) {
       const item = block[key];
 
-      if (isAsyncFactoryFunc(item)) {
-        const wire = cache.wire.has(blockKey)
-          ? cache.wire.get(blockKey)
-          : getWire(blockKey, circuit, cache);
-        const resolved = await item(wire);
+      if (!isAsyncFactory(item)) continue;
 
-        const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        cache.unit.set(finalKey, resolved);
+      const wire = cache.wire.has(blockKey)
+        ? cache.wire.get(blockKey)
+        : getWire(blockKey, circuit, cache);
+
+      let resolved;
+
+      if (isAsyncFactoryFunc(item)) {
+        resolved = await item(wire);
       } else if (isAsyncFactoryDef(item)) {
-        const wire = cache.wire.has(blockKey)
-          ? cache.wire.get(blockKey)
-          : getWire(blockKey, circuit, cache);
-        const resolved = await item[unitSymbol](wire);
-        const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-        cache.unit.set(finalKey, resolved);
+        resolved = await item[unitSymbol](wire);
       }
+
+      const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
+      cache.unit.set(finalKey, resolved);
     }
   }
+}
+
+function isAsyncFactory(item: unknown): boolean {
+  return isAsyncFactoryDef(item) || isAsyncFactoryFunc(item);
 }
 
 function createCacheObject(): Wcache {
