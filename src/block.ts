@@ -4,7 +4,6 @@ import {
   blockSymbol,
   type Hashmap,
   type Wcache,
-  Hashmaps,
 } from "./common.ts";
 import type { InferUnitValue } from "./unit.ts";
 import {
@@ -155,14 +154,22 @@ export type BlockProxy<B extends Hashmap> = {
   [K in keyof B]: InferUnitValue<B[K]>;
 };
 
-function createBlockProxy<C extends BulkCircuitFull, Local extends boolean>(
+function createBlockProxy<
+  C extends BulkCircuitFull,
+  Local extends boolean,
+  P extends "__hub" | "__inputs",
+>(
   blockPath: string,
   local: Local,
   circuit: C,
+  part: P,
   cache: Wcache,
-): BlockProxy<C["__hub"]> {
-  const blockDefs = circuit.__hub;
-  const blockDef = blockDefs[blockPath];
+): BlockProxy<C[P]> {
+  const blockDefs = circuit[part];
+  const blockDef =
+    blockPath === ""
+      ? Object.assign({}, circuit.__hub[""], circuit.__inputs[""])
+      : blockDefs[blockPath];
   const unitKeys = getBlockUnitKeys(blockDef, local);
 
   return new Proxy(
@@ -220,7 +227,7 @@ function createBlockProxy<C extends BulkCircuitFull, Local extends boolean>(
         };
       },
     },
-  ) as BlockProxy<C["__hub"]>;
+  ) as BlockProxy<C[P]>;
 }
 
 export function extractParentPath(localPath: string): string | null {
@@ -251,7 +258,13 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
         return cache.localProxy.get(localPath);
       }
 
-      const localProxy = createBlockProxy(localPath, true, circuit, cache);
+      const localProxy = createBlockProxy(
+        localPath,
+        true,
+        circuit,
+        "__hub",
+        cache,
+      );
       cache.localProxy.set(localPath, localProxy);
 
       return localProxy;
@@ -269,7 +282,13 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
         throw new Error('Block ".." does not exist');
       }
 
-      const parentProxy = createBlockProxy(parentPath, false, circuit, cache);
+      const parentProxy = createBlockProxy(
+        parentPath,
+        false,
+        circuit,
+        "__hub",
+        cache,
+      );
       cache.localProxy.set(parentPath, parentProxy);
 
       return parentProxy;
@@ -278,14 +297,14 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
     // Child block resolution
     if (key.startsWith(".")) {
       const blockPath = localPath + key;
-      const proxy = createBlockProxy(blockPath, false, circuit, cache);
+      const proxy = createBlockProxy(blockPath, false, circuit, "__hub", cache);
       cache.proxy.set(blockPath, proxy);
       return proxy;
     }
 
     // Root block resolution
     if (key === "") {
-      const proxy = createBlockProxy("", false, circuit, cache);
+      const proxy = createBlockProxy("", false, circuit, "__hub", cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
@@ -294,19 +313,19 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
     const blockPaths = Object.keys(circuit.__hub);
 
     if (blockPaths.includes(key)) {
-      const proxy = createBlockProxy(key, false, circuit, cache);
+      const proxy = createBlockProxy(key, false, circuit, "__hub", cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
 
     // input block resolution, uses absolute path of the input block
-    // const inputPaths = Object.keys(circuit.__inputs);
-    //
-    // if (inputPaths.includes(key)) {
-    //   const proxy = createInputBlockProxy(key, false, circuit, cache);
-    //   cache.proxy.set(key, proxy);
-    //   return proxy;
-    // }
+    const inputPaths = Object.keys(circuit.__inputs);
+
+    if (inputPaths.includes(key)) {
+      const proxy = createBlockProxy(key, false, circuit, "__inputs", cache);
+      cache.proxy.set(key, proxy);
+      return proxy;
+    }
 
     throw new Error(`Unit ${key} not found from block "${localPath}"`);
   };
@@ -348,7 +367,7 @@ export function mapBlocks<L extends Hashmap>(
 /**
  * Filter out the blocks from an object of units and blocks
  */
-function filterBlocks(block: Hashmap): Hashmap {
+export function filterBlocks(block: Hashmap): Hashmap {
   return Object.fromEntries(
     Object.keys(block)
       .map((key) => [key, block[key]])
@@ -356,11 +375,22 @@ function filterBlocks(block: Hashmap): Hashmap {
   );
 }
 
+/**
+ * Filter out the blocks from an object of units and blocks
+ */
+export function filterInputBlocks(block: Hashmap): Hashmap {
+  return Object.fromEntries(
+    Object.keys(block)
+      .filter((key) => !key.startsWith("$"))
+      .map((key) => [key, block[key]]),
+  );
+}
+
 export function mapInputBlocks<L extends Hashmap>(
   blocks: L,
   prefix?: string,
-): Hashmaps {
-  const mapped: Hashmaps = {};
+): BlocksMap {
+  const mapped: BlocksMap = {};
 
   Object.keys(blocks).forEach((key) => {
     const block = blocks[key];
@@ -392,7 +422,7 @@ export function mapInputBlocks<L extends Hashmap>(
 }
 
 function isInputBlockKey(key: string): boolean {
-  return key.startsWith("$");
+  return key.startsWith("$") && key !== "$";
 }
 
 export function isHashmap(item: unknown): item is Hashmap {

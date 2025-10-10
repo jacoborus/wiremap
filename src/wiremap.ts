@@ -6,6 +6,8 @@ import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
   defineBlock,
+  filterBlocks,
+  filterInputBlocks,
   getWire,
   isHashmap,
   mapBlocks,
@@ -213,14 +215,15 @@ type ExtractBlockKeys<T> = {
  */
 export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
   defs: Defs,
+  inputs?: Defs["__inputs"],
 ): WiredUp<InferCircuitBlocks<InferDef<Defs>>> {
   const finalDefinitions = defineBlock(defs.__hub);
 
   const blockDefinitions = mapBlocks(finalDefinitions);
-  blockDefinitions[""] = finalDefinitions;
+  blockDefinitions[""] = filterBlocks(finalDefinitions);
 
-  const inputDefinitions = mapInputBlocks(defs.__inputs || {});
-  inputDefinitions[""] = defs.__inputs;
+  const inputDefinitions = mapInputBlocks(inputs || {});
+  inputDefinitions[""] = filterInputBlocks(inputs || {});
 
   const cache = createCacheObject();
   const circuit = {

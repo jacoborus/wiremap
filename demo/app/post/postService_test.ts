@@ -4,11 +4,13 @@ import { mockUnit } from "../../../src/mock.ts";
 
 import type { Post } from "./postRepo.ts";
 import * as postService from "./postService.ts";
+import { safename } from "safename";
 
 Deno.test("addPostTest", function addPostTest() {
   const repo = [] as Post[];
   const fakeBlocks = {
     "..": { repo },
+    "": { normalizeString: safename },
     "user.service": {
       getUser: (id: string) => ({
         id,

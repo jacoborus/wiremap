@@ -35,12 +35,14 @@ export function addPost(
   userId: string,
 ) {
   const getUser = this("user.service").getUser;
+  const normalizeString = this().normalizeString;
   const user = getUser(userId);
   if (!user) throw new Error(`User with id ${userId} does not exist.`);
 
   const repo = this("..").repo;
   const id = crypto.randomUUID();
-  repo.push({ id, title, userId, content });
+  const slug = normalizeString(title);
+  repo.push({ id, title, userId, content, slug });
   return id;
 }
 addPost.is = "bound" as const;
