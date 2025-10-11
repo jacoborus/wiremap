@@ -1,14 +1,12 @@
-import { type InferCircuitBlocks, plug, wireUp } from "../../../src/wiremap.ts";
+import { defineCircuit } from "../../../src/circuit.ts";
+import { wireUp } from "../../../src/wiremap.ts";
 
-import { coreDefs, type Framework } from "../core/core.ts";
-import { postPlugin } from "../postModule/postPlugin.ts";
+import { coreDefs } from "../core/core.ts";
+import { postCircuit } from "../postModule/postCircuit.ts";
 
-const defs = {
+const defs = defineCircuit({
   ...coreDefs,
-  post: plug(postPlugin, {
-    getUser: ["user.service", "getUser"],
-    userService: ["user.service"],
-  }),
-};
+  post: postCircuit,
+});
 
 const app = wireUp(defs);

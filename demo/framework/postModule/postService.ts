@@ -1,28 +1,35 @@
 import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
-import { type PostPlugin } from "./postPlugin.ts";
+import type { PostCircuit } from "./postPlugin.ts";
 
-type W = InferWire<PostPlugin, "">;
+type W = InferWire<PostCircuit, "">;
 
 export const $ = tagBlock();
 
-export function addPost(
-  this: W,
-  email: string,
-  content: string,
-  published = false,
-) {
-  const author = this("#").getUserByEmail(email);
+interface NewPost {
+  email: string;
+  content: string;
+  title: string;
+  slug: string;
+  published?: boolean;
+}
+
+export function addPost(this: W, email: string, post: NewPost) {
+  const author = this().getUserByEmail(email);
+
   if (!author) throw new Error("Author does not exists");
 
-  if (published && !author.isAdmin) {
+  if (post.published && !author.isAdmin) {
     throw new Error("Author does have permission to publish");
   }
 
-  this("repo").data.push({
-    id: crypto.randomUUID(),
-    userId: author.id,
-    content,
-    published,
-  });
+  const newPost = Object.assign(
+    {
+      id: crypto.randomUUID(),
+      userId: author.id,
+      published: !!post.published,
+    },
+    post,
+  );
+
+  this("repo").data.push(newPost);
 }
-addPost.is = "bound" as const;
