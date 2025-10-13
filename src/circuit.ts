@@ -1,20 +1,20 @@
-import { BlocksMap } from "./block.ts";
-import { Hashmap } from "./common.ts";
+import type { Rehashmap } from "./block.ts";
+import type { Hashmap } from "./common.ts";
 
-export interface Rehash {
-  [K: string]: string | Rehash;
+export interface StringsHashmap {
+  [K: string]: string | StringsHashmap;
 }
 
 export interface BulkCircuitDef {
   __hub: Hashmap;
   __inputs: Hashmap;
-  __outputs: Rehash;
+  __outputs: StringsHashmap;
 }
 
 export type CircuitDef<
   H extends Hashmap,
   I extends Hashmap,
-  O extends Rehash,
+  O extends StringsHashmap,
 > = {
   __hub: H;
   __inputs: I;
@@ -22,15 +22,15 @@ export type CircuitDef<
 };
 
 export interface BulkCircuitFull {
-  __hub: BlocksMap;
-  __inputs: BlocksMap;
-  __outputs: Rehash;
+  __hub: Rehashmap;
+  __inputs: Rehashmap;
+  __outputs: StringsHashmap;
 }
 
 export type CircuitFull<
-  H extends BlocksMap,
+  H extends Rehashmap,
   I extends Hashmap,
-  O extends Rehash,
+  O extends StringsHashmap,
 > = {
   __hub: H;
   __inputs: I;
@@ -45,12 +45,13 @@ interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
 export function defineCircuit<
   const H extends Hashmap,
   I extends Hashmap,
-  O extends Rehash,
->(mainBlock: H, options?: CircuitOptions<I, O>): CircuitDef<H, I, O> {
+  O extends StringsHashmap,
+  C extends CircuitDef<H, I, O>,
+>(mainBlock: H, options?: CircuitOptions<I, O>): C {
   return {
     __hub: mainBlock,
     __outputs: options?.outputs || {},
-  } as CircuitDef<H, I, O>;
+  } as C;
 }
 
 export function defineInputs<Deps extends Hashmap>() {

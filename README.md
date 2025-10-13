@@ -265,16 +265,16 @@ It’s automatically injected into:
 - **factories / async factories** as the first argument
 
 You don’t need to create wires yourself, but you’ll usually want to infer their
-types using `InferCircuitBlocks` and `InferWire`.
+types using `InferCircuit` and `InferWire`.
 
 ```ts
 // -- main.ts --
-import { type InferCircuitBlocks } from "wiremap";
+import { type InferCircuit } from "wiremap";
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
 
 const mainBlock = { user: userMod, post: postMod };
-export type Blocks = InferCircuitBlocks<typeof mainBlock>;
+export type Blocks = InferCircuit<typeof mainBlock>;
 ```
 
 Now use `InferWire` to type your wire:
@@ -309,12 +309,12 @@ To bootstrap your app, pass the root block to `wireUp()`.\
 It returns the main wire (or a Promise if async factories exist):
 
 ```ts
-import { type InferCircuitBlocks, wireUp } from "wiremap";
+import { type InferCircuit, wireUp } from "wiremap";
 import * as mod1 from "./module1.ts";
 import * as mod2 from "./module2.ts";
 
 const mainBlock = { mod1, mod2 };
-export type Blocks = InferCircuitBlocks<typeof mainBlock>;
+export type Blocks = InferCircuit<typeof mainBlock>;
 
 const main = await wireUp(mainBlock);
 
@@ -411,7 +411,7 @@ export const createUser = defineUnit(
 );
 
 // app.ts
-import { type InferCircuitBlocks, wireUp } from "wiremap";
+import { type InferCircuit, wireUp } from "wiremap";
 import { config } from "./config.ts";
 import * as userService from "./userService.ts";
 import * as database from "./database.ts";
@@ -422,7 +422,7 @@ const main = {
   user: defineBlock({ service: userService }),
 };
 
-export type Blocks = InferCircuitBlocks<typeof main>;
+export type Blocks = InferCircuit<typeof main>;
 
 const app = await wireUp(main);
 

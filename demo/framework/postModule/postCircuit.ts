@@ -1,7 +1,7 @@
 import {
   defineInputs,
   defineCircuit,
-  type InferCircuitBlocks,
+  type InferCircuit,
 } from "../../../src/wiremap.ts";
 import type { Framework } from "../core/core.ts";
 
@@ -14,4 +14,4 @@ export const postPlugin = defineCircuit(postMod, {
   }>(),
 });
 
-export type PostCircuit = InferCircuitBlocks<typeof postPlugin>;
+export type PostCircuit = InferCircuit<typeof postPlugin>;

@@ -1,4 +1,4 @@
-import { BulkCircuitFull } from "./circuit.ts";
+import type { BulkCircuitFull } from "./circuit.ts";
 import {
   unitSymbol,
   blockSymbol,
@@ -21,7 +21,7 @@ export type BlockDef<T extends Hashmap> = T & {
 };
 
 /** Map of block names to their block definitions. */
-export type BlocksMap = Record<string, Hashmap>;
+export type Rehashmap = Record<string, Hashmap>;
 
 /**
  * Creates a block definition by adding the required block tag to a definitions object.
@@ -338,8 +338,8 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
 export function mapBlocks<L extends Hashmap>(
   blocks: L,
   prefix?: string,
-): BlocksMap {
-  const mapped: BlocksMap = {};
+): Rehashmap {
+  const mapped: Rehashmap = {};
 
   Object.keys(blocks).forEach((key) => {
     const block = blocks[key];
@@ -389,8 +389,8 @@ export function filterInputBlocks(block: Hashmap): Hashmap {
 export function mapInputBlocks<L extends Hashmap>(
   blocks: L,
   prefix?: string,
-): BlocksMap {
-  const mapped: BlocksMap = {};
+): Rehashmap {
+  const mapped: Rehashmap = {};
 
   Object.keys(blocks).forEach((key) => {
     const block = blocks[key];

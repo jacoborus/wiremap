@@ -13,7 +13,7 @@ import {
   mapBlocks,
   mapInputBlocks,
 } from "./block.ts";
-import type { BulkCircuitFull, CircuitDef, Rehash } from "./circuit.ts";
+import type { BulkCircuitFull, CircuitDef, StringsHashmap } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -42,7 +42,7 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
   : false;
 
 type InferDef<T extends Hashmap> =
-  T extends CircuitDef<infer C, Hashmap, Rehash> ? C : T;
+  T extends CircuitDef<infer C, Hashmap, StringsHashmap> ? C : T;
 
 /**
  * Checks if a specific object contains any async factory functions.
@@ -213,10 +213,12 @@ type ExtractBlockKeys<T> = {
  * @public
  * @since 1.0.0
  */
-export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
+export function wireUp<
+  Defs extends CircuitDef<Hashmap, Hashmap, StringsHashmap>,
+>(
   defs: Defs,
   inputs?: Defs["__inputs"],
-): WiredUp<InferCircuitBlocks<InferDef<Defs>>> {
+): WiredUp<InferCircuit<InferDef<Defs>>> {
   const finalDefinitions = defineBlock(defs.__hub);
 
   const blockDefinitions = mapBlocks(finalDefinitions);
@@ -237,12 +239,10 @@ export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
     // when all async factories are resolved
     return resolveAsyncFactories(circuit, cache).then(() => {
       return getWire("", circuit, cache);
-    }) as WiredUp<InferCircuitBlocks<InferDef<Defs>>>;
+    }) as WiredUp<InferCircuit<InferDef<Defs>>>;
   }
 
-  return getWire("", circuit, cache) as WiredUp<
-    InferCircuitBlocks<InferDef<Defs>>
-  >;
+  return getWire("", circuit, cache) as WiredUp<InferCircuit<InferDef<Defs>>>;
 }
 
 /**
@@ -263,16 +263,16 @@ export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
  *   config: { port: 3000 }
  * };
  *
- * export type Blocks = InferCircuitBlocks<typeof appSchema>;
+ * export type Blocks = InferCircuit<typeof appSchema>;
  * // Result: Blocks contains paths like "", "user", "user.service", "post", "post.service"
  * ```
  *
  * @example Using with wire types
  * ```typescript
- * import type { InferCircuitBlocks, InferWire } from "wiremap";
+ * import type { InferCircuit, InferWire } from "wiremap";
  *
  * const defs = { user: userMod, post: postMod };
- * export type Blocks = InferCircuitBlocks<typeof defs>;
+ * export type Blocks = InferCircuit<typeof defs>;
  *
  * // Now use in your services
  * type Wire = InferWire<Blocks, "user.service">;
@@ -281,8 +281,8 @@ export function wireUp<Defs extends CircuitDef<Hashmap, Hashmap, Rehash>>(
  * @public
  * @since 1.0.0
  */
-export type InferCircuitBlocks<R extends Hashmap> =
-  R extends CircuitDef<infer C, Hashmap, Rehash>
+export type InferCircuit<R extends Hashmap> =
+  R extends CircuitDef<infer C, Hashmap, StringsHashmap>
     ? {
         [K in BlockPaths<C>]: K extends "" ? C : PathValue<C, K>;
       }
