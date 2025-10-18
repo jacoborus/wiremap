@@ -13,7 +13,7 @@ import {
   mapBlocks,
   mapInputBlocks,
 } from "./block.ts";
-import type { BulkCircuitFull, CircuitDef, StringsHashmap } from "./circuit.ts";
+import type { BulkCircuitFull, CircuitDef, StringHashmap } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -42,7 +42,7 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
   : false;
 
 type InferDef<T extends Hashmap> =
-  T extends CircuitDef<infer C, Hashmap, StringsHashmap> ? C : T;
+  T extends CircuitDef<infer C, Hashmap, StringHashmap> ? C : T;
 
 /**
  * Checks if a specific object contains any async factory functions.
@@ -214,7 +214,7 @@ type ExtractBlockKeys<T> = {
  * @since 1.0.0
  */
 export function wireUp<
-  Defs extends CircuitDef<Hashmap, Hashmap, StringsHashmap>,
+  Defs extends CircuitDef<Hashmap, Hashmap, StringHashmap>,
 >(
   defs: Defs,
   inputs?: Defs["__inputs"],
@@ -282,7 +282,7 @@ export function wireUp<
  * @since 1.0.0
  */
 export type InferCircuit<R extends Hashmap> =
-  R extends CircuitDef<infer C, Hashmap, StringsHashmap>
+  R extends CircuitDef<infer C, Hashmap, StringHashmap>
     ? {
         [K in BlockPaths<C>]: K extends "" ? C : PathValue<C, K>;
       }
