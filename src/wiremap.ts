@@ -13,7 +13,12 @@ import {
   mapBlocks,
   mapInputBlocks,
 } from "./block.ts";
-import type { BulkCircuitFull, CircuitDef, StringHashmap } from "./circuit.ts";
+import type {
+  BulkCircuitDef,
+  BulkCircuitFull,
+  CircuitDef,
+  StringHashmap,
+} from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -40,9 +45,6 @@ type AnyItemContainsAnyAsyncFactory<R extends Hashmap> = true extends {
 }[keyof R]
   ? true
   : false;
-
-type InferDef<T extends Hashmap> =
-  T extends CircuitDef<infer C, Hashmap, StringHashmap> ? C : T;
 
 /**
  * Checks if a specific object contains any async factory functions.
@@ -215,10 +217,7 @@ type ExtractBlockKeys<T> = {
  */
 export function wireUp<
   Defs extends CircuitDef<Hashmap, Hashmap, StringHashmap>,
->(
-  defs: Defs,
-  inputs?: Defs["__inputs"],
-): WiredUp<InferCircuit<InferDef<Defs>>> {
+>(defs: Defs, inputs?: Defs["__inputs"]): WiredUp<InferCircuit<Defs>> {
   const finalDefinitions = defineBlock(defs.__hub);
 
   const blockDefinitions = mapBlocks(finalDefinitions);
@@ -239,10 +238,10 @@ export function wireUp<
     // when all async factories are resolved
     return resolveAsyncFactories(circuit, cache).then(() => {
       return getWire("", circuit, cache);
-    }) as WiredUp<InferCircuit<InferDef<Defs>>>;
+    }) as WiredUp<InferCircuit<Defs>>;
   }
 
-  return getWire("", circuit, cache) as WiredUp<InferCircuit<InferDef<Defs>>>;
+  return getWire("", circuit, cache) as WiredUp<InferCircuit<Defs>>;
 }
 
 /**
@@ -281,14 +280,11 @@ export function wireUp<
  * @public
  * @since 1.0.0
  */
-export type InferCircuit<R extends Hashmap> =
-  R extends CircuitDef<infer C, Hashmap, StringHashmap>
-    ? {
-        [K in BlockPaths<C>]: K extends "" ? C : PathValue<C, K>;
-      }
-    : {
-        [K in BlockPaths<R>]: K extends "" ? R : PathValue<R, K>;
-      };
+export type InferCircuit<C extends BulkCircuitDef> = {
+  [K in BlockPaths<C["__hub"]>]: K extends ""
+    ? C["__hub"]
+    : PathValue<C["__hub"], K>;
+};
 
 /**
  * Access type by a dot notated path.

@@ -1,5 +1,5 @@
 import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
-import type { PostCircuit } from "./postPlugin.ts";
+import type { PostCircuit } from "./postCircuit.ts";
 
 type W = InferWire<PostCircuit, "">;
 

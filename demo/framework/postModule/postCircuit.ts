@@ -7,11 +7,11 @@ import type { Framework } from "../core/core.ts";
 
 import * as postMod from "./postMod.ts";
 
-export const postPlugin = defineCircuit(postMod, {
+export const postCircuit = defineCircuit(postMod, {
   inputs: defineInputs<{
     getUser: Framework["user.service"]["getUserByEmail"];
     userService: Framework["user.service"];
   }>(),
 });
 
-export type PostCircuit = InferCircuit<typeof postPlugin>;
+export type PostCircuit = InferCircuit<typeof postCircuit>;

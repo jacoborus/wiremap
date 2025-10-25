@@ -46,9 +46,10 @@ Deno.test("wireUp resolves async factories that return a promise", async () => {
       subKey: "subValue",
     },
   };
-  type Defs = typeof defs;
+  type Defs = typeof appCircuit;
+  const appCircuit = defineCircuit(defs);
 
-  const app = await wireUp(defineCircuit(defs));
+  const app = await wireUp(appCircuit);
 
   assertEquals(app().keyName, "value");
   assertEquals(app("nested").subKey, "subValue");
@@ -124,9 +125,10 @@ Deno.test("wireUp protects private units", () => {
       other,
     },
   };
-  type Defs = InferCircuit<typeof defs>;
+  type Defs = InferCircuit<typeof circuit>;
 
-  const main = wireUp(defineCircuit(defs));
+  const circuit = defineCircuit(defs);
+  const main = wireUp(circuit);
 
   assertThrows(
     // @ts-ignore: this is just for the internal test
@@ -203,8 +205,9 @@ Deno.test("defineUnit: isPrivate", () => {
     },
   };
 
-  type Defs = InferCircuit<typeof block>;
-  const main = wireUp(defineCircuit(block));
+  type Defs = InferCircuit<typeof circuit>;
+  const circuit = defineCircuit(block);
+  const main = wireUp(circuit);
 
   assertEquals(main().valor, 5);
   assertEquals(main("a").valor, "hola");
@@ -259,9 +262,10 @@ Deno.test("defineUnit: isFactory", () => {
       },
     },
   };
-  type Defs = InferCircuit<typeof defs>;
+  type Defs = InferCircuit<typeof circuit>;
 
-  const main = wireUp(defineCircuit(defs));
+  const circuit = defineCircuit(defs);
+  const main = wireUp(circuit);
 
   assertEquals(main().valor, "rootvalue");
   assertEquals(main("a").valor, "avalue");
@@ -278,7 +282,7 @@ Deno.test("defineUnit: isAsync", async () => {
   type Wa = InferWire<Defs, "a">;
   type Wb = InferWire<Defs, "a.b">;
 
-  const defs = {
+  const circuit = defineCircuit({
     $,
     valor: "rootvalue",
     a: {
@@ -323,10 +327,10 @@ Deno.test("defineUnit: isAsync", async () => {
         ),
       },
     },
-  };
+  });
 
-  type Defs = InferCircuit<typeof defs>;
-  const main = await wireUp(defineCircuit(defs));
+  type Defs = InferCircuit<typeof circuit>;
+  const main = await wireUp(circuit);
 
   assertEquals(main().valor, "rootvalue");
   assertEquals(main("a").valor, "avalue");
