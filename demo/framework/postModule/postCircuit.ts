@@ -1,8 +1,4 @@
-import {
-  defineInputs,
-  defineCircuit,
-  type InferCircuit,
-} from "../../../src/wiremap.ts";
+import { defineInputs, defineCircuit } from "../../../src/wiremap.ts";
 import type { Framework } from "../core/core.ts";
 
 import * as postMod from "./postMod.ts";
@@ -14,4 +10,4 @@ export const postCircuit = defineCircuit(postMod, {
   }>(),
 });
 
-export type PostCircuit = InferCircuit<typeof postCircuit>;
+export type PostCircuit = typeof postCircuit;

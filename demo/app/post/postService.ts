@@ -1,7 +1,7 @@
 import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
-import type { Blocks } from "../appCircuit.ts";
+import type { Circuit } from "../appCircuit.ts";
 
-type W = InferWire<Blocks, "post.service">;
+type W = InferWire<Circuit["__hub"], "post.service">;
 
 export const $ = tagBlock();
 

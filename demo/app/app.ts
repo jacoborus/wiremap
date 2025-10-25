@@ -13,6 +13,8 @@ const userId = app("user.service").addUser(
   true,
 );
 
+console.log(app().hola);
+
 const postService = app("post.service");
 const addPost = postService.addPost;
 

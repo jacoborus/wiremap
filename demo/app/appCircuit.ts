@@ -1,12 +1,12 @@
 import type { safename } from "safename";
-import { circuit, defineInputs, type InferCircuit } from "../../src/wiremap.ts";
+import { defineCircuit, defineInputs } from "../../src/wiremap.ts";
 
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
 
-export const appCircuit = circuit(
+export const appCircuit = defineCircuit(
   {
-    hola: 5,
+    hola: "hi!",
     user: userMod,
     post: postMod,
   },
@@ -17,4 +17,4 @@ export const appCircuit = circuit(
   },
 );
 
-export type Blocks = InferCircuit<typeof appCircuit>;
+export type Circuit = typeof appCircuit;

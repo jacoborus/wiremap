@@ -1,18 +1,19 @@
-import type { Rehashmap } from "./block.ts";
+import { BlockDef, defineBlock, mapBlocks, type Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
+import { BlockPaths, PathValue } from "./wiremap.ts";
 
 export interface StringHashmap {
   [K: string]: string | StringHashmap;
 }
 
 export interface BulkCircuitDef {
-  __hub: Hashmap;
+  __hub: Rehashmap;
   __inputs: Hashmap;
   __outputs: StringHashmap;
 }
 
 export type CircuitDef<
-  H extends Hashmap,
+  H extends Rehashmap,
   I extends Hashmap,
   O extends StringHashmap,
 > = {
@@ -42,14 +43,23 @@ interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
   outputs?: O;
 }
 
+type MappedHub<H extends Hashmap> = {
+  [K in BlockPaths<H>]: PathValue<H, K & string>;
+};
+
+type EnsureBlock<D extends Hashmap> = D & { "": BlockDef<D> };
+
 export function defineCircuit<
   const H extends Hashmap,
   I extends Hashmap,
   O extends StringHashmap,
-  C extends CircuitDef<H, I, O>,
+  E extends EnsureBlock<H>,
+  C extends CircuitDef<MappedHub<E>, I, O>,
 >(mainBlock: H, options?: CircuitOptions<I, O>): C {
+  const target = { ...mainBlock, "": defineBlock(mainBlock) };
+
   return {
-    __hub: mainBlock,
+    __hub: mapBlocks(target),
     __inputs: {} as I,
     __outputs: options?.outputs || {},
   } as C;

@@ -1,4 +1,3 @@
-import type { InferCircuit } from "../../../src/wiremap.ts";
 import { defineCircuit } from "../../../src/wiremap.ts";
 
 import * as userMod from "./user/userMod.ts";
@@ -14,4 +13,4 @@ export const coreDefs = defineCircuit({
   hola: "hola",
 });
 
-export type Framework = InferCircuit<typeof coreDefs>;
+export type Framework = typeof coreDefs;

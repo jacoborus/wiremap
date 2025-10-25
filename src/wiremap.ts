@@ -5,20 +5,12 @@ import type { BlockDef, BlockProxy, IsBlock } from "./block.ts";
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
-  defineBlock,
-  filterBlocks,
   filterInputBlocks,
   getWire,
   isHashmap,
-  mapBlocks,
   mapInputBlocks,
 } from "./block.ts";
-import type {
-  BulkCircuitDef,
-  BulkCircuitFull,
-  CircuitDef,
-  StringHashmap,
-} from "./circuit.ts";
+import type { BulkCircuitDef, BulkCircuitFull } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -115,7 +107,7 @@ export interface InferWire<D extends Hashmap, N extends string> {
     blockPath: K,
   ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>, ".">]>>;
   // absolute block resolution
-  <K extends keyof D>(blockPath: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
+  <K extends keyof D>(blockPath?: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
 
 /**
@@ -215,76 +207,30 @@ type ExtractBlockKeys<T> = {
  * @public
  * @since 1.0.0
  */
-export function wireUp<
-  Defs extends CircuitDef<Hashmap, Hashmap, StringHashmap>,
->(defs: Defs, inputs?: Defs["__inputs"]): WiredUp<InferCircuit<Defs>> {
-  const finalDefinitions = defineBlock(defs.__hub);
-
-  const blockDefinitions = mapBlocks(finalDefinitions);
-  blockDefinitions[""] = filterBlocks(finalDefinitions);
-
+export function wireUp<Defs extends BulkCircuitDef>(
+  defs: Defs,
+  inputs?: Defs["__inputs"],
+): WiredUp<Defs["__hub"]> {
   const inputDefinitions = mapInputBlocks(inputs || {});
   inputDefinitions[""] = filterInputBlocks(inputs || {});
 
   const cache = createCacheObject();
   const circuit = {
-    __hub: blockDefinitions,
+    __hub: defs["__hub"],
     __inputs: inputDefinitions,
     __outputs: {},
   };
 
-  if (hasAsyncKeys(blockDefinitions)) {
+  if (hasAsyncKeys(defs["__hub"])) {
     // This will cause wireUp to return a promise that resolves
     // when all async factories are resolved
     return resolveAsyncFactories(circuit, cache).then(() => {
       return getWire("", circuit, cache);
-    }) as WiredUp<InferCircuit<Defs>>;
+    }) as WiredUp<Defs["__hub"]>;
   }
 
-  return getWire("", circuit, cache) as WiredUp<InferCircuit<Defs>>;
+  return getWire("", circuit, cache) as WiredUp<Defs["__hub"]>;
 }
-
-/**
- * Infers the structure of all blocks and units from a definitions object.
- *
- * This utility type analyzes your definitions object and generates a mapped type
- * containing all block paths and their corresponding unit structures. It's essential
- * for getting proper TypeScript support when working with wire functions across
- * your application.
- *
- * @template R - The definitions object type extending Hashmap
- *
- * @example Basic usage
- * ```typescript
- * const appSchema = {
- *   user: userMod,
- *   post: postMod,
- *   config: { port: 3000 }
- * };
- *
- * export type Blocks = InferCircuit<typeof appSchema>;
- * // Result: Blocks contains paths like "", "user", "user.service", "post", "post.service"
- * ```
- *
- * @example Using with wire types
- * ```typescript
- * import type { InferCircuit, InferWire } from "wiremap";
- *
- * const defs = { user: userMod, post: postMod };
- * export type Blocks = InferCircuit<typeof defs>;
- *
- * // Now use in your services
- * type Wire = InferWire<Blocks, "user.service">;
- * ```
- *
- * @public
- * @since 1.0.0
- */
-export type InferCircuit<C extends BulkCircuitDef> = {
-  [K in BlockPaths<C["__hub"]>]: K extends ""
-    ? C["__hub"]
-    : PathValue<C["__hub"], K>;
-};
 
 /**
  * Access type by a dot notated path.
@@ -294,7 +240,10 @@ export type InferCircuit<C extends BulkCircuitDef> = {
  * PathValue<{ user: { service: { getUser: () => User } } }, "user.service">
  * // Returns: { getUser: () => User }
  */
-type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
+export type PathValue<
+  T,
+  P extends string,
+> = P extends `${infer K}.${infer Rest}`
   ? K extends keyof T
     ? PathValue<T[K], Rest>
     : never
@@ -319,30 +268,28 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
  * }>
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
-type BlockPaths<T extends Hashmap, P extends string = ""> =
-  | ""
-  | {
-      [K in keyof T]: T[K] extends UnitDef
-        ? never
-        : T[K] extends Hashmap
-          ?
-              | (HasUnits<T[K]> extends true
-                  ? P extends ""
-                    ? `${Extract<K, string>}`
-                    : `${P}.${Extract<K, string>}`
-                  : never)
-              | (T[K] extends BlockDef<T[K]>
-                  ? HasBlocks<T[K]> extends true
-                    ? BlockPaths<
-                        T[K],
-                        P extends ""
-                          ? Extract<K, string>
-                          : `${P}.${Extract<K, string>}`
-                      >
-                    : never
-                  : never)
-          : never;
-    }[keyof T];
+export type BlockPaths<T extends Hashmap, P extends string = ""> = {
+  [K in keyof T]: T[K] extends UnitDef
+    ? never
+    : T[K] extends Hashmap
+      ?
+          | (HasUnits<T[K]> extends true
+              ? P extends ""
+                ? `${Extract<K, string>}`
+                : `${P}.${Extract<K, string>}`
+              : never)
+          | (T[K] extends BlockDef<T[K]>
+              ? HasBlocks<T[K]> extends true
+                ? BlockPaths<
+                    T[K],
+                    P extends ""
+                      ? Extract<K, string>
+                      : `${P}.${Extract<K, string>}`
+                  >
+                : never
+              : never)
+      : never;
+}[keyof T];
 
 /**
  * Determines whether an object contains items that are neither blocks nor blockTags.

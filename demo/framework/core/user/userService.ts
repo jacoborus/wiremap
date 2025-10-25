@@ -4,7 +4,7 @@ import { type User } from "./userRepo.ts";
 
 export const $ = tagBlock();
 
-type W = InferWire<Framework, "user.service">;
+type W = InferWire<Framework["__hub"], "user.service">;
 
 /**
  * Return a copy of the list of users

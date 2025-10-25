@@ -1,7 +1,7 @@
 import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
 import type { PostCircuit } from "./postCircuit.ts";
 
-type W = InferWire<PostCircuit, "">;
+type W = InferWire<PostCircuit["__hub"], "">;
 
 export const $ = tagBlock();
 
