@@ -347,7 +347,7 @@ export function mapInputBlocks<L extends Hashmap>(
   Object.keys(blocks).forEach((key) => {
     const block = blocks[key];
 
-    if (isInputBlockKey(key)) {
+    if (key.startsWith("$") && key !== "$") {
       if (typeof block !== "object" || block == null) return;
 
       const realKey = key.slice(1);
@@ -364,17 +364,13 @@ export function mapInputBlocks<L extends Hashmap>(
 
       // loop through sub-blocks
       if (hasBlocks(block)) {
-        const subBlocks = mapBlocks(block, finalKey);
+        const subBlocks = mapInputBlocks(block, finalKey);
         Object.assign(mapped, subBlocks);
       }
     }
   });
 
   return mapped;
-}
-
-function isInputBlockKey(key: string): boolean {
-  return key.startsWith("$") && key !== "$";
 }
 
 export function isHashmap(item: unknown): item is Hashmap {

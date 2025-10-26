@@ -90,17 +90,26 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  */
 export interface InferWire<
   C extends BulkCircuitDef,
-  N extends "" | keyof C["__hub"],
+  N extends keyof C["__hub"],
 > {
   // root block resolution
-  (): BlockProxy<FilterUnitValues<C["__hub"][""]>>;
+  (): BlockProxy<FilterPublicUnitValues<C["__hub"][""]>>;
+
   // local block resolution
   (blockPath: "."): BlockProxy<FilterUnitValues<C["__hub"][N]>>;
+
   // absolute block resolution
   <K extends keyof C["__hub"]>(
     blockPath?: K,
   ): BlockProxy<FilterPublicUnitValues<C["__hub"][K]>>;
-  <K extends keyof C["__inputs"]>(blockPath?: K): C["__inputs"][K];
+
+  // input root block resolution
+  (): FilterUnitValues<C["__inputs"][""]>;
+
+  // input absolute block resolution
+  <K extends keyof C["__inputs"]>(
+    blockPath?: K,
+  ): FilterUnitValues<C["__inputs"][K]>;
 }
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
@@ -177,8 +186,15 @@ export function wireUp<Defs extends BulkCircuitDef>(
   defs: Defs,
   inputs?: Defs["__inputs"],
 ): WiredUp<Defs> {
-  const inputDefinitions = mapInputBlocks(inputs || {});
-  inputDefinitions[""] = filterInputBlocks(inputs || {});
+  inputs = inputs ?? {};
+
+  const inputDefinitions = mapInputBlocks(inputs);
+
+  const rootInputBlock = filterInputBlocks(inputs);
+
+  if (Object.keys(rootInputBlock).length) {
+    inputDefinitions[""] = rootInputBlock;
+  }
 
   const cache = createCacheObject();
   const circuit = {

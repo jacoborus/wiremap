@@ -13,6 +13,11 @@ export const appCircuit = defineCircuit(
   {
     inputs: defineInputs<{
       normalizeString: typeof safename;
+      $tools: {
+        $other: {
+          normalizeString: typeof safename;
+        };
+      };
     }>(),
   },
 );

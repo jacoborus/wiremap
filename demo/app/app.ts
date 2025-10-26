@@ -4,7 +4,9 @@ import { safename } from "safename";
 import { appCircuit } from "./appCircuit.ts";
 
 export const app = await wireUp(appCircuit, {
-  normalizeString: safename,
+  "tools.other": {
+    normalizeString: safename,
+  },
 });
 
 const userId = app("user.service").addUser(
