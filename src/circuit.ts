@@ -1,6 +1,12 @@
-import { BlockDef, defineBlock, mapBlocks, type Rehashmap } from "./block.ts";
+import {
+  BlockDef,
+  defineBlock,
+  IsBlock,
+  mapBlocks,
+  type Rehashmap,
+} from "./block.ts";
 import type { Hashmap } from "./common.ts";
-import { BlockPaths, PathValue } from "./wiremap.ts";
+import { UnitDef } from "./unit.ts";
 
 export interface StringHashmap {
   [K: string]: string | StringHashmap;
@@ -46,6 +52,86 @@ interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
 type MappedHub<H extends Hashmap> = {
   [K in BlockPaths<H>]: PathValue<H, K & string>;
 };
+
+/**
+ * Extracts the dot composed paths of the blocks that contain units.
+ * This generates all valid block paths that can be accessed via the wire function.
+ *
+ * @example
+ * BlockPaths<{
+ *   a: Block<{someUnit: string}>,
+ *   b: {
+ *     c: Block<{otherUnit: number}>,
+ *     d: Block<{thirdUnit: boolean}>,
+ *     other: 4
+ *   },
+ * }>
+ * // Returns: "" | "a" | "b.c" | "b.d"
+ */
+type BlockPaths<T extends Hashmap, P extends string = ""> = {
+  [K in keyof T]: T[K] extends UnitDef
+    ? never
+    : T[K] extends Hashmap
+      ?
+          | (HasUnits<T[K]> extends true
+              ? P extends ""
+                ? `${Extract<K, string>}`
+                : `${P}.${Extract<K, string>}`
+              : never)
+          | (T[K] extends BlockDef<T[K]>
+              ? HasBlocks<T[K]> extends true
+                ? BlockPaths<
+                    T[K],
+                    P extends ""
+                      ? Extract<K, string>
+                      : `${P}.${Extract<K, string>}`
+                  >
+                : never
+              : never)
+      : never;
+}[keyof T];
+
+/**
+ * Determines whether an object contains items that are neither blocks nor blockTags.
+ * Used to identify blocks that actually contain any unit
+ */
+type HasUnits<T extends Hashmap> = true extends {
+  [K in keyof T]: K extends "$"
+    ? false
+    : IsBlock<T[K]> extends true
+      ? false
+      : true;
+}[keyof T]
+  ? true
+  : false;
+
+/**
+ * Determines whether an object contains items that are blocks.
+ * Used to identify if we need to recursively process nested blocks.
+ */
+type HasBlocks<T extends Hashmap> = true extends {
+  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? true : false;
+}[keyof T]
+  ? true
+  : false;
+
+/**
+ * Access type by a dot notated path.
+ * Recursively traverses an object type following a dot-separated path.
+ *
+ * @example
+ * PathValue<{ user: { service: { getUser: () => User } } }, "user.service">
+ * // Returns: { getUser: () => User }
+ */
+type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
+  ? K extends keyof T
+    ? PathValue<T[K], Rest>
+    : never
+  : P extends keyof T
+    ? T[P] extends BlockDef<Hashmap>
+      ? T[P]
+      : never
+    : never;
 
 type EnsureBlock<D extends Hashmap> = D & { "": BlockDef<D> };
 

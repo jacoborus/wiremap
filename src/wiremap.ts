@@ -1,6 +1,6 @@
 import type { Hashmap, Wcache } from "./common.ts";
-import type { IsAsyncFactory, IsPrivateUnit, UnitDef } from "./unit.ts";
-import type { BlockDef, BlockProxy, IsBlock } from "./block.ts";
+import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
+import type { BlockDef, BlockProxy } from "./block.ts";
 
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
@@ -114,25 +114,6 @@ type ExtractChildPaths<P extends string, H extends Hashmap> = {
   [K in keyof H]: K extends `${P}.${infer C}` ? `.${C}` : never;
 }[keyof H];
 
-/** Extract keys with no dots in them */
-type NoDots<T extends string> = T extends `${string}.${string}` ? never : T;
-
-type ExtractParentPath<
-  N extends string,
-  P extends string[],
-> = N extends `${infer Parent}.${infer Child}`
-  ? ExtractParentPath<Child, [...P, Parent]>
-  : P;
-
-/** Array.join but with types */
-type Join<T extends string[], D extends string> = T extends []
-  ? ""
-  : T extends [infer F extends string]
-    ? F
-    : T extends [infer F extends string, ...infer R extends string[]]
-      ? `${F}${D}${Join<R, D>}`
-      : string;
-
 /** Filters an object excluding the block tag ($), and any nested blocks */
 type FilterUnitValues<T> = T extends Hashmap
   ? Omit<T, "$" | ExtractBlockKeys<T>>
@@ -227,89 +208,6 @@ export function wireUp<Defs extends BulkCircuitDef>(
 
   return getWire("", circuit, cache) as WiredUp<Defs["__hub"]>;
 }
-
-/**
- * Access type by a dot notated path.
- * Recursively traverses an object type following a dot-separated path.
- *
- * @example
- * PathValue<{ user: { service: { getUser: () => User } } }, "user.service">
- * // Returns: { getUser: () => User }
- */
-export type PathValue<
-  T,
-  P extends string,
-> = P extends `${infer K}.${infer Rest}`
-  ? K extends keyof T
-    ? PathValue<T[K], Rest>
-    : never
-  : P extends keyof T
-    ? T[P] extends BlockDef<Hashmap>
-      ? T[P]
-      : never
-    : never;
-
-/**
- * Extracts the dot composed paths of the blocks that contain units.
- * This generates all valid block paths that can be accessed via the wire function.
- *
- * @example
- * BlockPaths<{
- *   a: Block<{someUnit: string}>,
- *   b: {
- *     c: Block<{otherUnit: number}>,
- *     d: Block<{thirdUnit: boolean}>,
- *     other: 4
- *   },
- * }>
- * // Returns: "" | "a" | "b.c" | "b.d"
- */
-export type BlockPaths<T extends Hashmap, P extends string = ""> = {
-  [K in keyof T]: T[K] extends UnitDef
-    ? never
-    : T[K] extends Hashmap
-      ?
-          | (HasUnits<T[K]> extends true
-              ? P extends ""
-                ? `${Extract<K, string>}`
-                : `${P}.${Extract<K, string>}`
-              : never)
-          | (T[K] extends BlockDef<T[K]>
-              ? HasBlocks<T[K]> extends true
-                ? BlockPaths<
-                    T[K],
-                    P extends ""
-                      ? Extract<K, string>
-                      : `${P}.${Extract<K, string>}`
-                  >
-                : never
-              : never)
-      : never;
-}[keyof T];
-
-/**
- * Determines whether an object contains items that are neither blocks nor blockTags.
- * Used to identify blocks that actually contain any unit
- */
-type HasUnits<T extends Hashmap> = true extends {
-  [K in keyof T]: K extends "$"
-    ? false
-    : IsBlock<T[K]> extends true
-      ? false
-      : true;
-}[keyof T]
-  ? true
-  : false;
-
-/**
- * Determines whether an object contains items that are blocks.
- * Used to identify if we need to recursively process nested blocks.
- */
-type HasBlocks<T extends Hashmap> = true extends {
-  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? true : false;
-}[keyof T]
-  ? true
-  : false;
 
 /** Check if any of the definitions are async factories */
 function hasAsyncKeys(blockDefs: Hashmap): boolean {

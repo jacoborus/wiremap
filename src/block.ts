@@ -230,14 +230,6 @@ function createBlockProxy<
   ) as BlockProxy<C[P]>;
 }
 
-export function extractParentPath(localPath: string): string | null {
-  const parts = localPath.split(".");
-  const hasParent = parts.length > 1;
-  if (!hasParent) return null;
-  const parentParts = parts.slice(0, parts.length - 1);
-  return parentParts.join(".");
-}
-
 export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
   localPath: P & string,
   circuit: C,
@@ -268,30 +260,6 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
       cache.localProxy.set(localPath, localProxy);
 
       return localProxy;
-    }
-
-    // Parent block resolution
-    if (key === "..") {
-      const parentPath = extractParentPath(localPath);
-
-      if (cache.localProxy.has(parentPath)) {
-        return cache.localProxy.get(parentPath);
-      }
-
-      if (parentPath === null) {
-        throw new Error('Block ".." does not exist');
-      }
-
-      const parentProxy = createBlockProxy(
-        parentPath,
-        false,
-        circuit,
-        "__hub",
-        cache,
-      );
-      cache.localProxy.set(parentPath, parentProxy);
-
-      return parentProxy;
     }
 
     // Child block resolution

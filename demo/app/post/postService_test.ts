@@ -9,7 +9,7 @@ import { safename } from "safename";
 Deno.test("addPostTest", function addPostTest() {
   const repo = [] as Post[];
   const fakeBlocks = {
-    "..": { repo },
+    post: { repo },
     "": { normalizeString: safename },
     "user.service": {
       getUser: (id: string) => ({
