@@ -258,14 +258,6 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
       return localProxy;
     }
 
-    // Child block resolution
-    if (key.startsWith(".")) {
-      const blockPath = localPath + key;
-      const proxy = createBlockProxy(blockPath, false, circuit, "__hub", cache);
-      cache.proxy.set(blockPath, proxy);
-      return proxy;
-    }
-
     // Root block resolution
     if (key === "") {
       const proxy = createBlockProxy("", false, circuit, "__hub", cache);
@@ -274,18 +266,14 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
     }
 
     // External block resolution, uses absolute path of the block
-    const blockPaths = Object.keys(circuit.__hub);
-
-    if (blockPaths.includes(key)) {
+    if (Object.keys(circuit.__hub).includes(key)) {
       const proxy = createBlockProxy(key, false, circuit, "__hub", cache);
       cache.proxy.set(key, proxy);
       return proxy;
     }
 
-    // input block resolution, uses absolute path of the input block
-    const inputPaths = Object.keys(circuit.__inputs);
-
-    if (inputPaths.includes(key)) {
+    // Input block resolution, uses absolute path of the input block
+    if (Object.keys(circuit.__inputs).includes(key)) {
       const proxy = createBlockProxy(key, false, circuit, "__inputs", cache);
       cache.proxy.set(key, proxy);
       return proxy;

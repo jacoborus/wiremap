@@ -100,6 +100,7 @@ export interface InferWire<
   <K extends keyof C["__hub"]>(
     blockPath?: K,
   ): BlockProxy<FilterPublicUnitValues<C["__hub"][K]>>;
+  <K extends keyof C["__inputs"]>(blockPath?: K): C["__inputs"][K];
 }
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
