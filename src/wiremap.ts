@@ -102,10 +102,6 @@ export interface InferWire<D extends Hashmap, N extends string> {
   <K extends ExtractChildPaths<N, D>>(
     blockPath: K,
   ): BlockProxy<FilterPublicUnitValues<D[`${N}${K}`]>>;
-  // parent block resolution
-  <K extends N extends NoDots<N> ? never : "..">(
-    blockPath: K,
-  ): BlockProxy<FilterUnitValues<D[Join<ExtractParentPath<N, []>, ".">]>>;
   // absolute block resolution
   <K extends keyof D>(blockPath?: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
