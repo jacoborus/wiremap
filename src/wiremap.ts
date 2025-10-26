@@ -23,8 +23,8 @@ export {
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
  */
-type WiredUp<Defs extends Hashmap> =
-  AnyItemContainsAnyAsyncFactory<Defs> extends true
+type WiredUp<Defs extends BulkCircuitDef> =
+  AnyItemContainsAnyAsyncFactory<Defs["__hub"]> extends true
     ? Promise<InferWire<Defs, "">>
     : InferWire<Defs, "">;
 
@@ -55,7 +55,7 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * It provides overloaded signatures for different block resolution patterns, enabling
  * both relative and absolute path navigation through your application's dependency graph.
  *
- * @template D - The blocks definitions type extending Hashmap
+ * @template C - The blocks definitions type extending Hashmap
  * @template N - The current block path context as a string
  *
  * @example Basic wire usage in a service
@@ -88,13 +88,18 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * @public
  * @since 1.0.0
  */
-export interface InferWire<D extends Hashmap, N extends string> {
+export interface InferWire<
+  C extends BulkCircuitDef,
+  N extends "" | keyof C["__hub"],
+> {
   // root block resolution
-  (): BlockProxy<FilterUnitValues<D[""]>>;
+  (): BlockProxy<FilterUnitValues<C["__hub"][""]>>;
   // local block resolution
-  (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
+  (blockPath: "."): BlockProxy<FilterUnitValues<C["__hub"][N]>>;
   // absolute block resolution
-  <K extends keyof D>(blockPath?: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
+  <K extends keyof C["__hub"]>(
+    blockPath?: K,
+  ): BlockProxy<FilterPublicUnitValues<C["__hub"][K]>>;
 }
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
@@ -170,7 +175,7 @@ type ExtractBlockKeys<T> = {
 export function wireUp<Defs extends BulkCircuitDef>(
   defs: Defs,
   inputs?: Defs["__inputs"],
-): WiredUp<Defs["__hub"]> {
+): WiredUp<Defs> {
   const inputDefinitions = mapInputBlocks(inputs || {});
   inputDefinitions[""] = filterInputBlocks(inputs || {});
 
@@ -186,10 +191,10 @@ export function wireUp<Defs extends BulkCircuitDef>(
     // when all async factories are resolved
     return resolveAsyncFactories(circuit, cache).then(() => {
       return getWire("", circuit, cache);
-    }) as WiredUp<Defs["__hub"]>;
+    }) as WiredUp<Defs>;
   }
 
-  return getWire("", circuit, cache) as WiredUp<Defs["__hub"]>;
+  return getWire("", circuit, cache) as WiredUp<Defs>;
 }
 
 /** Check if any of the definitions are async factories */

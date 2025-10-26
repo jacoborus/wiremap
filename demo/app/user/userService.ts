@@ -3,7 +3,7 @@ import type { Circuit } from "../appCircuit.ts";
 
 export const $ = tagBlock();
 
-type W = InferWire<Circuit["__hub"], "user.service">;
+type W = InferWire<Circuit, "user.service">;
 
 /** List the users */
 export function getUsers(this: W) {

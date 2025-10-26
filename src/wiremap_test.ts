@@ -27,7 +27,7 @@ Deno.test("wireUp resolves dependencies", () => {
 
 Deno.test("wireUp resolves async factories that return a promise", async () => {
   const $ = tagBlock();
-  type W = InferWire<Defs["__hub"], "">;
+  type W = InferWire<Defs, "">;
 
   function factoryFn(w: W) {
     const theKey = w().keyName;
@@ -93,8 +93,8 @@ Deno.test("error handling for missing dependencies", () => {
 });
 
 Deno.test("wireUp protects private units", () => {
-  type Wa = InferWire<Defs["__hub"], "A">;
-  type Wb = InferWire<Defs["__hub"], "B">;
+  type Wa = InferWire<Defs, "A">;
+  type Wb = InferWire<Defs, "B">;
 
   function priv() {
     return "private";
@@ -182,7 +182,7 @@ Deno.test("defineUnit: isPrivate", () => {
   const $ = tagBlock();
   const $a = tagBlock();
   const $b = tagBlock();
-  type Wb = InferWire<Defs["__hub"], "b">;
+  type Wb = InferWire<Defs, "b">;
 
   const circuit = defineCircuit({
     $,
@@ -222,8 +222,8 @@ Deno.test("defineUnit: isFactory", () => {
   const $a = tagBlock();
   const $b = tagBlock();
 
-  type Wa = InferWire<Defs["__hub"], "a">;
-  type Wb = InferWire<Defs["__hub"], "a.b">;
+  type Wa = InferWire<Defs, "a">;
+  type Wb = InferWire<Defs, "a.b">;
 
   const defs = {
     $,
@@ -278,8 +278,8 @@ Deno.test("defineUnit: isAsync", async () => {
   const $a = tagBlock();
   const $b = tagBlock();
 
-  type Wa = InferWire<Defs["__hub"], "a">;
-  type Wb = InferWire<Defs["__hub"], "a.b">;
+  type Wa = InferWire<Defs, "a">;
+  type Wb = InferWire<Defs, "a.b">;
 
   const circuit = defineCircuit({
     $,

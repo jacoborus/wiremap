@@ -294,11 +294,10 @@ export function myUnit(this: Wire) {
 myUnit.is = 'bound' as const;
 ```
 
-Wires can resolve **current**, **root**, **child**, or **absolute** blocks:
+Wires can resolve **current**, **root**, or **absolute** blocks:
 
 - `this(".")` → current block
 - `this()` → root block
-- `this(".child")` → child block
 - `this("path.to.block")` → absolute path
 
 ---
