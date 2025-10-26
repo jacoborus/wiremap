@@ -69,9 +69,6 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  *   // Local block access (includes private units)
  *   const getUserByEmail = this(".").getUserByEmail;
  *
- *   // Parent block access
- *   const repo = this("user").repo;
- *
  *   // Cross-module absolute access
  *   const logger = this("shared.logger");
  *
@@ -85,8 +82,6 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  * // From context "post.service":
  * wire()                 // → Root block proxy
  * wire(".")              // → Local block proxy (post.service, includes private units)
- * wire("..")             // → Parent block proxy (post)
- * wire(".repository")    // → Child block proxy (post.service.repository)
  * wire("user.service")   // → Absolute block path (user.service)
  * ```
  *
@@ -98,21 +93,9 @@ export interface InferWire<D extends Hashmap, N extends string> {
   (): BlockProxy<FilterUnitValues<D[""]>>;
   // local block resolution
   (blockPath: "."): BlockProxy<FilterUnitValues<D[N]>>;
-  // child block resolution
-  <K extends ExtractChildPaths<N, D>>(
-    blockPath: K,
-  ): BlockProxy<FilterPublicUnitValues<D[`${N}${K}`]>>;
   // absolute block resolution
   <K extends keyof D>(blockPath?: K): BlockProxy<FilterPublicUnitValues<D[K]>>;
 }
-
-/**
- * Find the keys of a hashmap that match the beginning of another string,
- * then extract the resulting substrings and prefix them with a dot '.'
- */
-type ExtractChildPaths<P extends string, H extends Hashmap> = {
-  [K in keyof H]: K extends `${P}.${infer C}` ? `.${C}` : never;
-}[keyof H];
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
 type FilterUnitValues<T> = T extends Hashmap

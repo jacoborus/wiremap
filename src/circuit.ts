@@ -1,11 +1,6 @@
-import {
-  BlockDef,
-  defineBlock,
-  IsBlock,
-  mapBlocks,
-  type Rehashmap,
-} from "./block.ts";
+import { BlockDef, defineBlock, mapBlocks, type Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
+import { blockSymbol } from "./common.ts";
 import { UnitDef } from "./unit.ts";
 
 export interface StringHashmap {
@@ -134,6 +129,8 @@ type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
     : never;
 
 type EnsureBlock<D extends Hashmap> = D & { "": BlockDef<D> };
+
+type IsBlock<T> = T extends { $: { [blockSymbol]: true } } ? true : false;
 
 export function defineCircuit<
   const H extends Hashmap,

@@ -117,10 +117,6 @@ export function tagBlock(): BlockTag {
   return { [blockSymbol]: true };
 }
 
-export type IsBlock<T> = T extends { $: { [blockSymbol]: true } }
-  ? true
-  : false;
-
 export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
   return (
     item !== null &&
