@@ -116,22 +116,20 @@ type InputPathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
 type BlockPaths<T extends Hashmap, P extends string = ""> = {
   [K in keyof T]: T[K] extends UnitDef
     ? never
-    : T[K] extends Hashmap
+    : T[K] extends BlockDef<Hashmap>
       ?
           | (HasUnits<T[K]> extends true
               ? P extends ""
                 ? `${Extract<K, string>}`
                 : `${P}.${Extract<K, string>}`
               : never)
-          | (T[K] extends BlockDef<T[K]>
-              ? HasBlocks<T[K]> extends true
-                ? BlockPaths<
-                    T[K],
-                    P extends ""
-                      ? Extract<K, string>
-                      : `${P}.${Extract<K, string>}`
-                  >
-                : never
+          | (HasBlocks<T[K]> extends true
+              ? BlockPaths<
+                  T[K],
+                  P extends ""
+                    ? Extract<K, string>
+                    : `${P}.${Extract<K, string>}`
+                >
               : never)
       : never;
 }[keyof T];
