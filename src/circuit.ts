@@ -9,7 +9,7 @@ export interface StringHashmap {
 
 export interface BulkCircuitDef {
   __hub: Rehashmap;
-  __inputs: Hashmap;
+  __inputs: Rehashmap;
   __outputs: StringHashmap;
 }
 
@@ -116,22 +116,34 @@ type InputPathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
 type BlockPaths<T extends Hashmap, P extends string = ""> = {
   [K in keyof T]: T[K] extends UnitDef
     ? never
-    : T[K] extends BlockDef<Hashmap>
-      ?
-          | (HasUnits<T[K]> extends true
-              ? P extends ""
-                ? `${Extract<K, string>}`
-                : `${P}.${Extract<K, string>}`
-              : never)
-          | (HasBlocks<T[K]> extends true
-              ? BlockPaths<
-                  T[K],
-                  P extends ""
-                    ? Extract<K, string>
-                    : `${P}.${Extract<K, string>}`
-                >
-              : never)
-      : never;
+    : K extends `$${infer Key}`
+      ? T[K] extends Hashmap
+        ?
+            | (HasUnits<T[K]> extends true
+                ? P extends ""
+                  ? Key
+                  : `${P}.${Key}`
+                : never)
+            | (HasBlocks<T[K]> extends true
+                ? BlockPaths<T[K], P extends "" ? Key : `${P}.${Key}`>
+                : never)
+        : never
+      : T[K] extends BlockDef<Hashmap>
+        ?
+            | (HasUnits<T[K]> extends true
+                ? P extends ""
+                  ? `${Extract<K, string>}`
+                  : `${P}.${Extract<K, string>}`
+                : never)
+            | (HasBlocks<T[K]> extends true
+                ? BlockPaths<
+                    T[K],
+                    P extends ""
+                      ? Extract<K, string>
+                      : `${P}.${Extract<K, string>}`
+                  >
+                : never)
+        : never;
 }[keyof T];
 
 /**
@@ -169,12 +181,18 @@ type HasBlocks<T extends Hashmap> = true extends {
 type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
   ? K extends keyof T
     ? PathValue<T[K], Rest>
-    : never
+    : `$${K}` extends keyof T
+      ? PathValue<T[`$${K}`], Rest>
+      : never
   : P extends keyof T
     ? T[P] extends BlockDef<Hashmap>
       ? T[P]
       : never
-    : never;
+    : `$${P}` extends keyof T
+      ? T[`$${P}`] extends Hashmap
+        ? T[`$${P}`]
+        : never
+      : never;
 
 type EnsureBlock<D extends Hashmap> = D & { "": BlockDef<D> };
 

@@ -87,7 +87,7 @@ Deno.test("error handling for missing dependencies", () => {
     throw new Error("Should have thrown an error");
   } catch (e: unknown) {
     if (e instanceof Error) {
-      assertEquals(e.message, 'Unit nonexistent not found from block ""');
+      assertEquals(e.message, 'Block "nonexistent" not found from block ""');
     }
   }
 });

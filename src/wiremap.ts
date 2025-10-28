@@ -14,11 +14,7 @@ import type { BulkCircuitDef, BulkCircuitFull } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
-export {
-  defineCircuit,
-  defineCircuit as circuit,
-  defineInputs,
-} from "./circuit.ts";
+export { defineCircuit, defineInputs } from "./circuit.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -113,24 +109,27 @@ export interface InferWire<
 }
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
-type FilterUnitValues<T> = T extends Hashmap
-  ? Omit<T, "$" | ExtractBlockKeys<T>>
-  : never;
+type FilterUnitValues<T extends Hashmap> = Omit<T, "$" | ExtractNonUnitKeys<T>>;
 
-type FilterPublicUnitValues<T> = T extends Hashmap
-  ? Omit<T, "$" | ExtractPrivatePaths<T> | ExtractBlockKeys<T>>
-  : never;
+type FilterPublicUnitValues<T extends Hashmap> = Omit<
+  T,
+  "$" | ExtractPrivatePaths<T> | ExtractNonUnitKeys<T>
+>;
 
-type ExtractPrivatePaths<T> = T extends Hashmap //
-  ? { [K in keyof T]: true extends IsPrivateUnit<T[K]> ? K : never }[keyof T]
-  : never;
+type ExtractPrivatePaths<T extends Hashmap> = {
+  [K in keyof T]: true extends IsPrivateUnit<T[K]> ? K : never;
+}[keyof T];
 
 /**
  * From an object, extract the keys that contain blocks.
  * This is used to filter out nested blocks when creating unit proxies.
  */
-type ExtractBlockKeys<T> = {
-  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? K : never;
+type ExtractNonUnitKeys<T> = {
+  [K in keyof T]: K extends `$${string}`
+    ? K
+    : T[K] extends BlockDef<Hashmap>
+      ? K
+      : never;
 }[keyof T];
 
 /**

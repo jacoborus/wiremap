@@ -4,7 +4,7 @@ import { safename } from "safename";
 import { appCircuit } from "./appCircuit.ts";
 
 export const app = await wireUp(appCircuit, {
-  "tools.other": {
+  $tools: {
     normalizeString: safename,
   },
 });
@@ -16,6 +16,7 @@ const userId = app("user.service").addUser(
 );
 
 console.log(app().hola);
+console.log("1 ===", app("dollar").a);
 
 const postService = app("post.service");
 const addPost = postService.addPost;

@@ -9,14 +9,15 @@ export const appCircuit = defineCircuit(
     hola: "hi!",
     user: userMod,
     post: postMod,
+    $dollar: {
+      a: 1,
+      b: 2,
+    },
   },
   {
     inputs: defineInputs<{
-      normalizeString: typeof safename;
       $tools: {
-        $other: {
-          normalizeString: typeof safename;
-        };
+        normalizeString: typeof safename;
       };
     }>(),
   },

@@ -279,7 +279,7 @@ export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
       return proxy;
     }
 
-    throw new Error(`Unit ${key} not found from block "${localPath}"`);
+    throw new Error(`Block "${key}" not found from block "${localPath}"`);
   };
 
   cache.wire.set(localPath, wire);
@@ -294,22 +294,33 @@ export function mapBlocks<L extends Hashmap>(
   const mapped: Rehashmap = {};
 
   Object.keys(blocks).forEach((key) => {
-    const block = blocks[key];
+    // this is the key of the block given the path
+    let realKey = "";
+    let block = blocks[key];
 
-    if (itemIsBlock(block)) {
-      // this is the key of the block given the path
-      const finalKey = prefix ? `${prefix}.${key}` : key;
+    if (!isHashmap(block)) return;
 
-      // only blocks with units are wireable
-      if (blockHasUnits(block)) {
-        mapped[finalKey] = filterBlocks(block);
-      }
+    if (key === "$") return;
 
-      // loop through sub-blocks
-      if (hasBlocks(block)) {
-        const subBlocks = mapBlocks(block, finalKey);
-        Object.assign(mapped, subBlocks);
-      }
+    if (key.startsWith("$")) {
+      realKey = key.slice(1);
+    } else if (itemIsBlock(block)) {
+      realKey = key;
+    } else {
+      return;
+    }
+
+    const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
+
+    // only blocks with units are wireable
+    if (blockHasUnits(block)) {
+      mapped[finalKey] = filterOutBlocks(block);
+    }
+
+    // loop through sub-blocks
+    if (hasBlocks(block)) {
+      const subBlocks = mapBlocks(block, finalKey);
+      Object.assign(mapped, subBlocks);
     }
   });
 
@@ -319,7 +330,7 @@ export function mapBlocks<L extends Hashmap>(
 /**
  * Filter out the blocks from an object of units and blocks
  */
-export function filterBlocks(block: Hashmap): Hashmap {
+export function filterOutBlocks(block: Hashmap): Hashmap {
   return Object.fromEntries(
     Object.keys(block)
       .map((key) => [key, block[key]])
@@ -380,7 +391,7 @@ export function isHashmap(item: unknown): item is Hashmap {
   });
 }
 
-function blockHasUnits(item: BlockDef<Hashmap>): boolean {
+function blockHasUnits(item: Hashmap): boolean {
   return Object.keys(item).some((key) => {
     if (key === "$") return false;
     return !itemIsBlock(item[key]);

@@ -10,7 +10,7 @@ Deno.test("addPostTest", function addPostTest() {
   const repo = [] as Post[];
   const fakeBlocks = {
     post: { repo },
-    "": { normalizeString: safename },
+    tools: { normalizeString: safename },
     "user.service": {
       getUser: (id: string) => ({
         id,
