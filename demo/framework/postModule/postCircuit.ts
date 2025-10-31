@@ -1,12 +1,19 @@
 import { defineInputs, defineCircuit } from "../../../src/wiremap.ts";
 import type { Framework } from "../core/core.ts";
+import type { InferUnitValue } from "../../../src/unit.ts";
 
 import * as postMod from "./postMod.ts";
 
 export const postCircuit = defineCircuit(postMod, {
   inputs: defineInputs<{
-    getUser: Framework["user.service"]["getUserByEmail"];
-    userService: Framework["user.service"];
+    "$>": {
+      getUser: Framework["__hub"]["user.service"]["getUserByEmail"];
+    };
+    $userService: {
+      getUser: InferUnitValue<
+        Framework["__hub"]["user.service"]["getUserByEmail"]
+      >;
+    };
   }>(),
 });
 

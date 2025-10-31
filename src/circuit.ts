@@ -44,59 +44,9 @@ interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
   outputs?: O;
 }
 
-type MappedHub<H extends Hashmap> = {
+export type MappedHub<H extends Hashmap> = {
   [K in BlockPaths<H>]: PathValue<H, K & string>;
 };
-
-export type MappedInputs<H extends Hashmap> = {
-  [K in InputBlockPaths<H>]: InputPathValue<H, K>;
-};
-
-export type InputBlockPaths<T extends Hashmap, P extends string = ""> = {
-  [K in keyof T]: K extends `$${infer V}`
-    ? T[K] extends Hashmap
-      ?
-          | (HasInputs<T[K]> extends true
-              ? P extends ""
-                ? V
-                : `${P}.${V}`
-              : never)
-          | (HasInputBlocks<T[K]> extends true
-              ? InputBlockPaths<T[K], P extends "" ? V : `${P}.${V}`>
-              : never)
-      : never
-    : never;
-}[keyof T];
-
-/**
- * Determines whether an object contains items that are neither blocks nor blockTags.
- * Used to identify blocks that actually contain any unit
- */
-type HasInputs<T extends Hashmap> = true extends {
-  [K in keyof T]: K extends "$" ? false : K extends `$${string}` ? false : true;
-}[keyof T]
-  ? true
-  : false;
-
-/**
- * Determines whether an object contains items that are blocks.
- * Used to identify if we need to recursively process nested blocks.
- */
-type HasInputBlocks<T extends Hashmap> = true extends {
-  [K in keyof T]: K extends `$${string}` ? true : false;
-}[keyof T]
-  ? true
-  : false;
-
-type InputPathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
-  ? `$${K}` extends keyof T
-    ? InputPathValue<T[`$${K}`], Rest>
-    : never
-  : `$${P}` extends keyof T
-    ? T[`$${P}`] extends Hashmap
-      ? T[`$${P}`]
-      : never
-    : never;
 
 /**
  * Extracts the dot composed paths of the blocks that contain units.
@@ -153,9 +103,11 @@ type BlockPaths<T extends Hashmap, P extends string = ""> = {
 type HasUnits<T extends Hashmap> = true extends {
   [K in keyof T]: K extends "$"
     ? false
-    : IsBlock<T[K]> extends true
+    : K extends `$${string}`
       ? false
-      : true;
+      : IsBlock<T[K]> extends true
+        ? false
+        : true;
 }[keyof T]
   ? true
   : false;
@@ -165,7 +117,13 @@ type HasUnits<T extends Hashmap> = true extends {
  * Used to identify if we need to recursively process nested blocks.
  */
 type HasBlocks<T extends Hashmap> = true extends {
-  [K in keyof T]: T[K] extends BlockDef<Hashmap> ? true : false;
+  [K in keyof T]: T[K] extends BlockDef<Hashmap>
+    ? true
+    : K extends `$${string}`
+      ? T[K] extends Hashmap
+        ? true
+        : false
+      : false;
 }[keyof T]
   ? true
   : false;
@@ -203,13 +161,13 @@ export function defineCircuit<
   I extends Hashmap,
   O extends StringHashmap,
   E extends EnsureBlock<H>,
-  C extends CircuitDef<MappedHub<E>, MappedInputs<I>, O>,
+  C extends CircuitDef<MappedHub<E>, MappedHub<I>, O>,
 >(mainBlock: H, options?: CircuitOptions<I, O>): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
 
   return {
     __hub: mapBlocks(target),
-    __inputs: {} as MappedInputs<I>,
+    __inputs: {} as MappedHub<I>,
     __outputs: options?.outputs || {},
   } as C;
 }

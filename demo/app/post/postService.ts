@@ -35,7 +35,7 @@ export function addPost(
   userId: string,
 ) {
   const getUser = this("user.service").getUser;
-  const normalizeString = this("tools").normalizeString;
+  const normalizeString = this("tools.text").normalizeString;
   const user = getUser(userId);
   if (!user) throw new Error(`User with id ${userId} does not exist.`);
 

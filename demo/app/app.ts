@@ -4,7 +4,7 @@ import { safename } from "safename";
 import { appCircuit } from "./appCircuit.ts";
 
 export const app = await wireUp(appCircuit, {
-  $tools: {
+  "tools.text": {
     normalizeString: safename,
   },
 });

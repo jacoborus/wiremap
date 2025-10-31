@@ -338,52 +338,6 @@ export function filterOutBlocks(block: Hashmap): Hashmap {
   );
 }
 
-/**
- * Filter out the blocks from an object of units and blocks
- */
-export function filterInputBlocks(block: Hashmap): Hashmap {
-  return Object.fromEntries(
-    Object.keys(block)
-      .filter((key) => !key.startsWith("$"))
-      .map((key) => [key, block[key]]),
-  );
-}
-
-export function mapInputBlocks<L extends Hashmap>(
-  blocks: L,
-  prefix?: string,
-): Rehashmap {
-  const mapped: Rehashmap = {};
-
-  Object.keys(blocks).forEach((key) => {
-    const block = blocks[key];
-
-    if (key.startsWith("$") && key !== "$") {
-      if (typeof block !== "object" || block == null) return;
-
-      const realKey = key.slice(1);
-
-      // this is the key of the block given the path
-      const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
-
-      if (!isHashmap(block)) return;
-
-      // only blocks with units are wireable
-      if (objectHasUnits(block)) {
-        mapped[finalKey] = block;
-      }
-
-      // loop through sub-blocks
-      if (hasBlocks(block)) {
-        const subBlocks = mapInputBlocks(block, finalKey);
-        Object.assign(mapped, subBlocks);
-      }
-    }
-  });
-
-  return mapped;
-}
-
 export function isHashmap(item: unknown): item is Hashmap {
   if (typeof item !== "object" || item === null) return false;
   return Object.keys(item).every((key) => {
@@ -395,12 +349,6 @@ function blockHasUnits(item: Hashmap): boolean {
   return Object.keys(item).some((key) => {
     if (key === "$") return false;
     return !itemIsBlock(item[key]);
-  });
-}
-
-function objectHasUnits(item: Hashmap): boolean {
-  return Object.keys(item).some((key) => {
-    return !key.startsWith("$");
   });
 }
 

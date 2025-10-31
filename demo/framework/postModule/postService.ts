@@ -1,7 +1,7 @@
 import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
 import type { PostCircuit } from "./postCircuit.ts";
 
-type W = InferWire<PostCircuit, "">;
+type W = InferWire<PostCircuit, "service">;
 
 export const $ = tagBlock();
 
@@ -14,7 +14,7 @@ interface NewPost {
 }
 
 export function addPost(this: W, email: string, post: NewPost) {
-  const author = this().getUserByEmail(email);
+  const author = this("userService").getUser(email);
 
   if (!author) throw new Error("Author does not exists");
 

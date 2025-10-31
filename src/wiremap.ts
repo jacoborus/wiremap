@@ -5,10 +5,11 @@ import type { BlockDef, BlockProxy } from "./block.ts";
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
-  filterInputBlocks,
+  defineBlock,
+  filterOutBlocks,
   getWire,
   isHashmap,
-  mapInputBlocks,
+  mapBlocks,
 } from "./block.ts";
 import type { BulkCircuitDef, BulkCircuitFull } from "./circuit.ts";
 
@@ -86,7 +87,7 @@ type ContainsAsyncFactory<T extends Hashmap> = true extends {
  */
 export interface InferWire<
   C extends BulkCircuitDef,
-  N extends keyof C["__hub"],
+  N extends keyof C["__hub"] = "",
 > {
   // root block resolution
   (): BlockProxy<FilterPublicUnitValues<C["__hub"][""]>>;
@@ -187,9 +188,13 @@ export function wireUp<Defs extends BulkCircuitDef>(
 ): WiredUp<Defs> {
   inputs = inputs ?? {};
 
-  const inputDefinitions = mapInputBlocks(inputs);
+  const inputDefinitions = mapBlocks(
+    Object.fromEntries(
+      Object.keys(inputs).map((key) => [key, defineBlock(inputs[key])]),
+    ),
+  );
 
-  const rootInputBlock = filterInputBlocks(inputs);
+  const rootInputBlock = filterOutBlocks(inputs);
 
   if (Object.keys(rootInputBlock).length) {
     inputDefinitions[""] = rootInputBlock;

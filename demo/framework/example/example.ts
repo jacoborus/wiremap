@@ -1,11 +1,10 @@
-import { defineCircuit } from "../../../src/circuit.ts";
-import { wireUp } from "../../../src/wiremap.ts";
+import { defineCircuit, wireUp } from "../../../src/wiremap.ts";
 
 import { coreDefs } from "../core/core.ts";
 import { postCircuit } from "../postModule/postCircuit.ts";
 
 const defs = defineCircuit({
-  ...coreDefs,
+  core: coreDefs,
   post: postCircuit,
 });
 
