@@ -23,22 +23,6 @@ export type CircuitDef<
   __outputs: O;
 };
 
-export interface BulkCircuitFull {
-  __hub: Rehashmap;
-  __inputs: Rehashmap;
-  __outputs: StringHashmap;
-}
-
-export type CircuitFull<
-  H extends Rehashmap,
-  I extends Hashmap,
-  O extends StringHashmap,
-> = {
-  __hub: H;
-  __inputs: I;
-  __outputs: O;
-};
-
 interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
   inputs?: I;
   outputs?: O;
@@ -175,3 +159,7 @@ export function defineCircuit<
 export function defineInputs<Deps extends Hashmap>() {
   return {} as Deps;
 }
+
+export type InferCircuit<C extends BulkCircuitDef> = {
+  [K in keyof C["__hub"]]: true;
+};

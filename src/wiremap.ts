@@ -11,7 +11,7 @@ import {
   isHashmap,
   mapBlocks,
 } from "./block.ts";
-import type { BulkCircuitDef, BulkCircuitFull } from "./circuit.ts";
+import type { BulkCircuitDef } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
@@ -233,7 +233,7 @@ function hasAsyncKeys(blockDefs: Hashmap): boolean {
 }
 
 async function resolveAsyncFactories(
-  circuit: BulkCircuitFull,
+  circuit: BulkCircuitDef,
   cache: Wcache,
 ): Promise<void> {
   const defs = circuit.__hub;

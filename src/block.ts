@@ -1,11 +1,11 @@
-import type { BulkCircuitFull } from "./circuit.ts";
+import type { BulkCircuitDef } from "./circuit.ts";
 import {
   unitSymbol,
   blockSymbol,
   type Hashmap,
   type Wcache,
 } from "./common.ts";
-import type { InferUnitValue } from "./unit.ts";
+import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
 import {
   isPrivate,
   isUnitDef,
@@ -142,6 +142,14 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
   });
 }
 
+type ExtractPublicPaths<T extends Hashmap> = {
+  [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K;
+}[keyof T];
+
+export type InferBlockValue<B extends Hashmap> = {
+  [K in ExtractPublicPaths<B>]: InferUnitValue<B[K]>;
+};
+
 /**
  * Block proxy type that provides access to units within a block.
  * Local proxies include private units, while public proxies exclude them.
@@ -151,7 +159,7 @@ export type BlockProxy<B extends Hashmap> = {
 };
 
 function createBlockProxy<
-  C extends BulkCircuitFull,
+  C extends BulkCircuitDef,
   Local extends boolean,
   P extends "__hub" | "__inputs",
 >(
@@ -226,7 +234,7 @@ function createBlockProxy<
   ) as BlockProxy<C[P]>;
 }
 
-export function getWire<C extends BulkCircuitFull, P extends keyof C["__hub"]>(
+export function getWire<C extends BulkCircuitDef, P extends keyof C["__hub"]>(
   localPath: P & string,
   circuit: C,
   cache: Wcache,
