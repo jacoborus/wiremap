@@ -2,6 +2,7 @@ import { BlockDef, defineBlock, mapBlocks, type Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import { blockSymbol } from "./common.ts";
 import { UnitDef } from "./unit.ts";
+import { InferWire } from "./wiremap.ts";
 
 export interface StringHashmap {
   [K: string]: string | StringHashmap;
@@ -160,6 +161,5 @@ export function defineInputs<Deps extends Hashmap>() {
   return {} as Deps;
 }
 
-export type InferCircuit<C extends BulkCircuitDef> = {
-  [K in keyof C["__hub"]]: true;
-};
+export type InferCircuit<C extends BulkCircuitDef> =
+  C["__outputs"] extends Rehashmap ? C["__outputs"] : InferWire<C>;

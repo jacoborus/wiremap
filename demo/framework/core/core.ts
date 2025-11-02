@@ -1,4 +1,5 @@
 import { defineCircuit } from "../../../src/wiremap.ts";
+import type { InferOutput } from "../../../src/wiremap.ts";
 
 import * as userMod from "./user/userMod.ts";
 
@@ -14,3 +15,4 @@ export const coreDefs = defineCircuit({
 });
 
 export type Framework = typeof coreDefs;
+export type FWCore = InferOutput<Framework>;

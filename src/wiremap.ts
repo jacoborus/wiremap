@@ -1,6 +1,6 @@
 import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
-import type { BlockDef, BlockProxy } from "./block.ts";
+import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
 
 import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
@@ -15,7 +15,7 @@ import type { BulkCircuitDef } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
-export { defineCircuit, defineInputs } from "./circuit.ts";
+export { defineCircuit, defineInputs, type InferCircuit } from "./circuit.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -108,6 +108,10 @@ export interface InferWire<
     blockPath?: K,
   ): FilterUnitValues<C["__inputs"][K]>;
 }
+
+export type InferOutput<C extends BulkCircuitDef> = {
+  [K in keyof C["__hub"]]: InferBlockValue<C["__hub"][K]>;
+};
 
 /** Filters an object excluding the block tag ($), and any nested blocks */
 type FilterUnitValues<T extends Hashmap> = Omit<T, "$" | ExtractNonUnitKeys<T>>;
