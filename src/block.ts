@@ -155,15 +155,16 @@ export type BlockProxy<B extends Hashmap> = {
 
 function createBlockProxy<
   C extends BulkCircuitDef,
+  K extends keyof C[P],
   Local extends boolean,
   P extends "__hub" | "__inputs",
 >(
-  blockPath: string,
+  blockPath: K & string,
   local: Local,
   circuit: C,
   part: P,
   cache: Wcache,
-): BlockProxy<C[P]> {
+): BlockProxy<C[P][K]> {
   const blockDefs = circuit[part];
   const blockDef =
     blockPath === ""
@@ -226,7 +227,7 @@ function createBlockProxy<
         };
       },
     },
-  ) as BlockProxy<C[P]>;
+  ) as BlockProxy<C[P][K]>;
 }
 
 export function getWire<C extends BulkCircuitDef, P extends keyof C["__hub"]>(
