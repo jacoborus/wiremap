@@ -1,4 +1,4 @@
-import { tagBlock } from "../../../src/wiremap.ts";
+import { tagBlock } from "../../../../src/wiremap.ts";
 
 export interface Post {
   id: string;

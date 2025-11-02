@@ -1,16 +1,16 @@
 import { type InferWire, tagBlock } from "../../../../src/wiremap.ts";
-import type { Framework } from "../core.ts";
+import type { UserCircuit } from "./userCircuit.ts";
 import { type User } from "./userRepo.ts";
 
 export const $ = tagBlock();
 
-type W = InferWire<Framework, "user.service">;
+type W = InferWire<UserCircuit, "service">;
 
 /**
  * Return a copy of the list of users
  */
 export function getUsers(this: W): User[] {
-  return this("user.repo").data.slice();
+  return this("repo").data.slice();
 }
 getUsers.is = "bound" as const;
 
@@ -31,7 +31,7 @@ export function addUser(this: W, email: string, isAdmin = false) {
   const prevUser = this(".").getUserByEmail(email);
   if (prevUser) throw new Error("User already exists");
 
-  this("user.repo").data.push({
+  this("repo").data.push({
     id: crypto.randomUUID(),
     email,
     isAdmin,
