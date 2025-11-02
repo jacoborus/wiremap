@@ -21,8 +21,8 @@ export { defineCircuit, defineInputs, type InferCircuit } from "./circuit.ts";
  */
 type WiredUp<Defs extends BulkCircuitDef> =
   AnyItemContainsAnyAsyncFactory<Defs["__hub"]> extends true
-    ? Promise<InferWire<Defs, "">>
-    : InferWire<Defs, "">;
+    ? Promise<InferWire<Defs>>
+    : InferWire<Defs>;
 
 /**
  * Recursively checks if any item in the definitions contains an async factory.

@@ -9,3 +9,5 @@ const circuit = defineCircuit({
 });
 
 export const app = wireUp(circuit);
+
+const x = app("post.service").addPost;

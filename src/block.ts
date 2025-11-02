@@ -1,6 +1,7 @@
 import type { BulkCircuitDef } from "./circuit.ts";
 import type { Hashmap, Wcache } from "./common.ts";
 import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
+import type { InferWire } from "./wiremap.ts";
 import {
   isPrivate,
   isUnitDef,
@@ -230,13 +231,13 @@ function createBlockProxy<
   ) as BlockProxy<C[P][K]>;
 }
 
-export function getWire<C extends BulkCircuitDef, P extends keyof C["__hub"]>(
-  localPath: P & string,
-  circuit: C,
-  cache: Wcache,
-) {
+export function getWire<
+  C extends BulkCircuitDef,
+  P extends keyof C["__hub"],
+  I extends InferWire<C, P>,
+>(localPath: P & string, circuit: C, cache: Wcache): I {
   if (cache.wire.has(localPath)) {
-    return cache.wire.get(localPath);
+    return cache.wire.get(localPath) as I;
   }
 
   const wire = function getBlockProxy(key = "") {
@@ -288,7 +289,7 @@ export function getWire<C extends BulkCircuitDef, P extends keyof C["__hub"]>(
 
   cache.wire.set(localPath, wire);
 
-  return wire;
+  return wire as I;
 }
 
 export function mapBlocks<L extends Hashmap>(

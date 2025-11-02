@@ -59,9 +59,7 @@ type BlockPaths<T extends Hashmap, P extends string = ""> = {
                   ? Key
                   : `${P}.${Key}`
                 : never)
-            | (HasBlocks<T[K]> extends true
-                ? BlockPaths<T[K], P extends "" ? Key : `${P}.${Key}`>
-                : never)
+            | BlockPaths<T[K], P extends "" ? Key : `${P}.${Key}`>
         : never
       : T[K] extends BlockDef<Hashmap>
         ?
@@ -70,15 +68,15 @@ type BlockPaths<T extends Hashmap, P extends string = ""> = {
                   ? `${Extract<K, string>}`
                   : `${P}.${Extract<K, string>}`
                 : never)
-            | (HasBlocks<T[K]> extends true
-                ? BlockPaths<
-                    T[K],
-                    P extends ""
-                      ? Extract<K, string>
-                      : `${P}.${Extract<K, string>}`
-                  >
-                : never)
-        : never;
+            | BlockPaths<
+                T[K],
+                P extends "" ? Extract<K, string> : `${P}.${Extract<K, string>}`
+              >
+        : T[K] extends BulkCircuitDef
+          ? P extends ""
+            ? `${K & string}.${string & keyof T[K]["__hub"]}`
+            : `${P}.${K & string}.${string & keyof T[K]["__hub"]}`
+          : never;
 }[keyof T];
 
 /**
@@ -98,22 +96,6 @@ type HasUnits<T extends Hashmap> = true extends {
   : false;
 
 /**
- * Determines whether an object contains items that are blocks.
- * Used to identify if we need to recursively process nested blocks.
- */
-type HasBlocks<T extends Hashmap> = true extends {
-  [K in keyof T]: T[K] extends BlockDef<Hashmap>
-    ? true
-    : K extends `$${string}`
-      ? T[K] extends Hashmap
-        ? true
-        : false
-      : false;
-}[keyof T]
-  ? true
-  : false;
-
-/**
  * Access type by a dot notated path.
  * Recursively traverses an object type following a dot-separated path.
  *
@@ -123,7 +105,9 @@ type HasBlocks<T extends Hashmap> = true extends {
  */
 type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
   ? K extends keyof T
-    ? PathValue<T[K], Rest>
+    ? T[K] extends BulkCircuitDef
+      ? PathValue<T[K]["__hub"], Rest>
+      : PathValue<T[K], Rest>
     : `$${K}` extends keyof T
       ? PathValue<T[`$${K}`], Rest>
       : never
