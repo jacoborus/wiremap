@@ -2,7 +2,6 @@ import type { Hashmap, Wcache } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
 import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
 
-import { unitSymbol } from "./common.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
   defineBlock,
@@ -264,7 +263,7 @@ async function resolveAsyncFactories(
       if (isAsyncFactoryFunc(item)) {
         resolved = await item(wire);
       } else if (isAsyncFactoryDef(item)) {
-        resolved = await item[unitSymbol](wire);
+        resolved = await item.__unit(wire);
       }
 
       const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;

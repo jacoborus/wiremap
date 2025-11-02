@@ -10,12 +10,11 @@ import {
   isPrivate,
   isUnitDef,
 } from "./unit.ts";
-import { unitSymbol } from "./common.ts";
 
 Deno.test("unit: defineUnit", async () => {
   // Plain definition
   const plainDef = defineUnit(5);
-  assertEquals(plainDef[unitSymbol], 5, "plain - defineUnit");
+  assertEquals(plainDef.__unit, 5, "plain - defineUnit");
   type W = () => number;
 
   // Bound definition
@@ -26,7 +25,7 @@ Deno.test("unit: defineUnit", async () => {
     { is: "bound" },
   );
   const w = () => 5;
-  const finalUnit = boundDef[unitSymbol].bind(w);
+  const finalUnit = boundDef.__unit.bind(w);
 
   assertEquals(finalUnit(), 5, "bound - defineUnit");
 
@@ -43,7 +42,7 @@ Deno.test("unit: defineUnit", async () => {
     },
     { is: "factory" },
   );
-  assertEquals(factoryDef[unitSymbol](5), 5, "factory - defineUnit");
+  assertEquals(factoryDef.__unit(5), 5, "factory - defineUnit");
 
   assertThrows(
     // TODO: check why this is not throwing TS error
@@ -61,7 +60,7 @@ Deno.test("unit: defineUnit", async () => {
     { is: "asyncFactory" },
   );
   assertEquals(
-    await asyncFactoryDef[unitSymbol](() => 5),
+    await asyncFactoryDef.__unit(() => 5),
     5,
     "async factory - defineUnit",
   );

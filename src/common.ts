@@ -1,6 +1,3 @@
-export const unitSymbol = Symbol("UnitSymbol");
-export const blockSymbol = Symbol("BlockSymbol");
-
 export type Hashmap = Record<string, unknown>;
 
 export interface Wcache {

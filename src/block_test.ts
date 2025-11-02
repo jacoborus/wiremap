@@ -1,6 +1,5 @@
 import { assertEquals } from "@std/assert";
 
-import { blockSymbol } from "./common.ts";
 import { defineBlock, getBlockUnitKeys, itemIsBlock } from "./block.ts";
 import { defineUnit } from "./unit.ts";
 
@@ -8,7 +7,7 @@ Deno.test("block: defineBlock", () => {
   const b1 = defineBlock({
     a: 1,
   });
-  assertEquals(b1.$[blockSymbol], true);
+  assertEquals(b1.$.__isBlock, true);
   assertEquals(b1.a, 1);
 });
 

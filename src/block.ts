@@ -1,10 +1,5 @@
 import type { BulkCircuitDef } from "./circuit.ts";
-import {
-  unitSymbol,
-  blockSymbol,
-  type Hashmap,
-  type Wcache,
-} from "./common.ts";
+import type { Hashmap, Wcache } from "./common.ts";
 import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
 import {
   isPrivate,
@@ -64,7 +59,7 @@ export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
 }
 
 interface BlockTag {
-  [blockSymbol]: true;
+  __isBlock: unknown;
 }
 
 /**
@@ -114,7 +109,7 @@ interface BlockTag {
  * @since 1.0.0
  */
 export function tagBlock(): BlockTag {
-  return { [blockSymbol]: true };
+  return { __isBlock: true };
 }
 
 export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
@@ -124,8 +119,8 @@ export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
     "$" in item &&
     typeof item["$"] === "object" &&
     item["$"] !== null &&
-    blockSymbol in item["$"] &&
-    item["$"][blockSymbol] === true
+    "__isBlock" in item["$"] &&
+    item["$"]["__isBlock"] === true
   );
 }
 
@@ -135,9 +130,9 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
   local: Local,
 ) {
   return Object.keys(blockDef).filter((key) => {
-    if (key === "$") return false;
+    if (key.startsWith("$")) return false;
     const unit = blockDef[key];
-    if (itemIsBlock(unit) || unit === unitSymbol) return false;
+    if (itemIsBlock(unit)) return false;
     return local ? true : !isPrivate(unit);
   });
 }
@@ -204,10 +199,10 @@ function createBlockProxy<
               ? def.bind(wire)
               : isUnitDef(def)
                 ? isFactoryDef(def)
-                  ? def[unitSymbol](wire)
+                  ? def.__unit(wire)
                   : isBoundDef(def)
-                    ? def[unitSymbol].bind(wire)
-                    : def[unitSymbol]
+                    ? def.__unit.bind(wire)
+                    : def.__unit
                 : def;
 
           cachedblock[prop] = unit;
@@ -304,7 +299,7 @@ export function mapBlocks<L extends Hashmap>(
   Object.keys(blocks).forEach((key) => {
     // this is the key of the block given the path
     let realKey = "";
-    let block = blocks[key];
+    const block = blocks[key];
 
     if (!isHashmap(block)) return;
 

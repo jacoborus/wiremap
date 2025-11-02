@@ -1,7 +1,6 @@
 import type { Hashmap } from "./common.ts";
 import type { InferUnitValue, IsAsyncFactory } from "./unit.ts";
 
-import { unitSymbol } from "./common.ts";
 import {
   isAsyncFactoryDef,
   isAsyncFactoryFunc,
@@ -114,21 +113,21 @@ export function mockUnit<T>(def: T, fakeBlocks: Hashmap): Mocked<T> {
 
   if (isUnitDef(def)) {
     if (isFactoryDef(def)) {
-      const defValue = def[unitSymbol];
+      const defValue = def.__unit;
       return defValue(wire) as Mocked<T>;
     }
 
     if (isBoundDef(def)) {
-      const defValue = def[unitSymbol];
+      const defValue = def.__unit;
       return defValue.bind(wire) as Mocked<T>;
     }
 
     if (isAsyncFactoryDef(def)) {
-      const defValue = def[unitSymbol];
+      const defValue = def.__unit;
       return defValue(wire) as Mocked<T>;
     }
 
-    return def[unitSymbol] as Mocked<T>;
+    return def.__unit as Mocked<T>;
   }
 
   if (isBoundFunc(def)) {

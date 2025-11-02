@@ -1,5 +1,3 @@
-import { unitSymbol } from "./common.ts";
-
 type Func = (...args: unknown[]) => unknown;
 type AsyncFunc = (...args: unknown[]) => Promise<unknown>;
 
@@ -76,14 +74,14 @@ type IsAsyncFn<T> = T extends (...args: infer _A) => Promise<unknown>
  * Type that checks if a factory is async (returns a Promise or is marked as async).
  */
 export type IsAsyncFactory<T> = T extends UnitDef
-  ? IsAsyncFn<T[typeof unitSymbol]>
+  ? IsAsyncFn<T["__unit"]>
   : T extends AsyncFactoryUnitOptions
     ? IsAsyncFn<T>
     : false;
 
 // it's unused, but keep it anyway
 // type PlainDef<T> = {
-//   [unitSymbol]: T;
+//   __unit: T;
 //   opts: {
 //     isPrivate?: boolean;
 //     is: undefined
@@ -91,7 +89,7 @@ export type IsAsyncFactory<T> = T extends UnitDef
 // };
 
 type BoundDef<T extends Func> = {
-  [unitSymbol]: T;
+  __unit: T;
   opts: {
     isPrivate?: boolean;
     is: "bound";
@@ -99,7 +97,7 @@ type BoundDef<T extends Func> = {
 };
 
 type FactoryDef<T extends Func> = {
-  [unitSymbol]: T;
+  __unit: T;
   opts: {
     isPrivate?: boolean;
     is: "factory";
@@ -107,7 +105,7 @@ type FactoryDef<T extends Func> = {
 };
 
 type AsyncFactoryDef<F extends AsyncFunc> = {
-  [unitSymbol]: F;
+  __unit: F;
   opts: {
     isPrivate?: boolean;
     is: "asyncFactory";
@@ -117,7 +115,7 @@ type AsyncFactoryDef<F extends AsyncFunc> = {
 export function isBoundDef(def: unknown): def is BoundDef<Func> {
   if (!isUnitDef(def)) return false;
 
-  const unit = def[unitSymbol];
+  const unit = def["__unit"];
   if (!isFunction(unit)) {
     return false;
   }
@@ -128,7 +126,7 @@ export function isBoundDef(def: unknown): def is BoundDef<Func> {
 export function isFactoryDef(def: unknown): def is FactoryDef<Func> {
   if (!isUnitDef(def)) return false;
 
-  const unit = def[unitSymbol];
+  const unit = def.__unit;
   if (!isFunction(unit)) {
     return false;
   }
@@ -141,7 +139,7 @@ export function isAsyncFactoryDef(
 ): def is AsyncFactoryDef<AsyncFunc> {
   if (!isUnitDef(def)) return false;
 
-  const unit = def[unitSymbol];
+  const unit = def.__unit;
   if (!isFunction(unit)) {
     return false;
   }
@@ -150,7 +148,7 @@ export function isAsyncFactoryDef(
 }
 
 export interface UnitDef {
-  [unitSymbol]: unknown;
+  __unit: unknown;
   opts: UnitOptions;
 }
 
@@ -181,7 +179,7 @@ type UnitOptions =
   | AsyncFactoryUnitOptions;
 
 type UnitDefinition<T, O extends UnitOptions> = {
-  [unitSymbol]: T;
+  __unit: T;
   opts: O;
 };
 
@@ -271,11 +269,11 @@ export function defineUnit<const T, const O extends UnitOptions = UnitOptions>(
     if (typeof def !== "function")
       throw new Error("Wrong unit definition value");
   }
-  return { [unitSymbol]: def, opts } as UnitDefinition<T, O>;
+  return { __unit: def, opts } as UnitDefinition<T, O>;
 }
 
 export function isUnitDef(def: unknown): def is UnitDef {
-  return typeof def === "object" && def !== null && unitSymbol in def;
+  return typeof def === "object" && def !== null && "__unit" in def;
 }
 
 /**
@@ -283,19 +281,19 @@ export function isUnitDef(def: unknown): def is UnitDef {
  */
 export type InferUnitValue<D> = D extends UnitDef
   ? D["opts"] extends AsyncFactoryUnitOptions
-    ? D[typeof unitSymbol] extends (...args: infer _A) => Promise<unknown>
-      ? Awaited<ReturnType<D[typeof unitSymbol]>>
+    ? D["__unit"] extends (...args: infer _A) => Promise<unknown>
+      ? Awaited<ReturnType<D["__unit"]>>
       : never
     : D["opts"] extends FactoryUnitOptions
-      ? D[typeof unitSymbol] extends (...args: infer _A) => unknown
-        ? ReturnType<D[typeof unitSymbol]>
+      ? D["__unit"] extends (...args: infer _A) => unknown
+        ? ReturnType<D["__unit"]>
         : never
       : D["opts"] extends BoundUnitOptions
-        ? D[typeof unitSymbol] extends (...args: infer _A) => unknown
-          ? OmitThisParameter<D[typeof unitSymbol]>
+        ? D["__unit"] extends (...args: infer _A) => unknown
+          ? OmitThisParameter<D["__unit"]>
           : never
         : D["opts"] extends PlainUnitOptions
-          ? D[typeof unitSymbol]
+          ? D["__unit"]
           : never
   : D extends AsyncFactoryUnitOptions
     ? D extends (...args: infer _A) => Promise<unknown>
