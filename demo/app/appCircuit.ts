@@ -14,15 +14,13 @@ export const appCircuit = defineCircuit(
       b: 2,
     },
   },
-  {
-    inputs: defineInputs<{
-      $tools: {
-        $text: {
-          normalizeString: typeof safename;
-        };
+  defineInputs<{
+    $tools: {
+      $text: {
+        normalizeString: typeof safename;
       };
-    }>(),
-  },
+    };
+  }>(),
 );
 
 export type Circuit = typeof appCircuit;

@@ -21,7 +21,7 @@ const circuit = defineCircuit(
       }),
     }),
   },
-  { inputs: {} },
+  {},
 );
 
 // const def = {

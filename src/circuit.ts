@@ -24,8 +24,7 @@ export type CircuitDef<
   __outputs: O;
 };
 
-interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
-  inputs: I;
+interface CircuitOptions<O extends Hashmap> {
   outputs?: O;
 }
 
@@ -131,12 +130,12 @@ export function defineCircuit<
   O extends StringHashmap,
   E extends EnsureBlock<H>,
   C extends CircuitDef<MappedHub<E>, MappedHub<I>, O>,
->(mainBlock: H, options: CircuitOptions<I, O>): C {
+>(mainBlock: H, inputs: I, options?: CircuitOptions<O>): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
 
   return {
     __hub: mapBlocks(target),
-    __inputs: {} as MappedHub<I>,
+    __inputs: inputs as MappedHub<I>,
     __outputs: options?.outputs || {},
   } as C;
 }

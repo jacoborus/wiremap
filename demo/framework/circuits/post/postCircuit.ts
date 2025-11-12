@@ -12,13 +12,11 @@ export const postCircuit = defineCircuit(
     service: postService,
     repo: postRepo,
   },
-  {
-    inputs: defineInputs<{
-      $user: {
-        $service: UserOutput["service"];
-      };
-    }>(),
-  },
+  defineInputs<{
+    $user: {
+      $service: UserOutput["service"];
+    };
+  }>(),
 );
 
 export type PostCircuit = typeof postCircuit;
