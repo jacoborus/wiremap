@@ -12,7 +12,7 @@ Deno.test("wireUp resolves dependencies", () => {
     },
   };
 
-  const app = wireUp(defineCircuit(defs));
+  const app = wireUp(defineCircuit(defs, { inputs: {} }));
 
   const keys = Object.keys(app());
   assertEquals(keys.length, 1, "block proxies are ennumerable");
@@ -47,7 +47,7 @@ Deno.test("wireUp resolves async factories that return a promise", async () => {
     },
   };
   type Defs = typeof appCircuit;
-  const appCircuit = defineCircuit(defs);
+  const appCircuit = defineCircuit(defs, { inputs: {} });
 
   const app = await wireUp(appCircuit);
 
@@ -68,7 +68,9 @@ Deno.test("block creates namespaced definitions", () => {
     namespace: blockInstance,
   };
 
-  const mainWire = wireUp(defineCircuit({ parent: blockParent }));
+  const mainWire = wireUp(
+    defineCircuit({ parent: blockParent }, { inputs: {} }),
+  );
 
   assertEquals(mainWire("parent.namespace").key, 5);
   assertEquals(mainWire("parent.namespace").key2, 6);
@@ -80,7 +82,7 @@ Deno.test("error handling for missing dependencies", () => {
     key: "value",
   };
 
-  const app = wireUp(defineCircuit(defs));
+  const app = wireUp(defineCircuit(defs, { inputs: {} }));
 
   try {
     app("nonexistent" as ".");
@@ -127,7 +129,7 @@ Deno.test("wireUp protects private units", () => {
   };
   type Defs = typeof circuit;
 
-  const circuit = defineCircuit(defs);
+  const circuit = defineCircuit(defs, { inputs: {} });
   const main = wireUp(circuit);
 
   assertThrows(
@@ -173,7 +175,7 @@ Deno.test("defineUnit: no options", () => {
       valor: defineUnit("hola"),
     },
   };
-  const main = wireUp(defineCircuit(block));
+  const main = wireUp(defineCircuit(block, { inputs: {} }));
   assertEquals(main().valor, 5);
   assertEquals(main("o").valor, "hola");
 });
@@ -184,26 +186,29 @@ Deno.test("defineUnit: isPrivate", () => {
   const $b = tagBlock();
   type Wb = InferWire<Defs, "b">;
 
-  const circuit = defineCircuit({
-    $,
-    valor: defineUnit(5),
-    o: 5,
-    a: {
-      $: $a,
-      valor: defineUnit("hola"),
+  const circuit = defineCircuit(
+    {
+      $,
+      valor: defineUnit(5),
       o: 5,
+      a: {
+        $: $a,
+        valor: defineUnit("hola"),
+        o: 5,
+      },
+      b: {
+        $: $b,
+        valor: defineUnit("hola", { isPrivate: true }),
+        refer: defineUnit(
+          function (w: Wb) {
+            return w(".").valor;
+          },
+          { is: "factory" },
+        ),
+      },
     },
-    b: {
-      $: $b,
-      valor: defineUnit("hola", { isPrivate: true }),
-      refer: defineUnit(
-        function (w: Wb) {
-          return w(".").valor;
-        },
-        { is: "factory" },
-      ),
-    },
-  });
+    { inputs: {} },
+  );
 
   type Defs = typeof circuit;
   const main = wireUp(circuit);
@@ -263,7 +268,7 @@ Deno.test("defineUnit: isFactory", () => {
   };
   type Defs = typeof circuit;
 
-  const circuit = defineCircuit(defs);
+  const circuit = defineCircuit(defs, { inputs: {} });
   const main = wireUp(circuit);
 
   assertEquals(main().valor, "rootvalue");
@@ -281,52 +286,55 @@ Deno.test("defineUnit: isAsync", async () => {
   type Wa = InferWire<Defs, "a">;
   type Wb = InferWire<Defs, "a.b">;
 
-  const circuit = defineCircuit({
-    $,
-    valor: "rootvalue",
-    a: {
-      $: $a,
-      valor: "avalue",
-      factory: defineUnit(
-        async (w: Wa) => {
-          const rootValue = w().valor;
-          const avalue = w(".").valor;
-          const bvalue = w("a.b").valor;
-          await new Promise((res) => {
-            res(true);
-          });
-          return () => `${rootValue}-${avalue}-${bvalue}`;
-        },
-        { is: "asyncFactory" },
-      ),
-      b: {
-        $: $b,
-        valor: "bvalue",
-        deepFactory: defineUnit(
-          async (w: Wb) => {
+  const circuit = defineCircuit(
+    {
+      $,
+      valor: "rootvalue",
+      a: {
+        $: $a,
+        valor: "avalue",
+        factory: defineUnit(
+          async (w: Wa) => {
             const rootValue = w().valor;
-            const avalue = w("a").valor;
-            const bvalue = w(".").valor;
-            return await new Promise<() => string>((res) => {
-              setTimeout(
-                () => res(() => `${rootValue}-${avalue}-${bvalue}`),
-                10,
-              );
+            const avalue = w(".").valor;
+            const bvalue = w("a.b").valor;
+            await new Promise((res) => {
+              res(true);
             });
+            return () => `${rootValue}-${avalue}-${bvalue}`;
           },
           { is: "asyncFactory" },
         ),
-        deepFactory2: defineUnit(
-          async (w: Wb) => {
-            return await new Promise<() => string>((res) => {
-              setTimeout(() => res(w(".").deepFactory), 20);
-            });
-          },
-          { is: "asyncFactory" },
-        ),
+        b: {
+          $: $b,
+          valor: "bvalue",
+          deepFactory: defineUnit(
+            async (w: Wb) => {
+              const rootValue = w().valor;
+              const avalue = w("a").valor;
+              const bvalue = w(".").valor;
+              return await new Promise<() => string>((res) => {
+                setTimeout(
+                  () => res(() => `${rootValue}-${avalue}-${bvalue}`),
+                  10,
+                );
+              });
+            },
+            { is: "asyncFactory" },
+          ),
+          deepFactory2: defineUnit(
+            async (w: Wb) => {
+              return await new Promise<() => string>((res) => {
+                setTimeout(() => res(w(".").deepFactory), 20);
+              });
+            },
+            { is: "asyncFactory" },
+          ),
+        },
       },
     },
-  });
+    { inputs: {} },
+  );
 
   type Defs = typeof circuit;
   const main = await wireUp(circuit);

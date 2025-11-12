@@ -25,7 +25,7 @@ export type CircuitDef<
 };
 
 interface CircuitOptions<I extends Hashmap, O extends Hashmap> {
-  inputs?: I;
+  inputs: I;
   outputs?: O;
 }
 
@@ -127,11 +127,11 @@ type IsBlock<T> = T extends { $: { __isBlock: unknown } } ? true : false;
 
 export function defineCircuit<
   const H extends Hashmap,
-  I extends Hashmap,
+  I extends InputsFromHub<H>,
   O extends StringHashmap,
   E extends EnsureBlock<H>,
   C extends CircuitDef<MappedHub<E>, MappedHub<I>, O>,
->(mainBlock: H, options?: CircuitOptions<I, O>): C {
+>(mainBlock: H, options: CircuitOptions<I, O>): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
 
   return {
@@ -152,9 +152,15 @@ export type ExtractCircuits<H extends Hashmap> = {
   [K in keyof H]: H[K] extends BulkCircuitDef ? H[K] : never;
 }[keyof H];
 
+type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
+  x: infer I,
+) => void
+  ? I
+  : never;
+
 export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   MappedHub<H>,
-  ExtractCircuits<H>["__inputs"]
+  UnionToIntersection<ExtractCircuits<H>["__inputs"]>
 >;
 
 export type KeysDiff<A, B> = {

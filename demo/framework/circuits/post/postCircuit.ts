@@ -14,9 +14,6 @@ export const postCircuit = defineCircuit(
   },
   {
     inputs: defineInputs<{
-      "$>": {
-        getUser: UserOutput["service"]["getUserByEmail"];
-      };
       $user: {
         $service: UserOutput["service"];
       };
