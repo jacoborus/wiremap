@@ -14,7 +14,7 @@ import type { BulkCircuitDef } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
-export { defineCircuit, defineInputs, type InferCircuit } from "./circuit.ts";
+export { defineCircuit, defineInputs } from "./circuit.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.

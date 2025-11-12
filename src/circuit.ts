@@ -2,7 +2,6 @@ import { defineBlock, mapBlocks } from "./block.ts";
 import type { BlockDef, Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
-import type { InferWire } from "./wiremap.ts";
 
 export interface StringHashmap {
   [K: string]: string | StringHashmap;
@@ -11,22 +10,22 @@ export interface StringHashmap {
 export interface BulkCircuitDef {
   __hub: Rehashmap;
   __inputs: Rehashmap;
-  __outputs: StringHashmap;
+  // __outputs: StringHashmap;
 }
 
 export type CircuitDef<
   H extends Rehashmap,
   I extends Rehashmap,
-  O extends StringHashmap,
+  // O extends StringHashmap,
 > = {
   __hub: H;
   __inputs: I;
-  __outputs: O;
+  // __outputs: O;
 };
 
-interface CircuitOptions<O extends Hashmap> {
-  outputs?: O;
-}
+// interface CircuitOptions<O extends Hashmap> {
+//   outputs?: O;
+// }
 
 export type MappedHub<H extends Hashmap> = {
   [K in BlockPaths<H>]: PathValue<H, K & string>;
@@ -127,40 +126,41 @@ type IsBlock<T> = T extends { $: { __isBlock: unknown } } ? true : false;
 export function defineCircuit<
   const H extends Hashmap,
   I extends InputsFromHub<H>,
-  O extends StringHashmap,
+  // O extends StringHashmap,
   E extends EnsureBlock<H>,
-  C extends CircuitDef<MappedHub<E>, MappedHub<I>, O>,
->(mainBlock: H, inputs: I, options?: CircuitOptions<O>): C {
+  // C extends CircuitDef<MappedHub<E>, MappedHub<I>, O>,
+  C extends CircuitDef<MappedHub<E>, MappedHub<I>>,
+>(mainBlock: H, inputs: I): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
 
   return {
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
-    __outputs: options?.outputs || {},
+    // __outputs: options?.outputs || {},
   } as C;
 }
 
-export function defineInputs<Deps extends Hashmap>() {
+export function defineInputs<Deps extends Hashmap>(): Deps {
   return {} as Deps;
 }
 
-export type InferCircuit<C extends BulkCircuitDef> =
-  C["__outputs"] extends Rehashmap ? C["__outputs"] : InferWire<C>;
+// export type InferCircuit<C extends BulkCircuitDef> =
+//   C["__outputs"] extends Rehashmap ? C["__outputs"] : InferWire<C>;
 
 export type ExtractCircuits<H extends Hashmap> = {
   [K in keyof H]: H[K] extends BulkCircuitDef ? H[K] : never;
 }[keyof H];
 
-type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
-  x: infer I,
-) => void
-  ? I
-  : never;
-
 export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   MappedHub<H>,
   UnionToIntersection<ExtractCircuits<H>["__inputs"]>
 >;
+
+type UnionToIntersection<U> = (
+  U extends unknown ? (x: U) => void : never
+) extends (x: infer I) => void
+  ? I
+  : never;
 
 export type KeysDiff<A, B> = {
   [K in keyof B]: K extends keyof A ? (A[K] extends B[K] ? never : K) : K;
