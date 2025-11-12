@@ -16,7 +16,7 @@ export interface BulkCircuitDef {
 
 export type CircuitDef<
   H extends Rehashmap,
-  I extends Hashmap,
+  I extends Rehashmap,
   O extends StringHashmap,
 > = {
   __hub: H;
@@ -147,3 +147,24 @@ export function defineInputs<Deps extends Hashmap>() {
 
 export type InferCircuit<C extends BulkCircuitDef> =
   C["__outputs"] extends Rehashmap ? C["__outputs"] : InferWire<C>;
+
+export type ExtractCircuits<H extends Hashmap> = {
+  [K in keyof H]: H[K] extends BulkCircuitDef ? H[K] : never;
+}[keyof H];
+
+export type InputsFromHub<H extends Hashmap> = BlocksDiff<
+  MappedHub<H>,
+  ExtractCircuits<H>["__inputs"]
+>;
+
+export type KeysDiff<A, B> = {
+  [K in keyof B]: K extends keyof A ? (A[K] extends B[K] ? never : K) : K;
+}[keyof B];
+
+export type GetFlatDiff<A, B> = {
+  [K in KeysDiff<A, B>]: K extends keyof B ? B[K] : never;
+};
+
+export type BlocksDiff<A, B> = {
+  [K in KeysDiff<A, B>]: K extends keyof A ? GetFlatDiff<A[K], B[K]> : B[K];
+};
