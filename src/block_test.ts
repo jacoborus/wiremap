@@ -4,6 +4,7 @@ import {
   defineBlock,
   extractUnits,
   getBlockUnitKeys,
+  hasBlocks,
   itemIsBlock,
 } from "./block.ts";
 import { defineUnit } from "./unit.ts";
@@ -78,4 +79,12 @@ Deno.test("block: extractUnits", () => {
   assertEquals(extractUnits({ a: 1, b: "asdf" }), { a: 1, b: "asdf" });
   assertEquals(extractUnits({ a: 1, $: "asfd" }), { a: 1 });
   assertEquals(extractUnits({ a: 1, $: { __isBlock: true } }), { a: 1 });
+});
+
+Deno.test("block: hasBlocks", () => {
+  assertEquals(hasBlocks({ a: 1, b: "asdf" }), false);
+  assertEquals(hasBlocks({ a: 1, $: "asfd" }), false);
+  assertEquals(hasBlocks({ a: 1, $: { __isBlock: true } }), false);
+  assertEquals(hasBlocks({ a: 1, $b: { b: 2 } }), true);
+  assertEquals(hasBlocks({ a: 1, b: { $: { __isBlock: true } } }), true);
 });

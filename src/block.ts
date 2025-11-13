@@ -317,9 +317,10 @@ export function mapBlocks<L extends Hashmap>(
 
     const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
 
+    const units = extractUnits(block);
     // only blocks with units are wireable
-    if (blockHasUnits(block)) {
-      mapped[finalKey] = extractUnits(block);
+    if (Object.keys(units).length) {
+      mapped[finalKey] = units;
     }
 
     // loop through sub-blocks
@@ -351,14 +352,13 @@ export function isHashmap(item: unknown): item is Hashmap {
   });
 }
 
-function blockHasUnits(item: Hashmap): boolean {
-  return Object.keys(item).some((key) => {
-    if (key === "$") return false;
-    return !itemIsBlock(item[key]);
-  });
-}
-
-function hasBlocks(item: Hashmap): boolean {
+export function hasBlocks(item: Hashmap): boolean {
   if (item === null || typeof item !== "object") return false;
-  return Object.keys(item).some((key) => itemIsBlock(item[key]));
+  return Object.keys(item).some(
+    (key) =>
+      (key.startsWith("$") &&
+        key.length > 1 &&
+        typeof item[key] === "object") ||
+      itemIsBlock(item[key]),
+  );
 }
