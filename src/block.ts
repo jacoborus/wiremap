@@ -138,12 +138,12 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
   });
 }
 
-type ExtractPublicPaths<T extends Hashmap> = {
+type ExtractPublicUnitPaths<T extends Hashmap> = {
   [K in keyof T]: true extends IsPrivateUnit<T[K]> ? never : K;
 }[keyof T];
 
 export type InferBlockValue<B extends Hashmap> = {
-  [K in ExtractPublicPaths<B>]: InferUnitValue<B[K]>;
+  [K in ExtractPublicUnitPaths<B>]: InferUnitValue<B[K]>;
 };
 
 /**
@@ -299,13 +299,13 @@ export function mapBlocks<L extends Hashmap>(
   const mapped: Rehashmap = {};
 
   Object.keys(blocks).forEach((key) => {
+    if (key === "$") return;
+
     // this is the key of the block given the path
     let realKey = "";
     const block = blocks[key];
 
     if (!isHashmap(block)) return;
-
-    if (key === "$") return;
 
     if (key.startsWith("$")) {
       realKey = key.slice(1);
@@ -356,9 +356,7 @@ export function hasBlocks(item: Hashmap): boolean {
   if (item === null || typeof item !== "object") return false;
   return Object.keys(item).some(
     (key) =>
-      (key.startsWith("$") &&
-        key.length > 1 &&
-        typeof item[key] === "object") ||
+      (key !== "$" && key.startsWith("$") && typeof item[key] === "object") ||
       itemIsBlock(item[key]),
   );
 }

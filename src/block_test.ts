@@ -6,6 +6,7 @@ import {
   getBlockUnitKeys,
   hasBlocks,
   itemIsBlock,
+  mapBlocks,
 } from "./block.ts";
 import { defineUnit } from "./unit.ts";
 
@@ -87,4 +88,21 @@ Deno.test("block: hasBlocks", () => {
   assertEquals(hasBlocks({ a: 1, $: { __isBlock: true } }), false);
   assertEquals(hasBlocks({ a: 1, $b: { b: 2 } }), true);
   assertEquals(hasBlocks({ a: 1, b: { $: { __isBlock: true } } }), true);
+});
+
+Deno.test("block: mapBlocks", () => {
+  const origin = {
+    $uno: {
+      a: 3,
+      b: "asdf",
+      $sub: {
+        otro: 2,
+      },
+      $otro: 5,
+    },
+  };
+  assertEquals(mapBlocks(origin), {
+    uno: { a: 3, b: "asdf" },
+    "uno.sub": { otro: 2 },
+  });
 });
