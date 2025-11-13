@@ -18,6 +18,7 @@ export type CircuitDef<
   I extends Rehashmap,
   // O extends StringHashmap,
 > = {
+  __isCircuit: true;
   __hub: H;
   __inputs: I;
   // __outputs: O;
@@ -47,34 +48,33 @@ export type MappedHub<H extends Hashmap> = {
  * // Returns: "" | "a" | "b.c" | "b.d"
  */
 type BlockPaths<T extends Hashmap, P extends string = ""> = {
-  [K in keyof T]: T[K] extends UnitDef
-    ? never
-    : K extends `$${infer Key}`
-      ? T[K] extends Hashmap
-        ?
-            | (HasUnits<T[K]> extends true
-                ? P extends ""
-                  ? Key
-                  : `${P}.${Key}`
-                : never)
-            | BlockPaths<T[K], P extends "" ? Key : `${P}.${Key}`>
-        : never
-      : T[K] extends BlockDef<Hashmap>
-        ?
-            | (HasUnits<T[K]> extends true
-                ? P extends ""
-                  ? `${Extract<K, string>}`
-                  : `${P}.${Extract<K, string>}`
-                : never)
-            | BlockPaths<
-                T[K],
-                P extends "" ? Extract<K, string> : `${P}.${Extract<K, string>}`
-              >
-        : T[K] extends BulkCircuitDef
-          ? P extends ""
-            ? `${K & string}.${string & keyof T[K]["__hub"]}`
-            : `${P}.${K & string}.${string & keyof T[K]["__hub"]}`
-          : never;
+  [K in keyof T]: K extends string
+    ? T[K] extends UnitDef
+      ? never
+      : K extends `$${infer Key}`
+        ? T[K] extends Hashmap
+          ?
+              | (HasUnits<T[K]> extends true
+                  ? P extends ""
+                    ? Key
+                    : `${P}.${Key}`
+                  : never)
+              | BlockPaths<T[K], P extends "" ? Key : `${P}.${Key}`>
+          : never
+        : T[K] extends BlockDef<Hashmap>
+          ?
+              | (HasUnits<T[K]> extends true
+                  ? P extends ""
+                    ? `${K}`
+                    : `${P}.${K}`
+                  : never)
+              | BlockPaths<T[K], P extends "" ? K : `${P}.${K}`>
+          : T[K] extends BulkCircuitDef
+            ? P extends ""
+              ? `${K}.${string & keyof T[K]["__hub"]}`
+              : `${P}.${K}.${string & keyof T[K]["__hub"]}`
+            : never
+    : never;
 }[keyof T];
 
 /**
@@ -134,6 +134,7 @@ export function defineCircuit<
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
 
   return {
+    __isCircuit: true,
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
     // __outputs: options?.outputs || {},
