@@ -5,7 +5,7 @@ import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
   defineBlock,
-  filterOutBlocks,
+  extractUnits,
   getWire,
   isHashmap,
   mapBlocks,
@@ -197,7 +197,7 @@ export function wireUp<Defs extends BulkCircuitDef>(
     ),
   );
 
-  const rootInputBlock = filterOutBlocks(inputs);
+  const rootInputBlock = extractUnits(inputs);
 
   if (Object.keys(rootInputBlock).length) {
     inputDefinitions[""] = rootInputBlock;

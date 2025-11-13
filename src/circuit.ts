@@ -156,6 +156,9 @@ export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   UnionToIntersection<ExtractCircuits<H>["__inputs"]>
 >;
 
+/**
+ * Transforms `A | B | C` into `A & B & C`
+ */
 type UnionToIntersection<U> = (
   U extends unknown ? (x: U) => void : never
 ) extends (x: infer I) => void

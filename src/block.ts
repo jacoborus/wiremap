@@ -319,7 +319,7 @@ export function mapBlocks<L extends Hashmap>(
 
     // only blocks with units are wireable
     if (blockHasUnits(block)) {
-      mapped[finalKey] = filterOutBlocks(block);
+      mapped[finalKey] = extractUnits(block);
     }
 
     // loop through sub-blocks
@@ -335,10 +335,11 @@ export function mapBlocks<L extends Hashmap>(
 /**
  * Filter out the blocks from an object of units and blocks
  */
-export function filterOutBlocks(block: Hashmap): Hashmap {
+export function extractUnits(block: Hashmap): Hashmap {
   return Object.fromEntries(
     Object.keys(block)
       .map((key) => [key, block[key]])
+      .filter(([key]) => typeof key === "string" && !key.startsWith("$"))
       .filter(([_, item]) => !itemIsBlock(item)),
   );
 }
