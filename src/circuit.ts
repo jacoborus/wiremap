@@ -1,4 +1,4 @@
-import { defineBlock, mapBlocks } from "./block.ts";
+import { defineBlock, isHashmap, mapBlocks } from "./block.ts";
 import type { BlockDef, Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
@@ -177,3 +177,14 @@ export type GetFlatDiff<A, B> = {
 export type BlocksDiff<A, B> = {
   [K in KeysDiff<A, B>]: K extends keyof A ? GetFlatDiff<A[K], B[K]> : B[K];
 };
+
+export function isCircuit(target: unknown): target is BulkCircuitDef {
+  if (typeof target !== "object" || target === null) return false;
+  if (!("__isCircuit" in target)) return false;
+  if (target["__isCircuit"] !== true) return false;
+  if (!("__hub" in target)) return false;
+  if (!isHashmap(target["__hub"])) return false;
+  if (!("__inputs" in target)) return false;
+  if (!isHashmap(target["__inputs"])) return false;
+  return true;
+}
