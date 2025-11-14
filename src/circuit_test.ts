@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { isCircuit, defineCircuit } from "./circuit.ts";
+import { isCircuit, defineCircuit, extractCircuitPaths } from "./circuit.ts";
 
 Deno.test("block: isCircuit", () => {
   assertEquals(
@@ -80,5 +80,59 @@ Deno.test("block: isCircuit", () => {
       ),
     ),
     true,
+  );
+});
+
+Deno.test("block: extactCircuitPaths", () => {
+  assertEquals(
+    extractCircuitPaths({
+      a: 1,
+      $b: { a: 1 },
+      c: { a: 1, $: { __isBlock: true } },
+    }),
+    [],
+  );
+
+  assertEquals(
+    extractCircuitPaths({
+      a: 1,
+      $b: { a: 1 },
+      c: { a: 1, $: { __isBlock: true } },
+      circ: {
+        __isCircuit: true,
+        __hub: {},
+        __inputs: {},
+      },
+      $other: {
+        __isCircuit: true,
+        __hub: {},
+        __inputs: {},
+      },
+    }),
+    ["circ", "other"],
+  );
+
+  assertEquals(
+    extractCircuitPaths({
+      a: 1,
+      $b: { a: 1 },
+      $good: {
+        a: 1,
+        $: {
+          __isBlock: true,
+        },
+        circ: {
+          __isCircuit: true,
+          __hub: {},
+          __inputs: {},
+        },
+      },
+      $other: {
+        __isCircuit: true,
+        __hub: {},
+        __inputs: {},
+      },
+    }),
+    ["good.circ", "other"],
   );
 });

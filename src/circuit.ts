@@ -1,4 +1,4 @@
-import { defineBlock, isHashmap, mapBlocks } from "./block.ts";
+import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
 import type { BlockDef, Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
@@ -187,4 +187,27 @@ export function isCircuit(target: unknown): target is BulkCircuitDef {
   if (!("__inputs" in target)) return false;
   if (!isHashmap(target["__inputs"])) return false;
   return true;
+}
+
+export function extractCircuitPaths<B extends Hashmap>(block: B): string[] {
+  const result: string[] = [];
+
+  Object.keys(block).forEach((key) => {
+    if (key === "$") return;
+
+    const item = block[key];
+    if (!isHashmap(item)) return;
+
+    const isPrefixed = key.startsWith("$");
+    const finalKey = isPrefixed ? key.slice(1) : key;
+
+    if (isCircuit(item)) return result.push(finalKey);
+
+    if (isPrefixed || isBlock(item)) {
+      const subPaths = extractCircuitPaths(item);
+      subPaths.forEach((path) => result.push(`${finalKey}.${path}`));
+    }
+  });
+
+  return result;
 }
