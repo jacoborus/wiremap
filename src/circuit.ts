@@ -11,6 +11,7 @@ export interface BulkCircuitDef {
   __hub: Rehashmap;
   __inputs: Rehashmap;
   // __outputs: StringHashmap;
+  __circuitPaths: string[];
 }
 
 export type CircuitDef<
@@ -22,6 +23,7 @@ export type CircuitDef<
   __hub: H;
   __inputs: I;
   // __outputs: O;
+  __circuitPaths: string[];
 };
 
 // interface CircuitOptions<O extends Hashmap> {
@@ -132,11 +134,13 @@ export function defineCircuit<
   C extends CircuitDef<MappedHub<E>, MappedHub<I>>,
 >(mainBlock: H, inputs: I): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
+  const circuitPaths = extractCircuitPaths(mainBlock);
 
   return {
     __isCircuit: true,
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
+    __circuitPaths: circuitPaths,
     // __outputs: options?.outputs || {},
   } as C;
 }
@@ -180,12 +184,16 @@ export type BlocksDiff<A, B> = {
 
 export function isCircuit(target: unknown): target is BulkCircuitDef {
   if (typeof target !== "object" || target === null) return false;
+
   if (!("__isCircuit" in target)) return false;
   if (target["__isCircuit"] !== true) return false;
+
   if (!("__hub" in target)) return false;
   if (!isHashmap(target["__hub"])) return false;
+
   if (!("__inputs" in target)) return false;
   if (!isHashmap(target["__inputs"])) return false;
+
   return true;
 }
 
@@ -201,7 +209,14 @@ export function extractCircuitPaths<B extends Hashmap>(block: B): string[] {
     const isPrefixed = key.startsWith("$");
     const finalKey = isPrefixed ? key.slice(1) : key;
 
-    if (isCircuit(item)) return result.push(finalKey);
+    if (isCircuit(item)) {
+      result.push(finalKey);
+      const finalPaths = item.__circuitPaths.map(
+        (path) => `${finalKey}.${path}`,
+      );
+      result.push(...finalPaths);
+      return;
+    }
 
     if (isPrefixed || isBlock(item)) {
       const subPaths = extractCircuitPaths(item);

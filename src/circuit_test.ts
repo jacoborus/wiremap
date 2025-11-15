@@ -102,11 +102,13 @@ Deno.test("block: extactCircuitPaths", () => {
         __isCircuit: true,
         __hub: {},
         __inputs: {},
+        __circuitPaths: [],
       },
       $other: {
         __isCircuit: true,
         __hub: {},
         __inputs: {},
+        __circuitPaths: [],
       },
     }),
     ["circ", "other"],
@@ -123,16 +125,19 @@ Deno.test("block: extactCircuitPaths", () => {
         },
         circ: {
           __isCircuit: true,
-          __hub: {},
+          __hub: {
+            $other: {
+              __isCircuit: true,
+              __hub: {},
+              __inputs: {},
+              __circuitPaths: [],
+            },
+          },
           __inputs: {},
+          __circuitPaths: ["other"],
         },
       },
-      $other: {
-        __isCircuit: true,
-        __hub: {},
-        __inputs: {},
-      },
     }),
-    ["good.circ", "other"],
+    ["good.circ", "good.circ.other"],
   );
 });

@@ -208,6 +208,7 @@ export function wireUp<Defs extends BulkCircuitDef>(
     __hub: defs["__hub"],
     __inputs: inputDefinitions,
     __outputs: {},
+    __circuitPaths: [],
   };
 
   if (hasAsyncKeys(defs["__hub"])) {

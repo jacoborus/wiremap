@@ -5,7 +5,7 @@ import {
   extractUnits,
   getBlockUnitKeys,
   hasBlocks,
-  itemIsBlock,
+  isBlock,
   mapBlocks,
 } from "./block.ts";
 import { defineUnit } from "./unit.ts";
@@ -22,8 +22,8 @@ Deno.test("block: itemIsBlock", () => {
   const b1 = defineBlock({
     a: 1,
   });
-  assertEquals(itemIsBlock(b1), true);
-  assertEquals(itemIsBlock({ $: 2 }), false);
+  assertEquals(isBlock(b1), true);
+  assertEquals(isBlock({ $: 2 }), false);
 });
 
 Deno.test("block: getBlockUnitKeys", () => {
@@ -61,19 +61,19 @@ Deno.test("block: getBlockUnitKeys", () => {
 Deno.test("block: createBlockProxy", () => {});
 
 Deno.test("block: itemIsBlock", () => {
-  assertEquals(itemIsBlock("asdf"), false);
-  assertEquals(itemIsBlock(1), false);
-  assertEquals(itemIsBlock(true), false);
-  assertEquals(itemIsBlock(null), false);
-  assertEquals(itemIsBlock({}), false);
+  assertEquals(isBlock("asdf"), false);
+  assertEquals(isBlock(1), false);
+  assertEquals(isBlock(true), false);
+  assertEquals(isBlock(null), false);
+  assertEquals(isBlock({}), false);
 
-  assertEquals(itemIsBlock({ a: 1 }), false);
-  assertEquals(itemIsBlock({ $a: 1 }), false);
-  assertEquals(itemIsBlock({ $: 1 }), false);
-  assertEquals(itemIsBlock({ $: { a: true } }), false);
+  assertEquals(isBlock({ a: 1 }), false);
+  assertEquals(isBlock({ $a: 1 }), false);
+  assertEquals(isBlock({ $: 1 }), false);
+  assertEquals(isBlock({ $: { a: true } }), false);
 
-  assertEquals(itemIsBlock({ $: { __isBlock: false } }), false);
-  assertEquals(itemIsBlock({ $: { __isBlock: true } }), true);
+  assertEquals(isBlock({ $: { __isBlock: false } }), false);
+  assertEquals(isBlock({ $: { __isBlock: true } }), true);
 });
 
 Deno.test("block: extractUnits", () => {

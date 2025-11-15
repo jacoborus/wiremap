@@ -1,4 +1,4 @@
-import type { BulkCircuitDef } from "./circuit.ts";
+import { isCircuit, type BulkCircuitDef } from "./circuit.ts";
 import type { Hashmap, Wcache } from "./common.ts";
 import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
 import type { InferWire } from "./wiremap.ts";
@@ -113,7 +113,7 @@ export function tagBlock(): BlockTag {
   return { __isBlock: true };
 }
 
-export function itemIsBlock(item: unknown): item is BlockDef<Hashmap> {
+export function isBlock(item: unknown): item is BlockDef<Hashmap> {
   return (
     item !== null &&
     typeof item === "object" &&
@@ -133,7 +133,7 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
   return Object.keys(blockDef).filter((key) => {
     if (key.startsWith("$")) return false;
     const unit = blockDef[key];
-    if (itemIsBlock(unit)) return false;
+    if (isBlock(unit)) return false;
     return local ? true : !isPrivate(unit);
   });
 }
@@ -302,30 +302,32 @@ export function mapBlocks<L extends Hashmap>(
     if (key === "$") return;
 
     // this is the key of the block given the path
-    let realKey = "";
     const block = blocks[key];
 
     if (!isHashmap(block)) return;
 
+    const isDollarBlock = key.startsWith("$");
+    const itemIsCircuit = isCircuit(block);
+    const itemIsBlock = isDollarBlock || isBlock(block);
+
     if (key.startsWith("$")) {
-      realKey = key.slice(1);
-    } else if (itemIsBlock(block)) {
-      realKey = key;
-    } else {
+      key = key.slice(1);
+    } else if (!itemIsBlock && !itemIsCircuit) {
       return;
     }
 
-    const finalKey = prefix ? `${prefix}.${realKey}` : realKey;
+    const finalKey = prefix ? `${prefix}.${key}` : key;
+    const finalBlock = itemIsCircuit ? block["__hub"] : block;
 
-    const units = extractUnits(block);
+    const units = extractUnits(finalBlock);
     // only blocks with units are wireable
     if (Object.keys(units).length) {
       mapped[finalKey] = units;
     }
 
     // loop through sub-blocks
-    if (hasBlocks(block)) {
-      const subBlocks = mapBlocks(block, finalKey);
+    if (hasBlocks(finalBlock)) {
+      const subBlocks = mapBlocks(finalBlock, finalKey);
       Object.assign(mapped, subBlocks);
     }
   });
@@ -341,7 +343,7 @@ export function extractUnits(block: Hashmap): Hashmap {
     Object.keys(block)
       .map((key) => [key, block[key]])
       .filter(([key]) => typeof key === "string" && !key.startsWith("$"))
-      .filter(([_, item]) => !itemIsBlock(item)),
+      .filter(([_, item]) => !isBlock(item)),
   );
 }
 
@@ -357,6 +359,6 @@ export function hasBlocks(item: Hashmap): boolean {
   return Object.keys(item).some(
     (key) =>
       (key !== "$" && key.startsWith("$") && typeof item[key] === "object") ||
-      itemIsBlock(item[key]),
+      isBlock(item[key]),
   );
 }
