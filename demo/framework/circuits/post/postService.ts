@@ -6,7 +6,6 @@ type W = InferWire<PostCircuit, "service">;
 export const $ = tagBlock();
 
 interface NewPost {
-  email: string;
   content: string;
   title: string;
   slug: string;
@@ -22,14 +21,17 @@ export function addPost(this: W, email: string, post: NewPost) {
     throw new Error("Author does have permission to publish");
   }
 
-  const newPost = Object.assign(
-    {
-      id: crypto.randomUUID(),
-      userId: author.id,
-      published: !!post.published,
-    },
-    post,
-  );
+  const newPost = Object.assign(post, {
+    id: crypto.randomUUID(),
+    userId: author.id,
+    published: !!post.published,
+  });
 
   this("repo").data.push(newPost);
 }
+addPost.is = "bound" as const;
+
+export function listPosts(this: W) {
+  return this("repo").data.slice();
+}
+listPosts.is = "bound" as const;

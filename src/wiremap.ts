@@ -1,4 +1,4 @@
-import type { Hashmap, Wcache } from "./common.ts";
+import type { Hashmap, Context } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
 import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
 
@@ -6,7 +6,7 @@ import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
   defineBlock,
   extractUnits,
-  getWire,
+  getBlockWire,
   isHashmap,
   mapBlocks,
 } from "./block.ts";
@@ -162,7 +162,7 @@ type ExtractNonUnitKeys<T> = {
  * const app = await wireUp(appSchema);
  *
  * // Access root units
- * console.log(app().config.port); // 3000
+ * app().config.port // 3000
  *
  * // Access nested block units
  * const userId = app("user.service").addUser("John", "john@example.com");
@@ -203,23 +203,29 @@ export function wireUp<Defs extends BulkCircuitDef>(
     inputDefinitions[""] = rootInputBlock;
   }
 
-  const cache = createCacheObject();
-  const circuit = {
+  // fill inner circuit inputs with main circuit
+  // TODO: change it to the relative parent circuit, not the main one
+  defs.__circuitPaths.forEach((path) => {
+    defs.__innerCircuits[path]["__inputs"] = defs["__hub"];
+  });
+
+  const context = createContext({
     __hub: defs["__hub"],
     __inputs: inputDefinitions,
     __outputs: {},
-    __circuitPaths: [],
-  };
+    __circuitPaths: defs.__circuitPaths,
+    __innerCircuits: defs.__innerCircuits,
+  });
 
   if (hasAsyncKeys(defs["__hub"])) {
     // This will cause wireUp to return a promise that resolves
     // when all async factories are resolved
-    return resolveAsyncFactories(circuit, cache).then(() => {
-      return getWire("", circuit, cache);
+    return resolveAsyncFactories(context).then(() => {
+      return getBlockWire("", context);
     }) as WiredUp<Defs>;
   }
 
-  return getWire("", circuit, cache) as WiredUp<Defs>;
+  return getBlockWire("", context) as WiredUp<Defs>;
 }
 
 /** Check if any of the definitions are async factories */
@@ -237,10 +243,9 @@ function hasAsyncKeys(blockDefs: Hashmap): boolean {
 }
 
 async function resolveAsyncFactories(
-  circuit: BulkCircuitDef,
-  cache: Wcache,
+  context: Context<BulkCircuitDef>,
 ): Promise<void> {
-  const defs = circuit.__hub;
+  const defs = context.circuit.__hub;
   const blockKeys = Object.keys(defs);
 
   for await (const blockKey of blockKeys) {
@@ -255,9 +260,9 @@ async function resolveAsyncFactories(
 
       if (!isAsyncFactory(item)) continue;
 
-      const wire = cache.wire.has(blockKey)
-        ? cache.wire.get(blockKey)
-        : getWire(blockKey, circuit, cache);
+      const wire = context.wire.has(blockKey)
+        ? context.wire.get(blockKey)
+        : getBlockWire(blockKey, context);
 
       let resolved;
 
@@ -268,7 +273,7 @@ async function resolveAsyncFactories(
       }
 
       const finalKey = blockKey === "" ? key : `${blockKey}.${key}`;
-      cache.unit.set(finalKey, resolved);
+      context.unit.set(finalKey, resolved);
     }
   }
 }
@@ -277,8 +282,9 @@ function isAsyncFactory(item: unknown): boolean {
   return isAsyncFactoryDef(item) || isAsyncFactoryFunc(item);
 }
 
-function createCacheObject(): Wcache {
+function createContext<C extends BulkCircuitDef>(circuit: C): Context<C> {
   return {
+    circuit,
     unit: new Map(),
     input: new Map(),
     wire: new Map(),
