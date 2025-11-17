@@ -288,13 +288,6 @@ export function getBlockWire<
       return localProxy;
     }
 
-    // Root block resolution
-    if (key === "") {
-      const proxy = createBlockProxy("", ctx, "__hub", false);
-      ctx.proxy.set(key, proxy);
-      return proxy;
-    }
-
     const proxyPath = !circuitPath ? key : `${circuitPath}.${key}`;
 
     // inner circuit block resolution, uses absolute path of the block
