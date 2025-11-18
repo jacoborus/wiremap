@@ -176,17 +176,7 @@ function createBlockProxy<
     }
   });
 
-  const circuit = circuitPath
-    ? ctx.circuit.__innerCircuits[circuitPath]
-    : ctx.circuit;
-
-  const localPath = circuitPath
-    ? blockPath.slice(circuitPath.length + 1)
-    : blockPath;
-
-  const blockDefs = circuit[part];
-
-  const blockDef = blockDefs[localPath];
+  const blockDef = ctx.circuit[part][blockPath];
 
   const unitKeys = getBlockUnitKeys(blockDef, local);
 
@@ -267,15 +257,7 @@ export function getBlockWire<
     }
   });
 
-  const finalCircuit = circuitPath
-    ? ctx.circuit.__innerCircuits[circuitPath]
-    : ctx.circuit;
-
   const wire = function getBlockProxy(key = "") {
-    if (ctx.proxy.has(key)) {
-      return ctx.proxy.get(key);
-    }
-
     // Local block resolution, includes private units
     if (key === ".") {
       if (ctx.localProxy.has(blockPath)) {
@@ -290,18 +272,30 @@ export function getBlockWire<
 
     const proxyPath = !circuitPath ? key : `${circuitPath}.${key}`;
 
-    // inner circuit block resolution, uses absolute path of the block
+    if (ctx.proxy.has(proxyPath)) {
+      return ctx.proxy.get(proxyPath);
+    }
+
+    // hub resolution, uses absolute path of the block
     if (Object.keys(ctx.circuit.__hub).includes(proxyPath)) {
       const proxy = createBlockProxy(proxyPath, ctx, "__hub", false);
       ctx.proxy.set(proxyPath, proxy);
       return proxy;
     }
 
-    // Input block resolution, uses absolute path of the input block
-    if (Object.keys(finalCircuit.__inputs).includes(key)) {
-      const proxy = createBlockProxy(key, ctx, "__inputs", false);
-      ctx.proxy.set(key, proxy);
-      return proxy;
+    // input resolution
+    if (circuitPath) {
+      if (Object.keys(ctx.circuit.__hub).includes(key)) {
+        const proxy = createBlockProxy(key, ctx, "__hub", false);
+        ctx.proxy.set(key, proxy);
+        return proxy;
+      }
+    } else {
+      if (Object.keys(ctx.circuit.__inputs).includes(key)) {
+        const proxy = createBlockProxy(key, ctx, "__inputs", false);
+        ctx.proxy.set(key, proxy);
+        return proxy;
+      }
     }
 
     throw new Error(`Block "${key}" not found from block "${blockPath}"`);

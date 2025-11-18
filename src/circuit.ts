@@ -12,7 +12,7 @@ export interface BulkCircuitDef extends Hashmap {
   __inputs: Rehashmap;
   // __outputs: StringHashmap;
   __circuitPaths: string[];
-  __innerCircuits: Record<string, BulkCircuitDef>;
+  __innerInputs: Record<string, Rehashmap>;
 }
 
 export type CircuitDef<
@@ -25,7 +25,7 @@ export type CircuitDef<
   __inputs: I;
   // __outputs: O;
   __circuitPaths: string[];
-  __innerCircuits: Record<string, BulkCircuitDef>;
+  __innerInputs: Record<string, Rehashmap>;
 };
 
 // interface CircuitOptions<O extends Hashmap> {
@@ -138,9 +138,11 @@ export function defineCircuit<
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
   const circuitPaths = extractCircuitPaths(mainBlock);
   const innerCircuits: Record<string, BulkCircuitDef> = {};
+  const innerInputs: Record<string, Rehashmap> = {};
 
   circuitPaths.forEach((path) => {
     innerCircuits[path] = mainBlock[path] as BulkCircuitDef;
+    innerInputs[path] = (mainBlock[path] as BulkCircuitDef).__inputs;
   });
 
   return {
@@ -148,7 +150,7 @@ export function defineCircuit<
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
     __circuitPaths: circuitPaths,
-    __innerCircuits: innerCircuits,
+    __innerInputs: innerInputs,
     // __outputs: options?.outputs || {},
   } as C;
 }

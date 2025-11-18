@@ -8,7 +8,8 @@
     "test": "deno test",
     "lint": "deno lint src demo",
     "check": "deno check src demo",
-    "fmt": "deno fmt --check src demo"
+    "fmt": "deno fmt --check src demo",
+    "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts"
   },
   "publish": {
     "include": [
