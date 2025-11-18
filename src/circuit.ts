@@ -1,7 +1,8 @@
-import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
 import type { BlockDef, Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
+
+import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
 
 export interface StringHashmap {
   [K: string]: string | StringHashmap;

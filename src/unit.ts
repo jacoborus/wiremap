@@ -308,3 +308,17 @@ export type InferUnitValue<D> = D extends UnitDef
           ? OmitThisParameter<D>
           : never
         : D;
+
+export function resolveUnit<D, W>(def: D, wire: W) {
+  return isFactoryFunc(def)
+    ? def(wire)
+    : isBoundFunc(def)
+      ? def.bind(wire)
+      : isUnitDef(def)
+        ? isFactoryDef(def)
+          ? def.__unit(wire)
+          : isBoundDef(def)
+            ? def.__unit.bind(wire)
+            : def.__unit
+        : def;
+}

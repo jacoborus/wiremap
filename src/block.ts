@@ -3,14 +3,7 @@ import type { BulkCircuitDef } from "./circuit.ts";
 import type { Hashmap, Context } from "./common.ts";
 import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
 import { isCircuit } from "./circuit.ts";
-import {
-  isBoundDef,
-  isBoundFunc,
-  isFactoryDef,
-  isFactoryFunc,
-  isPrivate,
-  isUnitDef,
-} from "./unit.ts";
+import { isPrivate, resolveUnit } from "./unit.ts";
 
 /** A block is a Hashmap with a block tag in '$'. */
 export type BlockDef<T extends Hashmap> = T & {
@@ -202,17 +195,7 @@ function createBlockProxy<
             ? ctx.wire.get(blockPath)
             : getBlockWire(blockPath, ctx);
 
-          const unit = isFactoryFunc(def)
-            ? def(wire)
-            : isBoundFunc(def)
-              ? def.bind(wire)
-              : isUnitDef(def)
-                ? isFactoryDef(def)
-                  ? def.__unit(wire)
-                  : isBoundDef(def)
-                    ? def.__unit.bind(wire)
-                    : def.__unit
-                : def;
+          const unit = resolveUnit(def, wire);
 
           cachedblock[prop] = unit;
           ctx.unit.set(finalKey, unit);

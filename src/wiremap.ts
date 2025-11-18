@@ -1,6 +1,7 @@
 import type { Hashmap, Context } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
 import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
+import type { BulkCircuitDef } from "./circuit.ts";
 
 import { isAsyncFactoryDef, isAsyncFactoryFunc } from "./unit.ts";
 import {
@@ -10,7 +11,6 @@ import {
   isHashmap,
   mapBlocks,
 } from "./block.ts";
-import type { BulkCircuitDef } from "./circuit.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
