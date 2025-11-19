@@ -81,6 +81,20 @@ Deno.test("block: isCircuit", () => {
     ),
     true,
   );
+
+  assertEquals(
+    isCircuit({
+      __isCircuit: true,
+      __hub: {
+        "aBlock.bBlock": {
+          c: 1,
+          d: "d",
+        },
+      },
+      __inputs: { asdf: 4 },
+    }),
+    true,
+  );
 });
 
 Deno.test("block: extactCircuitPaths", () => {

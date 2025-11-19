@@ -159,18 +159,7 @@ function createBlockProxy<
   part: P,
   local: Local,
 ): BlockProxy<C[P][K]> {
-  let circuitPath = "";
-
-  ctx.circuit.__circuitPaths.forEach((path) => {
-    if (blockPath.startsWith(path)) {
-      if (path.length > circuitPath.length) {
-        circuitPath = path;
-      }
-    }
-  });
-
   const blockDef = ctx.circuit[part][blockPath];
-
   const unitKeys = getBlockUnitKeys(blockDef, local);
 
   return new Proxy(
@@ -295,32 +284,30 @@ export function mapBlocks<L extends Hashmap>(
 ): Rehashmap {
   const mapped: Rehashmap = {};
 
-  Object.keys(blocks).forEach((key) => {
-    if (key === "$") return;
+  Object.keys(blocks).forEach((path) => {
+    if (path === "$") return;
 
-    // this is the key of the block given the path
-    const block = blocks[key];
+    const block = blocks[path];
 
     if (!isHashmap(block)) return;
 
-    const isDollarBlock = key.startsWith("$");
+    const isDollarBlock = path.startsWith("$");
     const itemIsCircuit = isCircuit(block);
     const itemIsBlock = isDollarBlock || isBlock(block);
 
-    if (key.startsWith("$")) {
-      key = key.slice(1);
-    } else if (!itemIsBlock && !itemIsCircuit) {
-      return;
-    }
+    if (!itemIsBlock && !itemIsCircuit) return;
 
-    const finalKey = prefix ? `${prefix}.${key}` : key;
+    if (isDollarBlock) {
+      path = path.slice(1);
+    }
+    path = prefix ? `${prefix}.${path}` : path;
 
     if (itemIsCircuit) {
-      const finalBlock = block["__hub"];
+      const subCircuitHub = block["__hub"];
 
-      Object.keys(finalBlock).forEach((prop) => {
-        const finalProp = prop === "" ? finalKey : `${finalKey}.${prop}`;
-        mapped[finalProp] = finalBlock[prop];
+      Object.keys(subCircuitHub).forEach((subPath) => {
+        const subBlockPath = subPath === "" ? path : `${path}.${subPath}`;
+        mapped[subBlockPath] = subCircuitHub[subPath];
       });
 
       return;
@@ -329,12 +316,12 @@ export function mapBlocks<L extends Hashmap>(
     const units = extractUnits(block);
     // only blocks with units are wireable
     if (Object.keys(units).length) {
-      mapped[finalKey] = units;
+      mapped[path] = units;
     }
 
     // loop through sub-blocks
-    if (hasBlocks(block)) {
-      const subBlocks = mapBlocks(block, finalKey);
+    if (hasBlocks(block) || hasCircuits(block)) {
+      const subBlocks = mapBlocks(block, path);
       Object.assign(mapped, subBlocks);
     }
   });
@@ -350,7 +337,8 @@ export function extractUnits(block: Hashmap): Hashmap {
     Object.keys(block)
       .map((key) => [key, block[key]])
       .filter(([key]) => typeof key === "string" && !key.startsWith("$"))
-      .filter(([_, item]) => !isBlock(item)),
+      .filter(([_, item]) => !isBlock(item))
+      .filter(([_, item]) => !isCircuit(item)),
   );
 }
 
@@ -368,4 +356,9 @@ export function hasBlocks(item: Hashmap): boolean {
       (key !== "$" && key.startsWith("$") && typeof item[key] === "object") ||
       isBlock(item[key]),
   );
+}
+
+export function hasCircuits(item: Hashmap): boolean {
+  if (item === null || typeof item !== "object") return false;
+  return Object.keys(item).some((key) => isCircuit(item[key]));
 }

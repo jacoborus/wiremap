@@ -5,6 +5,7 @@ import {
   extractUnits,
   getBlockUnitKeys,
   hasBlocks,
+  hasCircuits,
   isBlock,
   mapBlocks,
 } from "./block.ts";
@@ -18,7 +19,7 @@ Deno.test("block: defineBlock", () => {
   assertEquals(b1.a, 1);
 });
 
-Deno.test("block: itemIsBlock", () => {
+Deno.test("block: isBlock", () => {
   const b1 = defineBlock({
     a: 1,
   });
@@ -80,6 +81,17 @@ Deno.test("block: extractUnits", () => {
   assertEquals(extractUnits({ a: 1, b: "asdf" }), { a: 1, b: "asdf" });
   assertEquals(extractUnits({ a: 1, $: "asfd" }), { a: 1 });
   assertEquals(extractUnits({ a: 1, $: { __isBlock: true } }), { a: 1 });
+  assertEquals(
+    extractUnits({
+      a: 1,
+      b: {
+        __isCircuit: true,
+        __hub: { b: { bb: "bb" } },
+        __inputs: {},
+      },
+    }),
+    { a: 1 },
+  );
 });
 
 Deno.test("block: hasBlocks", () => {
@@ -90,19 +102,88 @@ Deno.test("block: hasBlocks", () => {
   assertEquals(hasBlocks({ a: 1, b: { $: { __isBlock: true } } }), true);
 });
 
-Deno.test("block: mapBlocks", () => {
-  const origin = {
-    $uno: {
-      a: 3,
-      b: "asdf",
-      $sub: {
-        otro: 2,
+Deno.test("block: hasCircuits", () => {
+  assertEquals(hasCircuits({ a: 1, b: "asdf" }), false);
+  assertEquals(hasCircuits({ a: 1, $: "asfd" }), false);
+  assertEquals(hasCircuits({ a: 1, b: { __isCircuit: true } }), false);
+  assertEquals(
+    hasCircuits({
+      a: 1,
+      b: {
+        __isCircuit: true,
+        __hub: {},
+        __inputs: {},
       },
-      $otro: 5,
+    }),
+    true,
+  );
+});
+
+Deno.test("block: mapBlocks", () => {
+  assertEquals(
+    mapBlocks({
+      $uno: {
+        a: 3,
+        b: "asdf",
+        $sub: {
+          otro: 2,
+        },
+        $otro: 5,
+      },
+    }),
+    {
+      uno: { a: 3, b: "asdf" },
+      "uno.sub": { otro: 2 },
     },
-  };
-  assertEquals(mapBlocks(origin), {
-    uno: { a: 3, b: "asdf" },
-    "uno.sub": { otro: 2 },
-  });
+  );
+
+  assertEquals(
+    mapBlocks({
+      circ: {
+        __isCircuit: true,
+        __hub: {
+          "aBlock.bBlock": {
+            c: 1,
+            d: "d",
+          },
+        },
+        __inputs: { asdf: 4 },
+      },
+      $uno: {
+        a: 3,
+        b: "asdf",
+        $otro: 5,
+      },
+    }),
+    {
+      uno: { a: 3, b: "asdf" },
+      "circ.aBlock.bBlock": { c: 1, d: "d" },
+    },
+    "include circuits in root",
+  );
+
+  assertEquals(
+    mapBlocks({
+      $uno: {
+        a: 3,
+        b: "asdf",
+        circ: {
+          __isCircuit: true,
+          __hub: {
+            "aBlock.bBlock": {
+              c: 1,
+              d: "d",
+            },
+          },
+          __inputs: { asdf: 4 },
+        },
+        $otro: 5,
+      },
+    }),
+    {
+      uno: { a: 3, b: "asdf" },
+      "uno.circ.aBlock.bBlock": { c: 1, d: "d" },
+    },
+    "include circuits in blocks",
+  );
 });
