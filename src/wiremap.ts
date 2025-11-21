@@ -286,7 +286,6 @@ function createContext<C extends BulkCircuitDef>(circuit: C): Context<C> {
   return {
     circuit,
     unit: new Map(),
-    input: new Map(),
     wire: new Map(),
     proxy: new Map(),
     localProxy: new Map(),
