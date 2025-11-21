@@ -1,5 +1,10 @@
 import { assertEquals } from "@std/assert";
-import { isCircuit, defineCircuit, extractCircuitPaths } from "./circuit.ts";
+
+import {
+  isCircuit,
+  defineCircuit,
+  extractCircuitPaths,
+} from "../src/circuit.ts";
 
 Deno.test("block: isCircuit", () => {
   assertEquals(

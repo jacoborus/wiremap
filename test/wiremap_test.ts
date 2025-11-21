@@ -1,6 +1,12 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { tagBlock, wireUp, defineUnit, defineCircuit } from "./wiremap.ts";
-import type { InferWire } from "./wiremap.ts";
+
+import {
+  tagBlock,
+  wireUp,
+  defineUnit,
+  defineCircuit,
+} from "../src//wiremap.ts";
+import type { InferWire } from "../src//wiremap.ts";
 
 Deno.test("wireUp resolves dependencies", () => {
   const defs = {

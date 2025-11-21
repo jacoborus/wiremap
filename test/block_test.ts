@@ -8,8 +8,8 @@ import {
   hasCircuits,
   isBlock,
   mapBlocks,
-} from "./block.ts";
-import { defineUnit } from "./unit.ts";
+} from "../src/block.ts";
+import { defineUnit } from "../src/unit.ts";
 
 Deno.test("block: defineBlock", () => {
   const b1 = defineBlock({

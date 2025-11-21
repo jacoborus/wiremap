@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 
-import { mockUnit } from "./mock.ts";
-import { defineUnit } from "./unit.ts";
+import { mockUnit } from "../src/mock.ts";
+import { defineUnit } from "../src/unit.ts";
 
 Deno.test("mockUnit: bound function", () => {
   type W = <K extends keyof typeof fakeBlocks>(k: K) => (typeof fakeBlocks)[K];

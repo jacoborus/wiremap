@@ -9,7 +9,7 @@ import {
   isFactoryFunc,
   isPrivate,
   isUnitDef,
-} from "./unit.ts";
+} from "../src//unit.ts";
 
 Deno.test("unit: defineUnit", async () => {
   // Plain definition
