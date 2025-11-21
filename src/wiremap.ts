@@ -203,18 +203,11 @@ export function wireUp<Defs extends BulkCircuitDef>(
     inputDefinitions[""] = rootInputBlock;
   }
 
-  // fill inner circuit inputs with main circuit
-  // TODO: change it to use the provided inputs instead of the main one
-  defs.__circuitPaths.forEach((path) => {
-    defs.__innerInputs[path] = defs["__hub"];
-  });
-
   const context = createContext({
     __hub: defs["__hub"],
     __inputs: inputDefinitions,
     __outputs: {},
     __circuitPaths: defs.__circuitPaths,
-    __innerInputs: defs.__innerInputs,
   });
 
   if (hasAsyncKeys(defs["__hub"])) {
