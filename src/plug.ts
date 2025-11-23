@@ -17,7 +17,7 @@ type Plugin<
 
 export function plug<
   C extends BulkCircuitDef,
-  S extends Record<keyof C["__inputs"], string>,
+  S extends Record<keyof C["__inputs"], string | Record<string, string>>,
 >(circuit: C, schema: S): Plugin<C, S> {
   return {
     __isPlugin: true,
