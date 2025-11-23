@@ -100,12 +100,12 @@ export interface InferWire<
   ): BlockProxy<FilterPublicUnitValues<C["__hub"][K]>>;
 
   // input root block resolution
-  (): FilterUnitValues<C["__inputs"][""]>;
+  (): FilterPublicUnitValues<C["__inputs"][""]>;
 
   // input absolute block resolution
   <K extends keyof C["__inputs"]>(
     blockPath?: K,
-  ): FilterUnitValues<C["__inputs"][K]>;
+  ): FilterPublicUnitValues<C["__inputs"][K]>;
 }
 
 export type InferOutput<C extends BulkCircuitDef> = {
