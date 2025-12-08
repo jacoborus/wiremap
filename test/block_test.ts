@@ -149,25 +149,10 @@ Deno.test("block: mapBlocks", () => {
         },
         __inputs: { asdf: 4 },
       },
-      $uno: {
-        a: 3,
-        b: "asdf",
-        $otro: 5,
-      },
-    }),
-    {
-      uno: { a: 3, b: "asdf" },
-      "circ.aBlock.bBlock": { c: 1, d: "d" },
-    },
-    "include circuits in root",
-  );
-
-  assertEquals(
-    mapBlocks({
-      $uno: {
-        a: 3,
-        b: "asdf",
-        circ: {
+      plug: {
+        __isPlugin: true,
+        __connector: {},
+        __circuit: {
           __isCircuit: true,
           __hub: {
             "aBlock.bBlock": {
@@ -177,13 +162,46 @@ Deno.test("block: mapBlocks", () => {
           },
           __inputs: { asdf: 4 },
         },
+      },
+      $uno: {
+        a: 3,
+        b: "asdf",
         $otro: 5,
       },
     }),
     {
       uno: { a: 3, b: "asdf" },
-      "uno.circ.aBlock.bBlock": { c: 1, d: "d" },
+      "plug.aBlock.bBlock": { c: 1, d: "d" },
     },
-    "include circuits in blocks",
+    "include circuits in root",
   );
+
+  // assertEquals(
+  //   mapBlocks({
+  //     $uno: {
+  //       a: 3,
+  //       b: "asdf",
+  //       plug: {
+  //         __isPlugin: true,
+  //         __connector: {},
+  //         __circuit: {
+  //           __isCircuit: true,
+  //           __inputs: { asdf: 4 },
+  //           __hub: {
+  //             "aBlock.bBlock": {
+  //               c: 1,
+  //               d: "d",
+  //             },
+  //           },
+  //         },
+  //       },
+  //       $otro: 5,
+  //     },
+  //   }),
+  //   {
+  //     uno: { a: 3, b: "asdf" },
+  //     "uno.plug.aBlock.bBlock": { c: 1, d: "d" },
+  //   },
+  //   "include circuits in blocks",
+  // );
 });

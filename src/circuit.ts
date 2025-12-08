@@ -2,6 +2,8 @@ import type { BlockDef, Rehashmap } from "./block.ts";
 import type { Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
 
+import type { BulkPlugin } from "./plug.ts";
+import { isPlugin } from "./plug.ts";
 import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
 
 export interface StringHashmap {
@@ -12,7 +14,7 @@ export interface BulkCircuitDef extends Hashmap {
   __hub: Rehashmap;
   __inputs: Rehashmap;
   // __outputs: StringHashmap;
-  __circuitPaths: string[];
+  __pluginPaths: string[];
 }
 
 export type CircuitDef<
@@ -24,7 +26,7 @@ export type CircuitDef<
   __hub: H;
   __inputs: I;
   // __outputs: O;
-  __circuitPaths: string[];
+  __pluginPaths: string[];
 };
 
 // interface CircuitOptions<O extends Hashmap> {
@@ -73,10 +75,12 @@ type BlockPaths<T extends Hashmap, P extends string = ""> = {
                   : never)
               | BlockPaths<T[K], P extends "" ? K : `${P}.${K}`>
           : T[K] extends BulkCircuitDef
-            ? P extends ""
-              ? `${K}.${string & keyof T[K]["__hub"]}`
-              : `${P}.${K}.${string & keyof T[K]["__hub"]}`
-            : never
+            ? never
+            : T[K] extends BulkPlugin
+              ? P extends ""
+                ? `${K}.${string & keyof T[K]["__circuit"]["__hub"]}`
+                : `${P}.${K}.${string & keyof T[K]["__circuit"]["__hub"]}`
+              : never
     : never;
 }[keyof T];
 
@@ -107,8 +111,10 @@ type HasUnits<T extends Hashmap> = true extends {
 type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
   ? K extends keyof T
     ? T[K] extends BulkCircuitDef
-      ? PathValue<T[K]["__hub"], Rest>
-      : PathValue<T[K], Rest>
+      ? never
+      : T[K] extends BulkPlugin
+        ? PathValue<T[K]["__circuit"]["__hub"], Rest>
+        : PathValue<T[K], Rest>
     : `$${K}` extends keyof T
       ? PathValue<T[`$${K}`], Rest>
       : never
@@ -135,13 +141,13 @@ export function defineCircuit<
   C extends CircuitDef<MappedHub<E>, MappedHub<I>>,
 >(mainBlock: H, inputs: I): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
-  const circuitPaths = extractCircuitPaths(mainBlock);
+  const pluginPaths = extractPluginPaths(mainBlock);
 
   return {
     __isCircuit: true,
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
-    __circuitPaths: circuitPaths,
+    __pluginPaths: pluginPaths,
     // __outputs: options?.outputs || {},
   } as C;
 }
@@ -198,7 +204,7 @@ export function isCircuit(target: unknown): target is BulkCircuitDef {
   return true;
 }
 
-export function extractCircuitPaths<B extends Hashmap>(block: B): string[] {
+export function extractPluginPaths<B extends Hashmap>(block: B): string[] {
   const result: string[] = [];
 
   Object.keys(block).forEach((key) => {
@@ -210,9 +216,9 @@ export function extractCircuitPaths<B extends Hashmap>(block: B): string[] {
     const isPrefixed = key.startsWith("$");
     const finalKey = isPrefixed ? key.slice(1) : key;
 
-    if (isCircuit(item)) {
+    if (isPlugin(item)) {
       result.push(finalKey);
-      const finalPaths = item.__circuitPaths.map(
+      const finalPaths = item.__circuit.__pluginPaths.map(
         (path) => `${finalKey}.${path}`,
       );
       result.push(...finalPaths);
@@ -220,7 +226,7 @@ export function extractCircuitPaths<B extends Hashmap>(block: B): string[] {
     }
 
     if (isPrefixed || isBlock(item)) {
-      const subPaths = extractCircuitPaths(item);
+      const subPaths = extractPluginPaths(item);
       subPaths.forEach((path) => result.push(`${finalKey}.${path}`));
     }
   });

@@ -3,6 +3,7 @@ import {
   defineBlock,
   defineCircuit,
   defineUnit,
+  plug,
   wireUp,
 } from "../../../src/wiremap.ts";
 
@@ -13,8 +14,8 @@ type W = InferWire<typeof circuit, "other">;
 
 const circuit = defineCircuit(
   {
-    user: userCircuit,
-    post: postCircuit,
+    user: plug(userCircuit, true),
+    post: plug(postCircuit, true),
     other: defineBlock({
       something: defineUnit((w: W) => w("user.service").addUser, {
         is: "factory",
@@ -40,8 +41,6 @@ postService.addPost("asdf@example.com", {
   title: "Asdf Asdf",
   content: "Amazing",
 });
-// console.log("userdata:", app("user.repo").data);
-// console.log("postData:", app("post.repo").data);
 
 console.log("POSTS:\n", postService.listPosts());
 

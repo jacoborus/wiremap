@@ -18,10 +18,30 @@ type Plugin<
 export function plug<
   C extends BulkCircuitDef,
   S extends Record<keyof C["__inputs"], string | Record<string, string>>,
->(circuit: C, schema: S): Plugin<C, S> {
+>(circuit: C, schema: boolean | S): Plugin<C, S> {
   return {
     __isPlugin: true,
     __circuit: circuit,
-    __connector: schema,
+    __connector: typeof schema === "boolean" ? ({} as S) : schema,
   };
+}
+
+export function isPlugin(item: unknown): item is BulkPlugin {
+  if (typeof item !== "object" || item === null) return false;
+  if (
+    !("__isPlugin" in item) ||
+    !("__circuit" in item) ||
+    !("__connector" in item)
+  )
+    return false;
+
+  if (item.__isPlugin !== true) return false;
+
+  if (typeof item.__circuit !== "object" || item.__circuit === null)
+    return false;
+
+  if (typeof item.__connector !== "object" || item.__connector === null)
+    return false;
+
+  return true;
 }

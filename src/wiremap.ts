@@ -11,10 +11,12 @@ import {
   isHashmap,
   mapBlocks,
 } from "./block.ts";
+import type { BulkPlugin } from "./plug.ts";
 
 export { defineUnit } from "./unit.ts";
 export { defineBlock, tagBlock } from "./block.ts";
 export { defineCircuit, defineInputs } from "./circuit.ts";
+export { plug } from "./plug.ts";
 
 /**
  * Determines the return type of wireUp - returns Promise<Wire> if any async factories exist.
@@ -133,7 +135,11 @@ type ExtractNonUnitKeys<T> = {
     ? K
     : T[K] extends BlockDef<Hashmap>
       ? K
-      : never;
+      : T[K] extends BulkPlugin
+        ? K
+        : T[K] extends BulkCircuitDef
+          ? K
+          : never;
 }[keyof T];
 
 /**
@@ -206,8 +212,8 @@ export function wireUp<Defs extends BulkCircuitDef>(
   const context = createContext({
     __hub: defs["__hub"],
     __inputs: inputDefinitions,
-    __outputs: {},
-    __circuitPaths: defs.__circuitPaths,
+    // __outputs: {},
+    __pluginPaths: defs.__pluginPaths,
   });
 
   if (hasAsyncKeys(defs["__hub"])) {

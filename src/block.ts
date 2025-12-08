@@ -4,6 +4,7 @@ import type { Hashmap, Context } from "./common.ts";
 import type { InferUnitValue, IsPrivateUnit } from "./unit.ts";
 import { isCircuit } from "./circuit.ts";
 import { isPrivate, resolveUnit } from "./unit.ts";
+import { isPlugin } from "./plug.ts";
 
 /** A block is a Hashmap with a block tag in '$'. */
 export type BlockDef<T extends Hashmap> = T & {
@@ -54,7 +55,7 @@ export function defineBlock<T extends Hashmap>(defs: T): BlockDef<T> {
 }
 
 interface BlockTag {
-  __isBlock: unknown;
+  __isBlock: true;
 }
 
 /**
@@ -128,6 +129,8 @@ export function getBlockUnitKeys<B extends Hashmap, Local extends boolean>(
     if (key.startsWith("$")) return false;
     const unit = blockDef[key];
     if (isBlock(unit)) return false;
+    if (isPlugin(unit)) return false;
+    if (isCircuit(unit)) return false;
     return local ? true : !isPrivate(unit);
   });
 }
@@ -219,12 +222,12 @@ export function getBlockWire<
     return ctx.wire.get(blockPath) as I;
   }
 
-  let circuitPath = "";
+  let pluginPath = "";
 
-  ctx.circuit.__circuitPaths.forEach((path) => {
+  ctx.circuit.__pluginPaths.forEach((path) => {
     if (blockPath.startsWith(path)) {
-      if (path.length > circuitPath.length) {
-        circuitPath = path;
+      if (path.length > pluginPath.length) {
+        pluginPath = path;
       }
     }
   });
@@ -242,7 +245,7 @@ export function getBlockWire<
       return localProxy;
     }
 
-    const proxyPath = !circuitPath ? key : `${circuitPath}.${key}`;
+    const proxyPath = !pluginPath ? key : `${pluginPath}.${key}`;
 
     if (ctx.proxy.has(proxyPath)) {
       return ctx.proxy.get(proxyPath);
@@ -256,7 +259,7 @@ export function getBlockWire<
     }
 
     // input resolution
-    if (circuitPath) {
+    if (pluginPath) {
       if (Object.keys(ctx.circuit.__hub).includes(key)) {
         const proxy = createBlockProxy(key, ctx, "__hub", false);
         ctx.proxy.set(key, proxy);
@@ -293,21 +296,24 @@ export function mapBlocks<L extends Hashmap>(
 
     const isDollarBlock = path.startsWith("$");
     const itemIsCircuit = isCircuit(block);
+    const itemIsPlugin = isPlugin(block);
     const itemIsBlock = isDollarBlock || isBlock(block);
 
-    if (!itemIsBlock && !itemIsCircuit) return;
+    if (!itemIsBlock && !itemIsPlugin) return;
 
     if (isDollarBlock) {
       path = path.slice(1);
     }
     path = prefix ? `${prefix}.${path}` : path;
 
-    if (itemIsCircuit) {
-      const subCircuitHub = block["__hub"];
+    if (itemIsCircuit) return;
 
-      Object.keys(subCircuitHub).forEach((subPath) => {
+    if (itemIsPlugin) {
+      const pluginHub = block["__circuit"]["__hub"];
+
+      Object.keys(pluginHub).forEach((subPath) => {
         const subBlockPath = subPath === "" ? path : `${path}.${subPath}`;
-        mapped[subBlockPath] = subCircuitHub[subPath];
+        mapped[subBlockPath] = pluginHub[subPath];
       });
 
       return;

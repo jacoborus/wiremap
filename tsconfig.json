@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "rootDir": "./src/",
+    "rootDir": "./",
     "outDir": "./dist/",
     "declaration": true,
     "declarationMap": true,
@@ -12,10 +12,11 @@
     "rewriteRelativeImportExtensions": true,
     "strict": true,
     "skipLibCheck": true,
-    "target": "es2019",
+    "target": "es2021",
     "lib": [
-      "es2019",
-      "dom"
+      "es2021",
+      "dom",
+      "deno.ns"
     ],
     "moduleResolution": "bundler",
     "removeComments": false
@@ -25,6 +26,7 @@
     "src/block.ts",
     "src/unit.ts",
     "src/mock.ts",
-    "src/common.ts"
+    "src/common.ts",
+    "demo"
   ]
 }

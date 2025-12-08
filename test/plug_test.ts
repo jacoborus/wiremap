@@ -7,7 +7,7 @@ Deno.test("plug", () => {
     __isCircuit: true,
     __hub: {},
     __inputs: {},
-    __circuitPaths: [],
+    __pluginPaths: [],
   };
   assertEquals(plug(circuit, {}), {
     __isPlugin: true,
@@ -26,7 +26,7 @@ Deno.test("plug", () => {
         b: string;
       };
     },
-    __circuitPaths: [],
+    __pluginPaths: [],
   };
   assertEquals(
     plug(circuit, {

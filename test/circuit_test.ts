@@ -3,7 +3,7 @@ import { assertEquals } from "@std/assert";
 import {
   isCircuit,
   defineCircuit,
-  extractCircuitPaths,
+  extractPluginPaths,
 } from "../src/circuit.ts";
 
 Deno.test("block: isCircuit", () => {
@@ -102,9 +102,9 @@ Deno.test("block: isCircuit", () => {
   );
 });
 
-Deno.test("block: extactCircuitPaths", () => {
+Deno.test("block: extactPluginPaths", () => {
   assertEquals(
-    extractCircuitPaths({
+    extractPluginPaths({
       a: 1,
       $b: { a: 1 },
       c: { a: 1, $: { __isBlock: true } },
@@ -113,28 +113,36 @@ Deno.test("block: extactCircuitPaths", () => {
   );
 
   assertEquals(
-    extractCircuitPaths({
+    extractPluginPaths({
       a: 1,
       $b: { a: 1 },
       c: { a: 1, $: { __isBlock: true } },
-      circ: {
-        __isCircuit: true,
-        __hub: {},
-        __inputs: {},
-        __circuitPaths: [],
+      theplugin: {
+        __isPlugin: true,
+        __connector: {},
+        __circuit: {
+          __isCircuit: true,
+          __hub: {},
+          __inputs: {},
+          __pluginPaths: [],
+        },
       },
       $other: {
-        __isCircuit: true,
-        __hub: {},
-        __inputs: {},
-        __circuitPaths: [],
+        __isPlugin: true,
+        __connector: {},
+        __circuit: {
+          __isCircuit: true,
+          __hub: {},
+          __inputs: {},
+          __pluginPaths: [],
+        },
       },
     }),
-    ["circ", "other"],
+    ["theplugin", "other"],
   );
 
   assertEquals(
-    extractCircuitPaths({
+    extractPluginPaths({
       a: 1,
       $b: { a: 1 },
       $good: {
@@ -143,17 +151,21 @@ Deno.test("block: extactCircuitPaths", () => {
           __isBlock: true,
         },
         circ: {
-          __isCircuit: true,
-          __hub: {
-            $other: {
-              __isCircuit: true,
-              __hub: {},
-              __inputs: {},
-              __circuitPaths: [],
+          __isPlugin: true,
+          __connector: {},
+          __circuit: {
+            __isCircuit: true,
+            __hub: {
+              $other: {
+                __isCircuit: true,
+                __hub: {},
+                __inputs: {},
+                __pluginPaths: [],
+              },
             },
+            __inputs: {},
+            __pluginPaths: ["other"],
           },
-          __inputs: {},
-          __circuitPaths: ["other"],
         },
       },
     }),
