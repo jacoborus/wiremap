@@ -14,38 +14,38 @@ time.
 
 ---
 
-## ✨ Features
+## Features
 
-- **🔒 Type-Safe**: Full TypeScript support without extra boilerplate
-- **🧱 Compositional**: Build complex apps from small, reusable units
-- **♻️ Circular Dependency-Free**: Designed to avoid circular dependencies
-- **🤯 No decorators. No classes.** No gorillas, no jungles. Just the bananas 🍌
-- **🌲 Hierarchical**: Organize dependencies with namespaces and blocks
-- **🧪 Testable**: Built-in utilities for mocking and isolation
-- **🪶 Lightweight**: Minimal runtime overhead with smart caching
-- **🔌 Zero Configuration**: Install and import, nothing else
-- **🔨 Simple API**: So simple, it hurts
+- ** Type-Safe**: Full TypeScript support without extra boilerplate
+- ** Compositional**: Build complex apps from small, reusable units
+- ** Circular Dependency-Free**: Designed to avoid circular dependencies
+- ** No decorators. No classes.** No gorillas, no jungles. Just the bananas 🍌
+- ** Hierarchical**: Organize dependencies with namespaces and blocks
+- ** Testable**: Built-in utilities for mocking and isolation
+- ** Lightweight**: Minimal runtime overhead with smart caching
+- ** Zero Configuration**: Install and import, nothing else
+- ** Simple API**: So simple, it hurts
 
-## 📑 Table of contents
+## Table of contents
 
 - [Wiremap](#wiremap)
-  - [✨ Features](#-features)
-  - [📑 TOC](#-table-of-contents)
-  - [🏛 Architecture-Agnostic](#-architecture-agnostic)
-  - [📦 Installation](#-installation)
-  - [🧩 Core Concepts](#-core-concepts)
+  - [Features](#-features)
+  - [TOC](#-table-of-contents)
+  - [Architecture-Agnostic](#-architecture-agnostic)
+  - [Installation](#-installation)
+  - [Core Concepts](#-core-concepts)
     - [Block](#block)
     - [Unit](#unit)
     - [Wire](#wire)
     - [Wire Up](#wire-up)
     - [Mock unit](#mock-unit)
-  - [🚀 Example](#-example)
-  - [🧪 Testing](#-testing)
-  - [📖 API Reference](#-api-reference)
-  - [🤝 Contributing](#-contributing)
-  - [📄 License](#-license)
+  - [Example](#-example)
+  - [Testing](#-testing)
+  - [API Reference](#-api-reference)
+  - [Contributing](#-contributing)
+  - [License](#-license)
 
-## 🏛 Architecture-Agnostic
+## Architecture-Agnostic
 
 Wiremap is architecture-agnostic. It doesn’t enforce a particular structure but
 adapts naturally to any software design approach. Whether you’re building with
@@ -57,7 +57,7 @@ methodology. You can even combine patterns without fighting the framework.\
 Wiremap’s role is to provide clean, dependency-free wiring, no matter how you
 shape your architecture.
 
-## 📦 Installation
+## Installation
 
 ```bash
 # pick your package manager
@@ -67,7 +67,7 @@ deno add jsr:@jacobo/wiremap
 bun add wiremap
 ```
 
-## 🧩 Core Concepts
+## Core Concepts
 
 Wiremap applications are composed of **units**, organized into **hierarchical
 blocks**. Units can depend on each other via **wires** provided by their blocks.
@@ -429,17 +429,17 @@ const app = await wireUp(main);
 console.log("Users:", app("user.service").getUsers());
 ```
 
-## 📖 API Reference
+## API Reference
 
-👉 [API Documentation](https://jsr.io/@jacobo/wiremap)
+[API Documentation](https://jsr.io/@jacobo/wiremap)
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
-**💬 Questions or Feedback?**\
+**Questions or Feedback?**\
 Open an issue on [GitHub](https://github.com/jacoborus/wiremap/issues)
 
-## 📄 License
+## License
 
 MIT © [Jacobo Tabernero Rey](https://github.com/jacoborus)
