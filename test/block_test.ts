@@ -5,7 +5,7 @@ import {
   extractUnits,
   getBlockUnitKeys,
   hasBlocks,
-  hasCircuits,
+  hasPlugins,
   isBlock,
   mapBlocks,
 } from "../src/block.ts";
@@ -103,16 +103,20 @@ Deno.test("block: hasBlocks", () => {
 });
 
 Deno.test("block: hasCircuits", () => {
-  assertEquals(hasCircuits({ a: 1, b: "asdf" }), false);
-  assertEquals(hasCircuits({ a: 1, $: "asfd" }), false);
-  assertEquals(hasCircuits({ a: 1, b: { __isCircuit: true } }), false);
+  assertEquals(hasPlugins({ a: 1, b: "asdf" }), false);
+  assertEquals(hasPlugins({ a: 1, $: "asfd" }), false);
+  assertEquals(hasPlugins({ a: 1, b: { __isCircuit: true } }), false);
   assertEquals(
-    hasCircuits({
+    hasPlugins({
       a: 1,
       b: {
-        __isCircuit: true,
-        __hub: {},
-        __inputs: {},
+        __isPlugin: true,
+        __connector: {},
+        __circuit: {
+          __isCircuit: true,
+          __hub: {},
+          __inputs: {},
+        },
       },
     }),
     true,
@@ -176,32 +180,32 @@ Deno.test("block: mapBlocks", () => {
     "include circuits in root",
   );
 
-  // assertEquals(
-  //   mapBlocks({
-  //     $uno: {
-  //       a: 3,
-  //       b: "asdf",
-  //       plug: {
-  //         __isPlugin: true,
-  //         __connector: {},
-  //         __circuit: {
-  //           __isCircuit: true,
-  //           __inputs: { asdf: 4 },
-  //           __hub: {
-  //             "aBlock.bBlock": {
-  //               c: 1,
-  //               d: "d",
-  //             },
-  //           },
-  //         },
-  //       },
-  //       $otro: 5,
-  //     },
-  //   }),
-  //   {
-  //     uno: { a: 3, b: "asdf" },
-  //     "uno.plug.aBlock.bBlock": { c: 1, d: "d" },
-  //   },
-  //   "include circuits in blocks",
-  // );
+  assertEquals(
+    mapBlocks({
+      $uno: {
+        a: 3,
+        b: "asdf",
+        plug: {
+          __isPlugin: true,
+          __connector: {},
+          __circuit: {
+            __isCircuit: true,
+            __inputs: { asdf: 4 },
+            __hub: {
+              "aBlock.bBlock": {
+                c: 1,
+                d: "d",
+              },
+            },
+          },
+        },
+        $otro: 5,
+      },
+    }),
+    {
+      uno: { a: 3, b: "asdf" },
+      "uno.plug.aBlock.bBlock": { c: 1, d: "d" },
+    },
+    "include circuits in blocks",
+  );
 });

@@ -326,7 +326,7 @@ export function mapBlocks<L extends Hashmap>(
     }
 
     // loop through sub-blocks
-    if (hasBlocks(block) || hasCircuits(block)) {
+    if (hasBlocks(block) || hasPlugins(block)) {
       const subBlocks = mapBlocks(block, path);
       Object.assign(mapped, subBlocks);
     }
@@ -344,7 +344,8 @@ export function extractUnits(block: Hashmap): Hashmap {
       .map((key) => [key, block[key]])
       .filter(([key]) => typeof key === "string" && !key.startsWith("$"))
       .filter(([_, item]) => !isBlock(item))
-      .filter(([_, item]) => !isCircuit(item)),
+      .filter(([_, item]) => !isCircuit(item))
+      .filter(([_, item]) => !isPlugin(item)),
   );
 }
 
@@ -364,7 +365,7 @@ export function hasBlocks(item: Hashmap): boolean {
   );
 }
 
-export function hasCircuits(item: Hashmap): boolean {
+export function hasPlugins(item: Hashmap): boolean {
   if (item === null || typeof item !== "object") return false;
-  return Object.keys(item).some((key) => isCircuit(item[key]));
+  return Object.keys(item).some((key) => isPlugin(item[key]));
 }
