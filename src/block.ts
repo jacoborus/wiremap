@@ -326,7 +326,7 @@ export function mapBlocks<L extends Hashmap>(
     }
 
     // loop through sub-blocks
-    if (hasBlocks(block) || hasPlugins(block)) {
+    if (hasBlocksOrPlugins(block)) {
       const subBlocks = mapBlocks(block, path);
       Object.assign(mapped, subBlocks);
     }
@@ -356,16 +356,12 @@ export function isHashmap(item: unknown): item is Hashmap {
   });
 }
 
-export function hasBlocks(item: Hashmap): boolean {
+export function hasBlocksOrPlugins(item: Hashmap): boolean {
   if (item === null || typeof item !== "object") return false;
   return Object.keys(item).some(
     (key) =>
       (key !== "$" && key.startsWith("$") && typeof item[key] === "object") ||
-      isBlock(item[key]),
+      isBlock(item[key]) ||
+      isPlugin(item[key]),
   );
-}
-
-export function hasPlugins(item: Hashmap): boolean {
-  if (item === null || typeof item !== "object") return false;
-  return Object.keys(item).some((key) => isPlugin(item[key]));
 }

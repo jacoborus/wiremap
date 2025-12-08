@@ -4,8 +4,7 @@ import {
   defineBlock,
   extractUnits,
   getBlockUnitKeys,
-  hasBlocks,
-  hasPlugins,
+  hasBlocksOrPlugins,
   isBlock,
   mapBlocks,
 } from "../src/block.ts";
@@ -95,19 +94,19 @@ Deno.test("block: extractUnits", () => {
 });
 
 Deno.test("block: hasBlocks", () => {
-  assertEquals(hasBlocks({ a: 1, b: "asdf" }), false);
-  assertEquals(hasBlocks({ a: 1, $: "asfd" }), false);
-  assertEquals(hasBlocks({ a: 1, $: { __isBlock: true } }), false);
-  assertEquals(hasBlocks({ a: 1, $b: { b: 2 } }), true);
-  assertEquals(hasBlocks({ a: 1, b: { $: { __isBlock: true } } }), true);
-});
-
-Deno.test("block: hasCircuits", () => {
-  assertEquals(hasPlugins({ a: 1, b: "asdf" }), false);
-  assertEquals(hasPlugins({ a: 1, $: "asfd" }), false);
-  assertEquals(hasPlugins({ a: 1, b: { __isCircuit: true } }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, b: "asdf" }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, $: "asfd" }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, $: { __isBlock: true } }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, $b: { b: 2 } }), true);
   assertEquals(
-    hasPlugins({
+    hasBlocksOrPlugins({ a: 1, b: { $: { __isBlock: true } } }),
+    true,
+  );
+  assertEquals(hasBlocksOrPlugins({ a: 1, b: "asdf" }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, $: "asfd" }), false);
+  assertEquals(hasBlocksOrPlugins({ a: 1, b: { __isCircuit: true } }), false);
+  assertEquals(
+    hasBlocksOrPlugins({
       a: 1,
       b: {
         __isPlugin: true,
