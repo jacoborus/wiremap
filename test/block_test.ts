@@ -93,7 +93,7 @@ Deno.test("block: extractUnits", () => {
   );
 });
 
-Deno.test("block: hasBlocks", () => {
+Deno.test("block: hasBlocksOrPlugin", () => {
   assertEquals(hasBlocksOrPlugins({ a: 1, b: "asdf" }), false);
   assertEquals(hasBlocksOrPlugins({ a: 1, $: "asfd" }), false);
   assertEquals(hasBlocksOrPlugins({ a: 1, $: { __isBlock: true } }), false);

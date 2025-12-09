@@ -13,8 +13,8 @@ export interface StringHashmap {
 export interface BulkCircuitDef extends Hashmap {
   __hub: Rehashmap;
   __inputs: Rehashmap;
-  // __outputs: StringHashmap;
   __pluginPaths: string[];
+  // __outputs: StringHashmap;
 }
 
 export type CircuitDef<
@@ -25,8 +25,8 @@ export type CircuitDef<
   __isCircuit: true;
   __hub: H;
   __inputs: I;
-  // __outputs: O;
   __pluginPaths: string[];
+  // __outputs: O;
 };
 
 // interface CircuitOptions<O extends Hashmap> {
@@ -159,13 +159,13 @@ export function defineInputs<Deps extends Hashmap>(): Deps {
 // export type InferCircuit<C extends BulkCircuitDef> =
 //   C["__outputs"] extends Rehashmap ? C["__outputs"] : InferWire<C>;
 
-export type ExtractCircuits<H extends Hashmap> = {
-  [K in keyof H]: H[K] extends BulkCircuitDef ? H[K] : never;
+export type ExtractPlugins<H extends Hashmap> = {
+  [K in keyof H]: H[K] extends BulkPlugin ? H[K] : never;
 }[keyof H];
 
 export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   MappedHub<H>,
-  UnionToIntersection<ExtractCircuits<H>["__inputs"]>
+  UnionToIntersection<ExtractPlugins<H>["__circuit"]["__inputs"]>
 >;
 
 /**
