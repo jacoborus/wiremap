@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 
-import { plug } from "../src/plug.ts";
+import { plug, isPlugin } from "../src/plug.ts";
 
 Deno.test("plug", () => {
   const circuit = {
@@ -41,5 +41,27 @@ Deno.test("plug", () => {
       },
       __inputs: {},
     },
+  );
+});
+
+Deno.test("isPlugin", () => {
+  const circuit = {
+    __isCircuit: true,
+    __hub: {},
+    __inputs: {} as {
+      algo: {
+        a: number;
+        b: string;
+      };
+    },
+    __pluginPaths: [],
+  };
+  assertEquals(
+    isPlugin(
+      plug(circuit, {
+        algo: { asf: "asdf" },
+      }),
+    ),
+    true,
   );
 });

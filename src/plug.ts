@@ -48,7 +48,8 @@ export function isPlugin(item: unknown): item is BulkPlugin {
   if (
     !("__isPlugin" in item) ||
     !("__circuit" in item) ||
-    !("__connector" in item)
+    !("__adapter" in item) ||
+    !("__inputs" in item)
   )
     return false;
 
@@ -57,7 +58,9 @@ export function isPlugin(item: unknown): item is BulkPlugin {
   if (typeof item.__circuit !== "object" || item.__circuit === null)
     return false;
 
-  if (typeof item.__connector !== "object" || item.__connector === null)
+  if (typeof item.__inputs !== "object" || item.__inputs === null) return false;
+
+  if (typeof item.__adapter !== "object" || item.__adapter === null)
     return false;
 
   return true;
