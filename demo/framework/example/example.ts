@@ -14,10 +14,10 @@ type W = InferWire<typeof circuit, "other">;
 
 const circuit = defineCircuit(
   {
-    user: plug(userCircuit, {}),
+    user: plug(userCircuit),
 
     post: plug(postCircuit, {
-      "user.service": "user.service",
+      userService: "user.service",
     }),
 
     other: defineBlock({

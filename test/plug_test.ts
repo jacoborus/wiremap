@@ -12,7 +12,8 @@ Deno.test("plug", () => {
   assertEquals(plug(circuit, {}), {
     __isPlugin: true,
     __circuit: circuit,
-    __connector: {},
+    __adapter: {},
+    __inputs: {},
   });
 });
 
@@ -35,9 +36,10 @@ Deno.test("plug", () => {
     {
       __isPlugin: true,
       __circuit: circuit,
-      __connector: {
+      __adapter: {
         algo: { asf: "asdf" },
       },
+      __inputs: {},
     },
   );
 });

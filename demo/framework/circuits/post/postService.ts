@@ -13,7 +13,7 @@ interface NewPost {
 }
 
 export function addPost(this: W, email: string, post: NewPost) {
-  const author = this("user.service").getUserByEmail(email);
+  const author = this("userService").getUserByEmail(email);
 
   if (!author) throw new Error("Author does not exists");
 

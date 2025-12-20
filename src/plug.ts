@@ -1,28 +1,45 @@
 import type { BulkCircuitDef } from "./circuit.ts";
+import type { Hashmap } from "./common.ts";
 
 export interface BulkPlugin {
   __isPlugin: true;
   __circuit: BulkCircuitDef;
-  __connector: Record<string, string | Record<string, string>>;
+  __adapter: Record<string, string | Record<string, string>>;
+  __inputs: Hashmap;
 }
 
 type Plugin<
   C extends BulkCircuitDef,
-  S extends Record<keyof C["__inputs"], string | Record<string, string>>,
+  A extends Record<
+    string & keyof C["__inputs"],
+    string | Record<string, string>
+  >,
 > = {
   __isPlugin: true;
   __circuit: C;
-  __connector: S;
+  __adapter: A;
+  __inputs: Adapt<C["__inputs"], A>;
+};
+
+type Adapt<
+  O extends Hashmap,
+  A extends Record<string & keyof O, string | Record<string, string>>,
+> = {
+  [K in keyof O as string & (K extends keyof A ? A[K] : K)]: O[K];
 };
 
 export function plug<
   C extends BulkCircuitDef,
-  S extends Record<keyof C["__inputs"], string | Record<string, string>>,
->(circuit: C, schema: boolean | S): Plugin<C, S> {
+  A extends Record<
+    string & keyof C["__inputs"],
+    string | Record<string, string>
+  >,
+>(circuit: C, adapter = {} as A): Plugin<C, A> {
   return {
     __isPlugin: true,
     __circuit: circuit,
-    __connector: typeof schema === "boolean" ? ({} as S) : schema,
+    __adapter: adapter,
+    __inputs: {} as Adapt<C["__inputs"], A>,
   };
 }
 

@@ -165,7 +165,7 @@ export type ExtractPlugins<H extends Hashmap> = {
 
 export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   MappedHub<H>,
-  UnionToIntersection<ExtractPlugins<H>["__circuit"]["__inputs"]>
+  UnionToIntersection<ExtractPlugins<H>["__inputs"]>
 >;
 
 /**

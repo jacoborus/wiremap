@@ -13,9 +13,7 @@ export const postCircuit = defineCircuit(
     repo: postRepo,
   },
   defineInputs<{
-    $user: {
-      $service: UserOutput["service"];
-    };
+    $userService: UserOutput["service"];
   }>(),
 );
 
