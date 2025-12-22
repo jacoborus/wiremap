@@ -224,7 +224,7 @@ export function getBlockWire<
 
   let pluginPath = "";
 
-  ctx.circuit.__pluginPaths.forEach((path) => {
+  ctx.circuit.__pluginAdapters.forEach((_, path) => {
     if (blockPath.startsWith(path)) {
       if (path.length > pluginPath.length) {
         pluginPath = path;
@@ -265,6 +265,17 @@ export function getBlockWire<
         ctx.proxy.set(key, proxy);
         return proxy;
       }
+
+      const adapter = ctx.adapters.get(pluginPath);
+
+      if (!adapter) throw new Error("something very wrong happened");
+
+      const newPath = adapter[key];
+
+      if (newPath && typeof newPath === "string") {
+        return getBlockProxy(newPath);
+      }
+      return;
     } else {
       if (Object.keys(ctx.circuit.__inputs).includes(key)) {
         const proxy = createBlockProxy(key, ctx, "__inputs", false);
@@ -290,14 +301,14 @@ export function mapBlocks<L extends Hashmap>(
   Object.keys(blocks).forEach((path) => {
     if (path === "$") return;
 
-    const block = blocks[path];
+    const item = blocks[path];
 
-    if (!isHashmap(block)) return;
+    if (!isHashmap(item)) return;
 
     const isDollarBlock = path.startsWith("$");
-    const itemIsCircuit = isCircuit(block);
-    const itemIsPlugin = isPlugin(block);
-    const itemIsBlock = isDollarBlock || isBlock(block);
+    const itemIsCircuit = isCircuit(item);
+    const itemIsPlugin = isPlugin(item);
+    const itemIsBlock = isDollarBlock || isBlock(item);
 
     if (!itemIsBlock && !itemIsPlugin) return;
 
@@ -309,7 +320,7 @@ export function mapBlocks<L extends Hashmap>(
     if (itemIsCircuit) return;
 
     if (itemIsPlugin) {
-      const pluginHub = block["__circuit"]["__hub"];
+      const pluginHub = item["__circuit"]["__hub"];
 
       Object.keys(pluginHub).forEach((subPath) => {
         const subBlockPath = subPath === "" ? path : `${path}.${subPath}`;
@@ -319,15 +330,15 @@ export function mapBlocks<L extends Hashmap>(
       return;
     }
 
-    const units = extractUnits(block);
+    const units = extractUnits(item);
     // only blocks with units are wireable
     if (Object.keys(units).length) {
       mapped[path] = units;
     }
 
     // loop through sub-blocks
-    if (hasBlocksOrPlugins(block)) {
-      const subBlocks = mapBlocks(block, path);
+    if (hasBlocksOrPlugins(item)) {
+      const subBlocks = mapBlocks(item, path);
       Object.assign(mapped, subBlocks);
     }
   });

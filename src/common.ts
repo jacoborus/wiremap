@@ -8,4 +8,10 @@ export interface Context<Circuit extends BulkCircuitDef> {
   wire: Map<string, unknown>;
   proxy: Map<string, Hashmap>;
   localProxy: Map<string | null, Hashmap>;
+  adapters: AdaptersMap;
 }
+
+export type AdaptersMap = Map<
+  string,
+  Record<string, string | Record<string, string>>
+>;

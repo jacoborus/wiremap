@@ -1,19 +1,19 @@
 import type { BlockDef, Rehashmap } from "./block.ts";
-import type { Hashmap } from "./common.ts";
+import type { AdaptersMap, Hashmap } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
 
 import type { BulkPlugin } from "./plug.ts";
 import { isPlugin } from "./plug.ts";
 import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
 
-export interface StringHashmap {
-  [K: string]: string | StringHashmap;
-}
+// export interface StringHashmap {
+//   [K: string]: string | StringHashmap;
+// }
 
 export interface BulkCircuitDef extends Hashmap {
   __hub: Rehashmap;
   __inputs: Rehashmap;
-  __pluginPaths: string[];
+  __pluginAdapters: AdaptersMap;
   // __outputs: StringHashmap;
 }
 
@@ -25,13 +25,9 @@ export type CircuitDef<
   __isCircuit: true;
   __hub: H;
   __inputs: I;
-  __pluginPaths: string[];
+  __pluginAdapters: AdaptersMap;
   // __outputs: O;
 };
-
-// interface CircuitOptions<O extends Hashmap> {
-//   outputs?: O;
-// }
 
 export type MappedHub<H extends Hashmap> = {
   [K in BlockPaths<H>]: PathValue<H, K & string>;
@@ -141,13 +137,14 @@ export function defineCircuit<
   C extends CircuitDef<MappedHub<E>, MappedHub<I>>,
 >(mainBlock: H, inputs: I): C {
   const target = { ...mainBlock, "": defineBlock(mainBlock) };
-  const pluginPaths = extractPluginPaths(mainBlock);
+
+  const adapters = extractPluginAdapters(mainBlock);
 
   return {
     __isCircuit: true,
     __hub: mapBlocks(target),
     __inputs: inputs as MappedHub<I>,
-    __pluginPaths: pluginPaths,
+    __pluginAdapters: adapters,
     // __outputs: options?.outputs || {},
   } as C;
 }
@@ -204,9 +201,11 @@ export function isCircuit(target: unknown): target is BulkCircuitDef {
   return true;
 }
 
-export function extractPluginPaths<B extends Hashmap>(block: B): string[] {
-  const result: string[] = [];
-
+export function extractPluginAdapters<B extends Hashmap>(
+  block: B,
+  adapters = new Map<string, Record<string, string | Record<string, string>>>(),
+  parentKey = "",
+) {
   Object.keys(block).forEach((key) => {
     if (key === "$") return;
 
@@ -217,19 +216,27 @@ export function extractPluginPaths<B extends Hashmap>(block: B): string[] {
     const finalKey = isPrefixed ? key.slice(1) : key;
 
     if (isPlugin(item)) {
-      result.push(finalKey);
-      const finalPaths = item.__circuit.__pluginPaths.map(
-        (path) => `${finalKey}.${path}`,
-      );
-      result.push(...finalPaths);
+      if (parentKey) {
+        adapters.set(`${parentKey}.${finalKey}`, item.__adapter);
+      } else {
+        adapters.set(finalKey, item.__adapter);
+      }
+
+      item.__circuit.__pluginAdapters.forEach((adapter, path) => {
+        if (parentKey) {
+          adapters.set(`${parentKey}.${finalKey}.${path}`, adapter);
+        } else {
+          adapters.set(`${finalKey}.${path}`, adapter);
+        }
+      });
+
       return;
     }
 
     if (isPrefixed || isBlock(item)) {
-      const subPaths = extractPluginPaths(item);
-      subPaths.forEach((path) => result.push(`${finalKey}.${path}`));
+      extractPluginAdapters(item, adapters, finalKey);
     }
   });
 
-  return result;
+  return adapters;
 }

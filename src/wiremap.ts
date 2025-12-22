@@ -1,4 +1,4 @@
-import type { Hashmap, Context } from "./common.ts";
+import type { Hashmap, Context, AdaptersMap } from "./common.ts";
 import type { IsAsyncFactory, IsPrivateUnit } from "./unit.ts";
 import type { BlockDef, BlockProxy, InferBlockValue } from "./block.ts";
 import type { BulkCircuitDef } from "./circuit.ts";
@@ -149,8 +149,8 @@ type ExtractNonUnitKeys<T> = {
  * and returns a wire function for accessing units across your application. It handles
  * both synchronous and asynchronous factory initialization automatically.
  *
- * @template Defs - The definitions object type
- * @param defs - Object containing unit definitions and imported blocks. Each block should export a `$` tag via `tagBlock`.
+ * @template C - The definitions object type
+ * @param circuit - Object containing unit definitions and imported blocks. Each block should export a `$` tag via `tagBlock`.
  * @returns Promise<Wire> if any async factory units exist, otherwise Wire for synchronous resolution.
  *
  * @example Basic application setup
@@ -191,10 +191,10 @@ type ExtractNonUnitKeys<T> = {
  * @public
  * @since 1.0.0
  */
-export function wireUp<Defs extends BulkCircuitDef>(
-  defs: Defs,
-  inputs?: Defs["__inputs"],
-): WiredUp<Defs> {
+export function wireUp<C extends BulkCircuitDef>(
+  circuit: C,
+  inputs?: C["__inputs"],
+): WiredUp<C> {
   inputs = inputs ?? {};
 
   const inputDefinitions = mapBlocks(
@@ -210,21 +210,24 @@ export function wireUp<Defs extends BulkCircuitDef>(
   }
 
   const context = createContext({
-    __hub: defs["__hub"],
+    __isCircuit: true,
+    __hub: circuit.__hub,
     __inputs: inputDefinitions,
     // __outputs: {},
-    __pluginPaths: defs.__pluginPaths,
+    __pluginAdapters: circuit.__pluginAdapters,
   });
 
-  if (hasAsyncKeys(defs["__hub"])) {
+  context.adapters = circuit.__pluginAdapters;
+
+  if (hasAsyncKeys(circuit["__hub"])) {
     // This will cause wireUp to return a promise that resolves
     // when all async factories are resolved
     return resolveAsyncFactories(context).then(() => {
       return getBlockWire("", context);
-    }) as WiredUp<Defs>;
+    }) as WiredUp<C>;
   }
 
-  return getBlockWire("", context) as WiredUp<Defs>;
+  return getBlockWire("", context) as WiredUp<C>;
 }
 
 /** Check if any of the definitions are async factories */
@@ -288,5 +291,6 @@ function createContext<C extends BulkCircuitDef>(circuit: C): Context<C> {
     wire: new Map(),
     proxy: new Map(),
     localProxy: new Map(),
+    adapters: {} as AdaptersMap,
   };
 }

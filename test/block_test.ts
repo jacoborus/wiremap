@@ -110,7 +110,7 @@ Deno.test("block: hasBlocksOrPlugin", () => {
       a: 1,
       b: {
         __isPlugin: true,
-        __connector: {},
+        __adapter: {},
         __circuit: {
           __isCircuit: true,
           __hub: {},
@@ -151,10 +151,11 @@ Deno.test("block: mapBlocks", () => {
           },
         },
         __inputs: { asdf: 4 },
+        __pluginAdapters: new Map(),
       },
       plug: {
         __isPlugin: true,
-        __connector: {},
+        __adapter: {},
         __circuit: {
           __isCircuit: true,
           __hub: {
@@ -164,6 +165,7 @@ Deno.test("block: mapBlocks", () => {
             },
           },
           __inputs: { asdf: 4 },
+          __pluginAdapters: new Map(),
         },
       },
       $uno: {
@@ -186,7 +188,7 @@ Deno.test("block: mapBlocks", () => {
         b: "asdf",
         plug: {
           __isPlugin: true,
-          __connector: {},
+          __adapter: {},
           __circuit: {
             __isCircuit: true,
             __inputs: { asdf: 4 },

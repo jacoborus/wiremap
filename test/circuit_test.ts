@@ -3,7 +3,7 @@ import { assertEquals } from "@std/assert";
 import {
   isCircuit,
   defineCircuit,
-  extractPluginPaths,
+  extractPluginAdapters,
 } from "../src/circuit.ts";
 
 Deno.test("block: isCircuit", () => {
@@ -102,47 +102,52 @@ Deno.test("block: isCircuit", () => {
   );
 });
 
-Deno.test("block: extactPluginPaths", () => {
+Deno.test("block: extactPluginAdapters", () => {
   assertEquals(
-    extractPluginPaths({
+    extractPluginAdapters({
       a: 1,
       $b: { a: 1 },
       c: { a: 1, $: { __isBlock: true } },
     }),
-    [],
+    new Map(),
   );
 
   assertEquals(
-    extractPluginPaths({
+    extractPluginAdapters({
       a: 1,
       $b: { a: 1 },
       c: { a: 1, $: { __isBlock: true } },
-      theplugin: {
+      thePlugin: {
         __isPlugin: true,
         __connector: {},
+        __adapter: {},
         __circuit: {
           __isCircuit: true,
           __hub: {},
           __inputs: {},
-          __pluginPaths: [],
+          __pluginAdapters: new Map(),
         },
       },
       $other: {
         __isPlugin: true,
         __connector: {},
+        __adapter: {},
         __circuit: {
           __isCircuit: true,
           __hub: {},
           __inputs: {},
-          __pluginPaths: [],
+          __pluginAdapters: new Map(),
         },
       },
     }),
-    ["theplugin", "other"],
+    new Map([
+      ["thePlugin", {}],
+      ["other", {}],
+    ]),
   );
 
   assertEquals(
-    extractPluginPaths({
+    extractPluginAdapters({
       a: 1,
       $b: { a: 1 },
       $good: {
@@ -152,23 +157,26 @@ Deno.test("block: extactPluginPaths", () => {
         },
         circ: {
           __isPlugin: true,
-          __connector: {},
+          __adapter: {},
           __circuit: {
             __isCircuit: true,
+            __inputs: {},
+            __pluginAdapters: new Map([["other", {}]]),
             __hub: {
               $other: {
                 __isCircuit: true,
                 __hub: {},
                 __inputs: {},
-                __pluginPaths: [],
+                __pluginAdapters: new Map(),
               },
             },
-            __inputs: {},
-            __pluginPaths: ["other"],
           },
         },
       },
     }),
-    ["good.circ", "good.circ.other"],
+    new Map([
+      ["good.circ", {}],
+      ["good.circ.other", {}],
+    ]),
   );
 });

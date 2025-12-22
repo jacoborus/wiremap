@@ -7,7 +7,7 @@ Deno.test("plug", () => {
     __isCircuit: true,
     __hub: {},
     __inputs: {},
-    __pluginPaths: [],
+    __pluginAdapters: new Map(),
   };
   assertEquals(plug(circuit, {}), {
     __isPlugin: true,
@@ -27,7 +27,7 @@ Deno.test("plug", () => {
         b: string;
       };
     },
-    __pluginPaths: [],
+    __pluginAdapters: new Map(),
   };
   assertEquals(
     plug(circuit, {
@@ -54,7 +54,7 @@ Deno.test("isPlugin", () => {
         b: string;
       };
     },
-    __pluginPaths: [],
+    __pluginAdapters: new Map(),
   };
   assertEquals(
     isPlugin(
@@ -62,6 +62,20 @@ Deno.test("isPlugin", () => {
         algo: { asf: "asdf" },
       }),
     ),
+    true,
+  );
+
+  assertEquals(
+    isPlugin({
+      __isPlugin: true,
+      __adapter: {},
+      __circuit: {
+        __isCircuit: true,
+        __hub: {},
+        __inputs: {},
+        __pluginAdapters: new Map(),
+      },
+    }),
     true,
   );
 });
