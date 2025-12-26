@@ -14,7 +14,7 @@ Deno.test("addPostTest", function addPostTest() {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@qfasdfasd.asdf",
         isAdmin: true,
       }),

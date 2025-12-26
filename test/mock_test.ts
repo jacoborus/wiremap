@@ -15,7 +15,7 @@ Deno.test("mockUnit: bound function", () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -29,7 +29,7 @@ Deno.test("mockUnit: bound function", () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
@@ -50,7 +50,7 @@ Deno.test("mockUnit: factory function", () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -64,7 +64,7 @@ Deno.test("mockUnit: factory function", () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
@@ -87,7 +87,7 @@ Deno.test("mockUnit: async factory function", async () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -101,7 +101,7 @@ Deno.test("mockUnit: async factory function", async () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
@@ -121,7 +121,7 @@ Deno.test("mockUnit: bound definition", () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -135,7 +135,7 @@ Deno.test("mockUnit: bound definition", () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
@@ -157,7 +157,7 @@ Deno.test("mockUnit: factory definition", () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -171,7 +171,7 @@ Deno.test("mockUnit: factory definition", () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });
@@ -195,7 +195,7 @@ Deno.test("mockUnit: async factory definition", async () => {
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@asdfasdf.asdf",
         isAdmin: true,
       }),
@@ -209,7 +209,7 @@ Deno.test("mockUnit: async factory definition", async () => {
 
   assertEquals(user, {
     id: "11234",
-    name: "jacobo",
+    name: "john",
     email: "asdfasdf@asdfasdf.asdf",
     isAdmin: true,
   });

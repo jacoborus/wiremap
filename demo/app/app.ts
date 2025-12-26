@@ -10,8 +10,8 @@ export const app = await wireUp(appCircuit, {
 });
 
 const userId = app("user.service").addUser(
-  "jacobo",
-  "jacobo@example.com",
+  "john",
+  "john@example.com",
   true,
 );
 
