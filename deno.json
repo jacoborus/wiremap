@@ -11,14 +11,16 @@
     "lint": "deno lint src demos test",
     "check": "deno check src test",
     "fmt": "deno fmt --check src demos test",
-    "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts",
-    "build-npm": "deno run -A scripts/build_npm.ts"
+    "all": "deno task test && deno task check && deno task lint && deno task demos",
+    "demos": "deno run demos/app/app.ts && deno run demos/framework/example/example.ts",
+    "npm": "deno run -A scripts/build_npm.ts"
   },
   "publish": {
     "include": [
       "LICENSE",
       "README.md",
-      "src/"
+      "src/",
+      "docs/"
     ]
   },
   "imports": {
