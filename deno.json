@@ -8,9 +8,9 @@
   "exports": "./src/wiremap.ts",
   "tasks": {
     "test": "deno test test/",
-    "lint": "deno lint src demo test",
+    "lint": "deno lint src demos test",
     "check": "deno check src test",
-    "fmt": "deno fmt --check src demo test",
+    "fmt": "deno fmt --check src demos test",
     "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts",
     "build-npm": "deno run -A scripts/build_npm.ts"
   },
