@@ -26,19 +26,6 @@ time.
 - ** Zero Configuration**: Install and import, nothing else
 - ** Simple API**: So simple, it hurts
 
-## Table of contents
-
-- [Wiremap](#wiremap)
-  - [Features](#-features)
-  - [TOC](#-table-of-contents)
-  - [Architecture-Agnostic](#-architecture-agnostic)
-  - [Installation](#-installation)
-  - [Core Concepts](#-core-concepts)
-  - [Example](#-example)
-  - [Testing](#-testing)
-  - [API Reference](#-api-reference)
-  - [Contributing](#-contributing)
-  - [License](#-license)
 
 ## Architecture-Agnostic
 
