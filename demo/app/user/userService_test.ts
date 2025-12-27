@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 
-import { mockUnit } from "../../../src/mock.ts";
+import { mockUnit } from "wiremap";
 
 import type { User } from "./userRepo.ts";
 import * as userService from "./userService.ts";

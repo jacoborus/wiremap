@@ -1,4 +1,4 @@
-import { wireUp } from "../../src/wiremap.ts";
+import { wireUp } from "wiremap";
 import { safename } from "safename";
 
 import { appCircuit } from "./appCircuit.ts";
@@ -9,11 +9,7 @@ export const app = await wireUp(appCircuit, {
   },
 });
 
-const userId = app("user.service").addUser(
-  "john",
-  "john@example.com",
-  true,
-);
+const userId = app("user.service").addUser("john", "john@example.com", true);
 
 console.log(app().hola);
 console.log("1 ===", app("dollar").a);

@@ -1,4 +1,4 @@
-import { defineUnit, tagBlock } from "../../../src/wiremap.ts";
+import { defineUnit, tagBlock } from "wiremap";
 
 import * as postService from "./postService.ts";
 import postRepo from "./postRepo.ts";

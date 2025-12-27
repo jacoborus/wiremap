@@ -1,5 +1,5 @@
 import type { safename } from "safename";
-import { defineCircuit, defineInputs } from "../../src/wiremap.ts";
+import { defineCircuit, defineInputs } from "wiremap";
 
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";

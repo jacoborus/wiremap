@@ -1,4 +1,4 @@
-import { tagBlock } from "../../../../src/wiremap.ts";
+import { tagBlock } from "wiremap";
 
 export type User = {
   id: string;

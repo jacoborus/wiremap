@@ -1,11 +1,5 @@
-import type { InferWire } from "../../../src/wiremap.ts";
-import {
-  defineBlock,
-  defineCircuit,
-  defineUnit,
-  plug,
-  wireUp,
-} from "../../../src/wiremap.ts";
+import type { InferWire } from "wiremap";
+import { defineBlock, defineCircuit, defineUnit, plug, wireUp } from "wiremap";
 
 import { postCircuit } from "../circuits/post/postCircuit.ts";
 import { userCircuit } from "../circuits/user/userCircuit.ts";

@@ -1,4 +1,5 @@
-import { type InferWire, tagBlock } from "../../../../src/wiremap.ts";
+import { type InferWire, tagBlock } from "wiremap";
+
 import type { UserCircuit } from "./userCircuit.ts";
 import type { User } from "./userRepo.ts";
 

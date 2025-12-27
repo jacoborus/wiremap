@@ -1,4 +1,4 @@
-import { type InferWire, tagBlock } from "../../../src/wiremap.ts";
+import { type InferWire, tagBlock } from "wiremap";
 import type { Circuit } from "../appCircuit.ts";
 
 type W = InferWire<Circuit, "post.service">;

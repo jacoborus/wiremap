@@ -1,13 +1,13 @@
 {
   "name": "@jacobo/wiremap",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "license": "MIT",
   "description": "Compositional dependency injection framework.",
   "exports": "./src/wiremap.ts",
   "tasks": {
     "test": "deno test test/",
     "lint": "deno lint src demo test",
-    "check": "deno check src demo test",
+    "check": "deno check src test",
     "fmt": "deno fmt --check src demo test",
     "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts"
   },
@@ -15,15 +15,10 @@
     "include": [
       "LICENSE",
       "README.md",
-      "src/wiremap.ts",
-      "src/block.ts",
-      "src/unit.ts",
-      "src/mock.ts",
-      "src/common.ts"
+      "src/"
     ]
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@1",
-    "safename": "npm:safename@^2.0.0"
+    "@std/assert": "jsr:@std/assert@1"
   }
 }

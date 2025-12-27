@@ -1,7 +1,7 @@
-import { defineInputs, defineCircuit } from "../../../../src/wiremap.ts";
-import type { InferOutput } from "../../../../src/wiremap.ts";
-import type { UserCircuit } from "../user/userCircuit.ts";
+import { defineInputs, defineCircuit } from "wiremap";
+import type { InferOutput } from "wiremap";
 
+import type { UserCircuit } from "../user/userCircuit.ts";
 import * as postService from "./postService.ts";
 import * as postRepo from "./postRepo.ts";
 

@@ -1,5 +1,5 @@
-import { defineCircuit } from "../../../../src/wiremap.ts";
-import type { BulkCircuitDef } from "../../../../src/circuit.ts";
+import { defineCircuit } from "wiremap";
+import type { BulkCircuitDef } from "wiremap";
 
 import * as userService from "./userService.ts";
 import * as userRepo from "./userRepo.ts";
