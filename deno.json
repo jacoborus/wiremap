@@ -3,13 +3,16 @@
   "version": "1.0.0-alpha.5",
   "license": "MIT",
   "description": "Compositional dependency injection framework.",
+  "keywords": [],
+  "author": "Jacobo Tabernero Rey -- github.com/jacoborus",
   "exports": "./src/wiremap.ts",
   "tasks": {
     "test": "deno test test/",
     "lint": "deno lint src demo test",
     "check": "deno check src test",
     "fmt": "deno fmt --check src demo test",
-    "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts"
+    "all": "deno task test && deno task check && deno task lint && deno run demo/app/app.ts && deno run demo/framework/example/example.ts",
+    "build-npm": "deno run -A scripts/build_npm.ts"
   },
   "publish": {
     "include": [

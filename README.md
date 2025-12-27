@@ -1,4 +1,4 @@
-  # Wiremap
+# Wiremap
 
 **Wiremap** is a lightweight, type-safe dependency injection framework for
 TypeScript that favors **composition over inheritance**. It helps you build
