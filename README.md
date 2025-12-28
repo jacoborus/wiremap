@@ -16,15 +16,15 @@ time.
 
 ## Features
 
-- ** Type-Safe**: Full TypeScript support without extra boilerplate
-- ** Compositional**: Build complex apps from small, reusable units
-- ** Circular Dependency-Free**: Designed to avoid circular dependencies
-- ** No decorators. No classes.** No gorillas, no jungles. Just the bananas 🍌
-- ** Hierarchical**: Organize dependencies with namespaces and blocks
-- ** Testable**: Built-in utilities for mocking and isolation
-- ** Lightweight**: Minimal runtime overhead with smart caching
-- ** Zero Configuration**: Install and import, nothing else
-- ** Simple API**: So simple, it hurts
+- **Type-Safe**: Full TypeScript support without extra boilerplate
+- **Compositional**: Build complex apps from small, reusable units
+- **Circular Dependency-Free**: Designed to avoid circular dependencies
+- **No decorators. No classes.** No gorillas, no jungles. Just the bananas 🍌
+- **Hierarchical**: Organize dependencies with namespaces and blocks
+- **Testable**: Built-in utilities for mocking and isolation
+- **Lightweight**: Minimal runtime overhead with smart caching
+- **Zero Configuration**: Install and import, nothing else
+- **Simple API**: So simple, it hurts
 
 
 ## Architecture-Agnostic
