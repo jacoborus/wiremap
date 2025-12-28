@@ -6,16 +6,16 @@ It’s automatically injected into:
 - **bound functions** as `this`
 - **factories / async factories** as the first argument
 
-You don’t need to create wires yourself, but you’ll usually want to infer their types using `InferCircuit` and `InferWire`.
+You don’t need to create wires yourself, but you’ll usually want to infer their types using `InferOutput` and `InferWire`.
 
 ```ts
 // -- main.ts --
-import { type InferCircuit } from "wiremap";
+import { type InferOutput } from "wiremap";
 import * as postMod from "./post/postMod.ts";
 import * as userMod from "./user/userMod.ts";
 
 const mainBlock = { user: userMod, post: postMod };
-export type Blocks = InferCircuit<typeof mainBlock>;
+export type Blocks = InferOutput<typeof mainBlock>;
 ```
 
 Now use `InferWire` to type your wire:
