@@ -1,18 +1,20 @@
 import { assertEquals } from "@std/assert";
 
-import { mockUnit } from "../../src/mock.ts";
+import { mockUnit } from "wiremap";
 
 import type { Post } from "./postRepo.ts";
 import * as postService from "./postService.ts";
+import { safename } from "safename";
 
 Deno.test("addPostTest", function addPostTest() {
   const repo = [] as Post[];
   const fakeBlocks = {
-    "..": { repo },
+    post: { repo },
+    "tools.text": { normalizeString: safename },
     "user.service": {
       getUser: (id: string) => ({
         id,
-        name: "jacobo",
+        name: "john",
         email: "asdfasdf@qfasdfasd.asdf",
         isAdmin: true,
       }),

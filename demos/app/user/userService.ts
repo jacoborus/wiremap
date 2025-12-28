@@ -1,9 +1,9 @@
-import { defineUnit, tagBlock, type InferWire } from "../../src/wiremap.ts";
-import type { Blocks } from "../app.ts";
+import { defineUnit, type InferWire, tagBlock } from "wiremap";
+import type { Circuit } from "../appCircuit.ts";
 
 export const $ = tagBlock();
 
-type W = InferWire<Blocks, "user.service">;
+type W = InferWire<Circuit, "user.service">;
 
 /** List the users */
 export function getUsers(this: W) {

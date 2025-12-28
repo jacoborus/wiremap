@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "rootDir": "./src/",
-    "outDir": "./dist/",
+    "rootDir": "./",
+    "outDir": "./npm/",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -12,19 +12,15 @@
     "rewriteRelativeImportExtensions": true,
     "strict": true,
     "skipLibCheck": true,
-    "target": "es2019",
+    "target": "es2021",
     "lib": [
-      "es2019",
+      "es2021",
       "dom"
     ],
     "moduleResolution": "bundler",
     "removeComments": false
   },
   "include": [
-    "src/wiremap.ts",
-    "src/block.ts",
-    "src/unit.ts",
-    "src/mock.ts",
-    "src/common.ts"
+    "src"
   ]
 }
