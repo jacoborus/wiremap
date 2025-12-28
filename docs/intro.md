@@ -4,7 +4,7 @@ Wiremap lets you compose apps from small **units** grouped into **blocks**, all 
 
 ## Minimal example
 ```ts
-import { defineUnit, tagBlock, wireUp } from "wiremap";
+import { defineUnit, tagBlock, wireUp, InferWire } from "wiremap";
 
 type W = InferWire<typeof circuit>
 const app = {
