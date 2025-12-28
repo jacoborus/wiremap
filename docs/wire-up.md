@@ -191,7 +191,7 @@ interface DatabaseService {
 const circuit = defineCircuit(
   {
     $service: {
-      createUser: defineInput(async function(this: W, name: string)  {
+      createUser: defineUnit(async function(this: W, name: string)  {
         const db = this('database')
         const user = { id: crypto.randomUUID(), name };
         await db.save(user);
