@@ -99,16 +99,16 @@ export const createUser = defineUnit(
 );
 
 // app.ts
-import { type InferCircuit, wireUp } from "wiremap";
+import { defineCircuit, type InferCircuit, wireUp } from "wiremap";
 import { config } from "./config.ts";
 import * as userService from "./userService.ts";
 import * as database from "./database.ts";
 
-const main = {
+const main = defineCircuit({
   config,
   database,
   user: defineBlock({ service: userService }),
-};
+}, {});
 
 export type Blocks = InferCircuit<typeof main>;
 
