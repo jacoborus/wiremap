@@ -15,3 +15,12 @@ export type AdaptersMap = Map<
   string,
   Record<string, string | Record<string, string>>
 >;
+
+/**
+ * Transforms `A | B | C` into `A & B & C`
+ */
+export type UnionToIntersection<U> = (
+  U extends unknown ? (x: U) => void : never
+) extends (x: infer I) => void
+  ? I
+  : never;

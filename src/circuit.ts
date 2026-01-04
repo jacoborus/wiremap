@@ -1,14 +1,10 @@
 import type { BlockDef, Rehashmap } from "./block.ts";
-import type { AdaptersMap, Hashmap } from "./common.ts";
+import type { AdaptersMap, Hashmap, UnionToIntersection } from "./common.ts";
 import type { UnitDef } from "./unit.ts";
 
 import type { BulkPlugin } from "./plug.ts";
 import { isPlugin } from "./plug.ts";
 import { defineBlock, isHashmap, mapBlocks, isBlock } from "./block.ts";
-
-// export interface StringHashmap {
-//   [K: string]: string | StringHashmap;
-// }
 
 export interface BulkCircuitDef extends Hashmap {
   __hub: Rehashmap;
@@ -164,15 +160,6 @@ export type InputsFromHub<H extends Hashmap> = BlocksDiff<
   MappedHub<H>,
   UnionToIntersection<ExtractPlugins<H>["__inputs"]>
 >;
-
-/**
- * Transforms `A | B | C` into `A & B & C`
- */
-type UnionToIntersection<U> = (
-  U extends unknown ? (x: U) => void : never
-) extends (x: infer I) => void
-  ? I
-  : never;
 
 export type KeysDiff<A, B> = {
   [K in keyof B]: K extends keyof A ? (A[K] extends B[K] ? never : K) : K;
